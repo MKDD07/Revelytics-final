@@ -7,7 +7,7 @@
  */
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'revelytics-final.mkmkataria07.workers.dev';
+  import.meta.env.VITE_API_URL || 'https://revelytics-final.mkmkataria07.workers.dev';
 
 export interface ApiResponse<T = any> {
   success?: boolean;
