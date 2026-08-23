@@ -146,13 +146,38 @@ export async function fetchServices(): Promise<ServiceItem[]> {
   }
 }
 
+export type FaqDbSource =
+  | 'page'
+  | 'faq_page'
+  | 'index'
+  | 'index_faqs'
+  | 'service'
+  | 'service_faqs'
+  | 'general'
+  | 'faqs'
+  | 'local';
+
 /**
- * Fetch all active FAQs from D1 (supports optional params)
+ * Fetch active FAQs from D1 based on chosen database source / table
  */
-export async function fetchFaqs(type?: 'index' | 'service' | 'page', serviceSlug?: string): Promise<FaqItem[]> {
+export async function fetchFaqs(
+  type?: FaqDbSource,
+  serviceSlug?: string
+): Promise<FaqItem[]> {
   try {
+    if (type === 'local') {
+      return [];
+    }
+
     const params = new URLSearchParams();
-    if (type) params.append('type', type);
+    if (type) {
+      let normalizedType = type;
+      if (type === 'faq_page') normalizedType = 'page';
+      if (type === 'index_faqs') normalizedType = 'index';
+      if (type === 'service_faqs') normalizedType = 'service';
+      if (type === 'faqs') normalizedType = 'general';
+      params.append('type', normalizedType);
+    }
     if (serviceSlug) params.append('service', serviceSlug);
 
     const qs = params.toString() ? `?${params.toString()}` : '';
@@ -169,24 +194,41 @@ export async function fetchFaqs(type?: 'index' | 'service' | 'page', serviceSlug
 }
 
 /**
+ * Fetch FAQs by explicit DB table / source
+ */
+export async function fetchFaqsByDb(
+  dbSource: FaqDbSource,
+  serviceSlug?: string
+): Promise<FaqItem[]> {
+  return fetchFaqs(dbSource, serviceSlug);
+}
+
+/**
  * Fetch Homepage FAQs from index_faqs table
  */
 export async function fetchIndexFaqs(): Promise<FaqItem[]> {
-  return fetchFaqs('index');
+  return fetchFaqs('index_faqs');
 }
 
 /**
  * Fetch FAQ Page FAQs grouped/sorted from faq_page table
  */
 export async function fetchFaqPage(): Promise<FaqItem[]> {
-  return fetchFaqs('page');
+  return fetchFaqs('faq_page');
 }
 
 /**
  * Fetch Service-specific FAQs from service_faqs table
  */
 export async function fetchServiceFaqs(serviceSlug?: string): Promise<FaqItem[]> {
-  return fetchFaqs('service', serviceSlug);
+  return fetchFaqs('service_faqs', serviceSlug);
+}
+
+/**
+ * Fetch General FAQs from faqs table
+ */
+export async function fetchGeneralFaqs(): Promise<FaqItem[]> {
+  return fetchFaqs('faqs');
 }
 
 /**

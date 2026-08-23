@@ -52,7 +52,30 @@ CREATE TABLE IF NOT EXISTS faqs (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4b. FAQ Page (index_faqs)
+-- 4b. Index FAQs Table
+CREATE TABLE IF NOT EXISTS index_faqs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4c. Service FAQs Table
+CREATE TABLE IF NOT EXISTS service_faqs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_slug TEXT NOT NULL,
+  question TEXT NOT NULL,
+  answer TEXT,
+  meta_title TEXT,
+  meta_description TEXT,
+  schema_type TEXT DEFAULT 'FAQPage',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active INTEGER NOT NULL DEFAULT 1
+);
+
+-- 4d. FAQ Page Table
 CREATE TABLE IF NOT EXISTS faq_page (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   subheading TEXT NOT NULL,
@@ -62,8 +85,6 @@ CREATE TABLE IF NOT EXISTS faq_page (
   question_sort_order INTEGER NOT NULL DEFAULT 0,
   is_active INTEGER NOT NULL DEFAULT 1
 );
-
-CREATE INDEX IF NOT EXISTS index_faqs ON faq_page (section_sort_order, question_sort_order, is_active);
 
 -- 5. Contact Inquiries Table
 CREATE TABLE IF NOT EXISTS inquiries (

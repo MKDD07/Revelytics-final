@@ -1,243 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { fetchFaqPage, type FaqItem } from '../../services/api';
+import { fetchFaqsByDb, type FaqDbSource, type FaqItem } from '../../services/api';
+
+export type { FaqDbSource };
 
 // ==================================================
 // START: FaqAccordion (Dedicated FAQ Page)
-// Dynamic Component connected with D1 table: faq_page
+// Dynamic Component connected with D1 table: faq_page (with db selection)
 // ==================================================
 
-export const ALL_FAQ_PAGE_DATA: FaqItem[] = [
-  // 1. General
-  {
-    id: 1,
-    subheading: 'General',
-    section_sort_order: 10,
-    question: 'Who is Revlytics?',
-    answer: 'Revlytics is a digital marketing and travel-technology company that designs websites and apps, integrates travel APIs/GDS systems, and runs digital marketing campaigns — helping travel, e-commerce, and business clients grow online.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 2,
-    subheading: 'General',
-    section_sort_order: 10,
-    question: 'What makes Revlytics different from a typical agency?',
-    answer: 'We combine technical development (websites, apps, API integrations) and marketing (SEO, PPC, social) under one roof, so the platform we build and the traffic we drive to it are always aligned.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 3,
-    subheading: 'General',
-    section_sort_order: 10,
-    question: 'Which locations/markets do you serve?',
-    answer: 'We work with clients across India and internationally, including travel businesses in the US, Canada, and other regions, delivering projects remotely with regular calls and updates.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-  {
-    id: 4,
-    subheading: 'General',
-    section_sort_order: 10,
-    question: 'How do I request a quote?',
-    answer: 'Contact us via the website form, email, or WhatsApp with your project details, and we\'ll schedule a free consultation before sending a detailed proposal.',
-    question_sort_order: 40,
-    is_active: 1,
-  },
-
-  // 2. Website & App Development
-  {
-    id: 5,
-    subheading: 'Website & App Development',
-    section_sort_order: 20,
-    question: 'How much does a website cost?',
-    answer: 'Pricing depends on the number of pages, design complexity, and functionality (e.g., booking engine vs informational site); we provide a custom quote after understanding your requirements.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 6,
-    subheading: 'Website & App Development',
-    section_sort_order: 20,
-    question: 'Do you build booking engines for flights, hotels, and tours?',
-    answer: 'Yes, this is one of our core specialties, including live pricing via GDS/API integration, search filters, and secure checkout.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 7,
-    subheading: 'Website & App Development',
-    section_sort_order: 20,
-    question: 'Can you redesign my existing website instead of building from scratch?',
-    answer: 'Yes, we can redesign and rebuild your existing site while preserving SEO value and improving speed, design, and conversions.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-  {
-    id: 8,
-    subheading: 'Website & App Development',
-    section_sort_order: 20,
-    question: 'Do you develop mobile apps as well as websites?',
-    answer: 'Yes, we build Android and iOS apps that can share the same backend and booking logic as your website.',
-    question_sort_order: 40,
-    is_active: 1,
-  },
-  {
-    id: 9,
-    subheading: 'Website & App Development',
-    section_sort_order: 20,
-    question: 'What CMS or platform will my website be built on?',
-    answer: 'We typically use WordPress for content-driven sites and custom code for complex booking/e-commerce platforms, recommending the best fit for your goals and budget.',
-    question_sort_order: 50,
-    is_active: 1,
-  },
-
-  // 3. Travel API & GDS Integration
-  {
-    id: 10,
-    subheading: 'Travel API & GDS Integration',
-    section_sort_order: 30,
-    question: 'Which GDS and travel APIs can you integrate?',
-    answer: 'Amadeus, Sabre, Travelpayouts, car rental APIs, and various white-label supplier APIs for flights, hotels, and cars.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 11,
-    subheading: 'Travel API & GDS Integration',
-    section_sort_order: 30,
-    question: 'Why do travel businesses need GDS integration?',
-    answer: 'It gives your platform real-time flight/hotel availability and pricing, letting customers search and book directly instead of relying on manual quotes or third-party sites.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 12,
-    subheading: 'Travel API & GDS Integration',
-    section_sort_order: 30,
-    question: 'Can you combine multiple suppliers into one search results page?',
-    answer: 'Yes, we build engines that query several APIs at once and merge the results, similar to a meta-search experience.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-  {
-    id: 13,
-    subheading: 'Travel API & GDS Integration',
-    section_sort_order: 30,
-    question: 'How long does API integration usually take?',
-    answer: 'Typically 4–8 weeks depending on the number of APIs, business logic (markup/commission rules), and the testing/certification process required by the provider.',
-    question_sort_order: 40,
-    is_active: 1,
-  },
-
-  // 4. E-Commerce
-  {
-    id: 14,
-    subheading: 'E-Commerce',
-    section_sort_order: 40,
-    question: 'Do you build Shopify or WooCommerce stores?',
-    answer: 'Yes, we build and customize stores on both platforms, and also develop fully custom e-commerce solutions for larger catalogs.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 15,
-    subheading: 'E-Commerce',
-    section_sort_order: 40,
-    question: 'Can you build a multi-vendor marketplace?',
-    answer: 'Yes, including vendor onboarding, dashboards, commissions, and order management.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 16,
-    subheading: 'E-Commerce',
-    section_sort_order: 40,
-    question: 'Will my store be optimized for mobile shopping?',
-    answer: 'Yes, every store is built mobile-first with a streamlined, fast checkout flow.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-
-  // 5. Digital Marketing (SEO, PPC, Social)
-  {
-    id: 17,
-    subheading: 'Digital Marketing (SEO, PPC, Social)',
-    section_sort_order: 50,
-    question: 'How long until SEO shows results?',
-    answer: 'Most clients see measurable ranking and traffic improvements within 3–6 months, with results compounding as authority builds.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 18,
-    subheading: 'Digital Marketing (SEO, PPC, Social)',
-    section_sort_order: 50,
-    question: 'Do you run PPC/Google Ads campaigns for travel bookings?',
-    answer: 'Yes, we run PPC campaigns optimized for cost-per-booking, not just clicks, specifically for flight, hotel, and tour searches.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 19,
-    subheading: 'Digital Marketing (SEO, PPC, Social)',
-    section_sort_order: 50,
-    question: 'Can you manage our social media accounts and content?',
-    answer: 'Yes, including content planning, creative, posting, and paid social campaigns.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-  {
-    id: 20,
-    subheading: 'Digital Marketing (SEO, PPC, Social)',
-    section_sort_order: 50,
-    question: 'Do you offer Amazon/Flipkart marketplace advertising?',
-    answer: 'Yes, we manage marketplace ad campaigns to boost product visibility and sales.',
-    question_sort_order: 40,
-    is_active: 1,
-  },
-  {
-    id: 21,
-    subheading: 'Digital Marketing (SEO, PPC, Social)',
-    section_sort_order: 50,
-    question: 'Is there a minimum contract length for marketing services?',
-    answer: 'We typically recommend a 3–6 month minimum for SEO to allow enough time to show measurable results; PPC and social can start on shorter monthly terms.',
-    question_sort_order: 50,
-    is_active: 1,
-  },
-
-  // 6. Support & Pricing
-  {
-    id: 22,
-    subheading: 'Support & Pricing',
-    section_sort_order: 60,
-    question: 'Do you offer post-launch maintenance and support?',
-    answer: 'Yes, we offer maintenance packages covering bug fixes, security updates, API monitoring, and content updates after your project goes live.',
-    question_sort_order: 10,
-    is_active: 1,
-  },
-  {
-    id: 23,
-    subheading: 'Support & Pricing',
-    section_sort_order: 60,
-    question: 'What payment terms do you follow?',
-    answer: 'Typically a milestone-based payment schedule (e.g., advance, mid-project, and final payment on delivery); exact terms are shared in the proposal.',
-    question_sort_order: 20,
-    is_active: 1,
-  },
-  {
-    id: 24,
-    subheading: 'Support & Pricing',
-    section_sort_order: 60,
-    question: 'Can I request ongoing feature additions after launch?',
-    answer: 'Yes, we support ongoing development as a retainer or per-project basis for new features, integrations, or redesigns.',
-    question_sort_order: 30,
-    is_active: 1,
-  },
-];
-
 export interface FaqAccordionProps {
+  /** Initial fallback data or custom items */
   initialFaqs?: FaqItem[];
+  /** The target database table / source to retrieve data from ('faq_page' | 'index_faqs' | 'service_faqs' | 'faqs') */
+  dbSource?: FaqDbSource;
+  /** Optional service slug for filtering service_faqs */
+  serviceSlug?: string;
+  /** Whether to show the database selector controls on top */
+  showDbSelector?: boolean;
+  /** Custom section title */
+  title?: string | React.ReactNode;
+  /** Custom section subtitle */
+  subtitle?: string;
+  /** Callback when DB source is changed */
+  onDbChange?: (selectedDb: FaqDbSource) => void;
 }
 
 interface FaqGroup {
@@ -245,35 +30,105 @@ interface FaqGroup {
   items: FaqItem[];
 }
 
-const FaqAccordion: React.FC<FaqAccordionProps> = ({ initialFaqs = ALL_FAQ_PAGE_DATA }) => {
+const DB_OPTIONS: { id: FaqDbSource; label: string; table: string; badge: string }[] = [
+  { id: 'faq_page', label: 'Dedicated FAQ Page', table: 'faq_page', badge: 'D1 Table' },
+  { id: 'index_faqs', label: 'Homepage FAQs', table: 'index_faqs', badge: 'D1 Table' },
+  { id: 'service_faqs', label: 'Service FAQs', table: 'service_faqs', badge: 'D1 Table' },
+  { id: 'faqs', label: 'General FAQs', table: 'faqs', badge: 'D1 Table' },
+];
+
+const FaqAccordion: React.FC<FaqAccordionProps> = ({
+  initialFaqs = [],
+  dbSource = 'faq_page',
+  serviceSlug,
+  showDbSelector = false,
+  title,
+  subtitle,
+  onDbChange,
+}) => {
+  const [activeDb, setActiveDb] = useState<FaqDbSource>(dbSource);
   const [faqs, setFaqs] = useState<FaqItem[]>(initialFaqs);
   const [openKey, setOpenKey] = useState<string | null>('group-0-item-0');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [dataSourceInfo, setDataSourceInfo] = useState<{ source: string; count: number; isLive: boolean }>({
+    source: dbSource,
+    count: 0,
+    isLive: false,
+  });
 
+  // Sync state if prop changes
+  useEffect(() => {
+    setActiveDb(dbSource);
+  }, [dbSource]);
+
+  // Fetch from the chosen DB source.
+  // NOTE: initialFaqs is only ever used as a fallback when activeDb still
+  // equals the dbSource the component was mounted/prop-updated with. If the
+  // user switches tables via the selector and that table comes back empty or
+  // errors, we show an empty state instead of silently re-showing
+  // initialFaqs — otherwise an empty "index_faqs" table would render
+  // leftover "faq_page" content and look like the same cross-source leak bug.
   useEffect(() => {
     let isMounted = true;
-    async function load() {
+    const isInitialSource = activeDb === dbSource;
+
+    async function loadData() {
+      setLoading(true);
       try {
-        const data = await fetchFaqPage();
-        if (isMounted && data && data.length > 0) {
-          setFaqs(data);
+        const data = await fetchFaqsByDb(activeDb, serviceSlug);
+        if (isMounted) {
+          if (data && data.length > 0) {
+            setFaqs(data);
+            setDataSourceInfo({ source: `D1: ${activeDb}`, count: data.length, isLive: true });
+          } else if (isInitialSource && initialFaqs.length > 0) {
+            setFaqs(initialFaqs);
+            setDataSourceInfo({ source: `${activeDb} (empty, using fallback)`, count: initialFaqs.length, isLive: false });
+          } else {
+            setFaqs([]);
+            setDataSourceInfo({ source: `${activeDb} (empty)`, count: 0, isLive: false });
+          }
         }
       } catch (err) {
-        console.warn('Failed to load FAQ page data from D1:', err);
+        console.warn(`Failed to retrieve FAQ data from ${activeDb}:`, err);
+        if (isMounted) {
+          if (isInitialSource && initialFaqs.length > 0) {
+            setFaqs(initialFaqs);
+            setDataSourceInfo({ source: `${activeDb} (offline fallback)`, count: initialFaqs.length, isLive: false });
+          } else {
+            setFaqs([]);
+            setDataSourceInfo({ source: `${activeDb} (error)`, count: 0, isLive: false });
+          }
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     }
-    load();
+
+    loadData();
+
     return () => {
       isMounted = false;
     };
-  }, []);
+    // dbSource/initialFaqs intentionally excluded: isInitialSource already
+    // captures dbSource per-render, and initialFaqs is only read, not a
+    // trigger for refetching.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDb, serviceSlug]);
 
-  // Group FAQs by subheading preserving sort order
+  const handleDbSelect = (source: FaqDbSource) => {
+    setActiveDb(source);
+    if (onDbChange) {
+      onDbChange(source);
+    }
+  };
+
+  // Group FAQs by subheading / category preserving sort order
   const groupedFaqs: FaqGroup[] = React.useMemo(() => {
     const groups: { [key: string]: FaqGroup } = {};
     const groupOrder: string[] = [];
 
     faqs.forEach((item) => {
-      const heading = item.subheading || 'General';
+      const heading = item.subheading || item.category || 'General';
       if (!groups[heading]) {
         groups[heading] = { subheading: heading, items: [] };
         groupOrder.push(heading);
@@ -293,17 +148,124 @@ const FaqAccordion: React.FC<FaqAccordionProps> = ({ initialFaqs = ALL_FAQ_PAGE_
   return (
     <>
       {/* FAQ Accordion Area */}
-      <div id="faq" className="tp-faq-area pb-130">
+      <div id="faq" className="tp-faq-area pb-130 position-relative">
         <div className="container">
+          {/* Optional Database Selector UI */}
+          {showDbSelector && (
+            <div className="row mb-40">
+              <div className="col-12">
+                <div
+                  className="p-4 rounded-4"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          backgroundColor: dataSourceInfo.isLive ? '#10b981' : '#f59e0b',
+                          boxShadow: dataSourceInfo.isLive ? '0 0 10px #10b981' : '0 0 10px #f59e0b',
+                        }}
+                      />
+                      <span className="text-white fw-600 fs-15">Select Database Source:</span>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-dark border border-secondary text-secondary px-3 py-2 rounded-pill fs-13">
+                        Active: <strong className="text-white">{dataSourceInfo.source}</strong> ({dataSourceInfo.count} items)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* DB Option Tabs / Buttons */}
+                  <div className="d-flex flex-wrap gap-2">
+                    {DB_OPTIONS.map((opt) => {
+                      const isSelected = activeDb === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => handleDbSelect(opt.id)}
+                          disabled={loading}
+                          className="btn btn-sm px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2"
+                          style={{
+                            background: isSelected ? '#ff3e6c' : 'rgba(255, 255, 255, 0.08)',
+                            color: '#ffffff',
+                            border: isSelected ? '1px solid #ff3e6c' : '1px solid rgba(255, 255, 255, 0.15)',
+                            transition: 'all 0.2s ease',
+                            cursor: loading ? 'wait' : 'pointer',
+                          }}
+                        >
+                          <span>{opt.label}</span>
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              opacity: 0.8,
+                              textTransform: 'uppercase',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: isSelected ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                            }}
+                          >
+                            {opt.table}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Header Title */}
           <div className="row">
             <div className="col-12">
+              {subtitle && (
+                <span className="text-uppercase fw-500 text-muted mb-2 d-inline-block">
+                  {subtitle}
+                </span>
+              )}
               <h2 className="tp-section-title reveal-text fs-72 mb-40">
-                Explore Answers to<br />
-                Our Most Asked Questions
+                {title || (
+                  <>
+                    Explore Answers to<br />
+                    Our Most Asked Questions
+                  </>
+                )}
               </h2>
             </div>
           </div>
 
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="row mb-40 text-center">
+              <div className="col-12">
+                <div className="spinner-border text-danger" role="status">
+                  <span className="visually-hidden">Loading FAQs from database...</span>
+                </div>
+                <p className="mt-2 text-muted fs-14">Retrieving FAQ records from D1 ({activeDb})...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && faqs.length === 0 && (
+            <div className="row mb-50">
+              <div className="col-12 text-center py-5">
+                <p className="text-muted fs-16">No FAQ records found in table: <strong>{activeDb}</strong>.</p>
+              </div>
+            </div>
+          )}
+
+          {/* FAQs List Grouped */}
           {groupedFaqs.map((group, groupIdx) => (
             <div className="row mb-50" key={group.subheading || groupIdx}>
               <div className="col-xxl-4 col-xl-3">

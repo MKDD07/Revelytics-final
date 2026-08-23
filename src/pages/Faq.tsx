@@ -11,9 +11,11 @@ const Faq: React.FC = () => {
       {/* FAQ Header */}
       <FaqHero />
 
-      {/* Accordion FAQ Sections */}
-      <FaqAccordion />
-
+      {/* Accordion FAQ Sections with Database Source Selection */}
+<FaqAccordion
+  dbSource="faq_page"
+  initialFaqs={[]}   // empty on purpose — don't seed with another table's data
+/>
       {/* Inquire CTA */}
       <Cta1 />
     </>
