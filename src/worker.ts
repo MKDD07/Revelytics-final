@@ -104,12 +104,14 @@ export default {
       });
     }
 
-    // 2. Serve Static Frontend Assets (if deployed with assets)
+    // 2. Serve Static Frontend Assets (SPA-aware)
     if (!path.startsWith('/api') && env.ASSETS) {
       const response = await env.ASSETS.fetch(request);
       if (response.status !== 404) {
         return response;
       }
+      // SPA fallback: serve index.html for unmatched client routes
+      return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
     }
 
     try {
