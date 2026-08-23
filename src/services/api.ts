@@ -41,11 +41,15 @@ export interface ServiceItem {
 }
 
 export interface FaqItem {
-  id: number;
+  id: number | string;
   question: string;
   answer: string;
+  subheading?: string;
+  section_sort_order?: number;
+  question_sort_order?: number;
   category?: string;
   order_index?: number;
+  is_active?: number;
 }
 
 export interface InquiryPayload {
@@ -143,17 +147,46 @@ export async function fetchServices(): Promise<ServiceItem[]> {
 }
 
 /**
- * Fetch all active FAQs from D1
+ * Fetch all active FAQs from D1 (supports optional params)
  */
-export async function fetchFaqs(): Promise<FaqItem[]> {
+export async function fetchFaqs(type?: 'index' | 'service' | 'page', serviceSlug?: string): Promise<FaqItem[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/faqs`);
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    if (serviceSlug) params.append('service', serviceSlug);
+
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/api/faqs${qs}`);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
     const json = await res.json();
     return json.data || [];
   } catch (err) {
     console.warn('Failed to fetch FAQs from D1 API:', err);
     return [];
   }
+}
+
+/**
+ * Fetch Homepage FAQs from index_faqs table
+ */
+export async function fetchIndexFaqs(): Promise<FaqItem[]> {
+  return fetchFaqs('index');
+}
+
+/**
+ * Fetch FAQ Page FAQs grouped/sorted from faq_page table
+ */
+export async function fetchFaqPage(): Promise<FaqItem[]> {
+  return fetchFaqs('page');
+}
+
+/**
+ * Fetch Service-specific FAQs from service_faqs table
+ */
+export async function fetchServiceFaqs(serviceSlug?: string): Promise<FaqItem[]> {
+  return fetchFaqs('service', serviceSlug);
 }
 
 /**

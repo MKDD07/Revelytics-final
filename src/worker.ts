@@ -197,6 +197,17 @@ export default {
             );
           `),
           env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS faq_page (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              subheading TEXT NOT NULL DEFAULT '',
+              section_sort_order INTEGER NOT NULL DEFAULT 0,
+              question TEXT NOT NULL,
+              answer TEXT,
+              question_sort_order INTEGER NOT NULL DEFAULT 0,
+              is_active INTEGER NOT NULL DEFAULT 1
+            );
+          `),
+          env.DB.prepare(`
             CREATE TABLE IF NOT EXISTS inquiries (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               name TEXT NOT NULL,
@@ -231,6 +242,14 @@ export default {
             (3, 'How does Revlytics help increase direct hotel bookings?', 'We optimize the entire booking funnel — from immersive visual storytelling and mobile checkout speed to automated analytics tracking and revenue optimization.', 3),
             (4, 'Can you integrate with our existing CRS and PMS booking engines?', 'Yes! We seamlessly integrate with major booking engines including SynXis, Sabre, Cloudbeds, Mews, SiteMinder, and custom direct booking APIs.', 4),
             (5, 'Do you provide ongoing monthly growth and design retainers?', 'Yes, we offer dedicated monthly partnerships covering continuous UX improvements, CRO experimentation, SEO optimization, and campaign assets.', 5);
+          `),
+          env.DB.prepare(`
+            INSERT OR IGNORE INTO faq_page (id, subheading, section_sort_order, question, answer, question_sort_order, is_active) VALUES
+            (1, 'Our FAQs', 1, 'What is Revlytics?', 'Revlytics is a full-service travel digital acceleration agency helping luxury resorts, boutique hotels, and global destination brands scale direct bookings through high-performance design, custom engineering, and growth strategy.', 1, 1),
+            (2, 'Our FAQs', 1, 'How long does a typical project take?', 'Project timelines vary depending on scope and requirements, but most design and development projects range between 2 to 6 weeks.', 2, 1),
+            (3, 'Our FAQs', 1, 'What makes Revlytics different from other agencies?', 'We focus on end-to-end strategy, rapid execution, and data-driven designs tailored specifically to scale modern luxury travel and hospitality brands.', 3, 1),
+            (4, 'Our FAQs', 1, 'Can you handle both design and development?', 'Yes! We provide full-stack services including brand strategy, UI/UX design, custom web development, and digital marketing.', 4, 1),
+            (5, 'Our FAQs', 1, 'Do you offer ongoing support after project delivery?', 'Absolutely. We provide flexible maintenance, optimization, and dedicated post-launch support packages to ensure long-term success.', 5, 1);
           `),
           // Seed Blogs
           env.DB.prepare(`
@@ -405,12 +424,87 @@ export default {
       // -----------------------------------------------------------------------
       // 3. FAQS API
       // -----------------------------------------------------------------------
-      if (path === '/api/faqs') {
+      if (path === '/api/faqs' || path === '/api/index-faqs' || path === '/api/faq-page' || path === '/api/service-faqs') {
         if (method === 'GET') {
-          const { results } = await env.DB.prepare(
-            'SELECT * FROM faqs WHERE is_active = 1 ORDER BY order_index ASC, id ASC'
-          ).all();
-          return jsonResponse({ success: true, count: results.length, data: results });
+          const type = url.searchParams.get('type') || (path === '/api/index-faqs' ? 'index' : path === '/api/faq-page' ? 'page' : path === '/api/service-faqs' ? 'service' : null);
+          const serviceSlug = url.searchParams.get('service') || url.searchParams.get('slug');
+
+          // If asking for faq_page (dedicated FAQ page)
+          if (type === 'page' || path === '/api/faq-page') {
+            try {
+              const res = await env.DB.prepare(
+                'SELECT id, subheading, section_sort_order, question, answer, question_sort_order, is_active FROM faq_page WHERE is_active = 1 ORDER BY section_sort_order ASC, question_sort_order ASC, id ASC'
+              ).all();
+              if (res?.results && res.results.length > 0) {
+                return jsonResponse({ success: true, count: res.results.length, data: res.results });
+              }
+            } catch (e) {
+              console.warn('faq_page query error:', e);
+            }
+          }
+
+          // If asking for index_faqs (homepage FAQs)
+          if (type === 'index' || path === '/api/index-faqs') {
+            try {
+              const res = await env.DB.prepare(
+                'SELECT id, question, answer, sort_order, is_active FROM index_faqs WHERE is_active = 1 ORDER BY sort_order ASC, id ASC'
+              ).all();
+              if (res?.results && res.results.length > 0) {
+                return jsonResponse({ success: true, count: res.results.length, data: res.results });
+              }
+            } catch (e) {
+              console.warn('index_faqs query error:', e);
+            }
+          }
+
+          // If asking for service_faqs
+          if (type === 'service' || path === '/api/service-faqs' || serviceSlug) {
+            try {
+              let query = 'SELECT * FROM service_faqs WHERE is_active = 1';
+              const params: any[] = [];
+              if (serviceSlug) {
+                query += ' AND service_slug = ?';
+                params.push(serviceSlug);
+              }
+              query += ' ORDER BY sort_order ASC, id ASC';
+              
+              const stmt = params.length > 0 ? env.DB.prepare(query).bind(...params) : env.DB.prepare(query);
+              const res = await stmt.all();
+              if (res?.results && res.results.length > 0) {
+                return jsonResponse({ success: true, count: res.results.length, data: res.results });
+              }
+            } catch (e) {
+              console.warn('service_faqs query error:', e);
+            }
+          }
+
+          // Default / Generic: Try index_faqs first, then faq_page, then faqs
+          try {
+            const indexFaqs = await env.DB.prepare(
+              'SELECT id, question, answer, sort_order, is_active FROM index_faqs WHERE is_active = 1 ORDER BY sort_order ASC, id ASC'
+            ).all();
+            if (indexFaqs?.results && indexFaqs.results.length > 0) {
+              return jsonResponse({ success: true, count: indexFaqs.results.length, data: indexFaqs.results });
+            }
+          } catch (e) {}
+
+          try {
+            const faqPageResult = await env.DB.prepare(
+              'SELECT id, question, answer, subheading, section_sort_order, question_sort_order, is_active FROM faq_page WHERE is_active = 1 ORDER BY section_sort_order ASC, question_sort_order ASC, id ASC'
+            ).all();
+            if (faqPageResult?.results && faqPageResult.results.length > 0) {
+              return jsonResponse({ success: true, count: faqPageResult.results.length, data: faqPageResult.results });
+            }
+          } catch (e) {}
+
+          try {
+            const { results } = await env.DB.prepare(
+              'SELECT * FROM faqs WHERE is_active = 1 ORDER BY order_index ASC, id ASC'
+            ).all();
+            return jsonResponse({ success: true, count: results?.length || 0, data: results || [] });
+          } catch (e: any) {
+            return jsonResponse({ success: true, count: 0, data: [] });
+          }
         }
 
         if (method === 'POST') {
@@ -418,14 +512,34 @@ export default {
           if (!auth.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
 
           const body = (await request.json()) as any;
-          const result = await env.DB.prepare(`
-            INSERT INTO faqs (question, answer, category, order_index)
-            VALUES (?, ?, ?, ?)
-          `)
-            .bind(body.question, body.answer, body.category || 'General', body.order_index || 0)
-            .run();
-
-          return jsonResponse({ success: true, id: result.meta.last_row_id }, 201);
+          
+          try {
+            const result = await env.DB.prepare(`
+              INSERT INTO index_faqs (question, answer, sort_order, is_active)
+              VALUES (?, ?, ?, 1)
+            `)
+              .bind(body.question, body.answer, body.sort_order || 10)
+              .run();
+            return jsonResponse({ success: true, id: result.meta.last_row_id }, 201);
+          } catch (e) {
+            try {
+              const result = await env.DB.prepare(`
+                INSERT INTO faq_page (question, answer, subheading, section_sort_order, question_sort_order, is_active)
+                VALUES (?, ?, ?, ?, ?, 1)
+              `)
+                .bind(body.question, body.answer, body.subheading || 'Our FAQs', body.section_sort_order || 1, body.question_sort_order || 0)
+                .run();
+              return jsonResponse({ success: true, id: result.meta.last_row_id }, 201);
+            } catch (e2) {
+              const result = await env.DB.prepare(`
+                INSERT INTO faqs (question, answer, category, order_index)
+                VALUES (?, ?, ?, ?)
+              `)
+                .bind(body.question, body.answer, body.category || 'General', body.order_index || 0)
+                .run();
+              return jsonResponse({ success: true, id: result.meta.last_row_id }, 201);
+            }
+          }
         }
       }
 

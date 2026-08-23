@@ -5,11 +5,11 @@ compatibility_date = "2024-09-23"
 [[d1_databases]]
 binding = "DB"
 database_name = "revlytics-db"
-database_id = "6f0f1928-9284-4184-8b0e-333ada672515"
+database_id = "939a2da3-3705-413d-a89f-dd10e1e08335"
 
 [vars]
 ENVIRONMENT = "production"
-API_URL = "https://revelytics.mkmkataria07.workers.dev"
+API_URL = "https://revelytics-final.mkmkataria07.workers.dev"
 
 [assets]
 directory = "./dist"

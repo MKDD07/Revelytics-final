@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchIndexFaqs, type FaqItem } from '../../services/api';
 
 // Arrow Icon Component
 const ArrowIcon = () => (
@@ -10,42 +11,68 @@ const ArrowIcon = () => (
   </svg>
 );
 
-// Structured FAQ Dataset
-const FAQ_DATA = [
+const FALLBACK_FAQS: FaqItem[] = [
   {
-    id: 'faq-1',
-    question: 'What is Cunnet?',
-    answer: 'Track your income and expenses easily with our app so you always know where your money is going and can make better financial decisions.',
+    id: 1,
+    question: 'What does Revlytics do?',
+    answer: 'Revlytics is a digital marketing and travel-technology company. We build and grow websites, booking engines, and apps for travel businesses (airlines, OTAs, DMCs, hotels, car rentals) as well as e-commerce and service brands — covering web design, web development, API integrations (GDS/flight/hotel), mobile apps, and full-funnel digital marketing (SEO, PPC, social media).',
   },
   {
-    id: 'faq-2',
-    question: 'How long does a typical project take?',
-    answer: 'Project timelines vary depending on scope and requirements, but most design and development projects range between 2 to 6 weeks.',
+    id: 2,
+    question: 'Which industries does Revlytics specialize in?',
+    answer: 'While we serve e-commerce, hospitality, and general businesses, our core strength is travel: flight and hotel booking platforms, tour and DMC websites, car rental portals, and travel marketplaces — combined with the digital marketing needed to drive bookings.',
   },
   {
-    id: 'faq-3',
-    question: 'What makes Cunnet different from other agencies?',
-    answer: 'We focus on end-to-end strategy, rapid execution, and data-driven designs tailored specifically to scale modern online businesses.',
+    id: 3,
+    question: 'What services are included under one roof at Revlytics?',
+    answer: 'Website design and development, custom web applications, GDS/travel API integration (Amadeus, Sabre, Travelpayouts, car rental APIs), mobile app development (Android/iOS), e-commerce development (Shopify/WooCommerce/custom), and digital marketing (SEO, PPC, social media, Amazon/Flipkart ads).',
   },
   {
-    id: 'faq-4',
-    question: 'Can you handle both design and development?',
-    answer: 'Yes! We provide full-stack services including brand strategy, UI/UX design, custom web development, and digital marketing.',
+    id: 4,
+    question: 'How is Revlytics different from a regular web design or SEO agency?',
+    answer: 'We combine engineering and marketing under one team. Instead of just designing a site or just running ads, we build the booking/e-commerce backend, integrate the APIs that power live pricing and availability, and then run the SEO/PPC/social campaigns that bring qualified traffic to convert on that backend.',
   },
   {
-    id: 'faq-5',
-    question: 'Do you offer ongoing support after project delivery?',
-    answer: 'Absolutely. We provide flexible maintenance, optimization, and dedicated post-launch support packages to ensure long-term success.',
+    id: 5,
+    question: 'Do you work with startups as well as established travel companies?',
+    answer: 'Yes. We work with early-stage travel and e-commerce startups that need an MVP website or app, as well as established agencies and DMCs that need to modernize, integrate new APIs, or scale their marketing.',
   },
 ];
 
-const Faq1 = () => {
+const Faq1: React.FC = () => {
   // Track open item index (default opens first item: 0)
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [faqs, setFaqs] = useState<FaqItem[]>(FALLBACK_FAQS);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFaqs() {
+      try {
+        const data = await fetchIndexFaqs();
+        if (isMounted && data && data.length > 0) {
+          setFaqs(data);
+        }
+      } catch (err) {
+        console.warn('Error fetching FAQs:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadFaqs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  const subheading = faqs[0]?.subheading || 'Our Faq';
 
   return (
     <div className="ca-faq-area pt-135 pb-145">
@@ -55,7 +82,7 @@ const Faq1 = () => {
           <div className="col-lg-5">
             <div className="ca-faq-title-wrap mb-40 tp_fade_anim" data-delay=".3">
               <span className="ca-team-subtitle text-uppercase d-block mb-15">
-                <span>[ </span>Our Faq<span> ]</span>
+                <span>[ </span>{subheading}<span> ]</span>
               </span>
               <img className="mb-10" src="assets/img/faq/faq-thumb.png" alt="FAQ thumbnail" width={300} />
               <h2 className="ca-section-title mb-15">Have Questions</h2>
@@ -78,11 +105,11 @@ const Faq1 = () => {
           <div className="col-xl-7">
             <div className="tp-faq ml-115">
               <div className="accordion" id="accordionExample">
-                {FAQ_DATA.map((item, index) => {
+                {faqs.map((item, index) => {
                   const isOpen = openIndex === index;
 
                   return (
-                    <div className="tp-faq-item tp_fade_anim" data-delay=".3" key={item.id}>
+                    <div className="tp-faq-item tp_fade_anim" data-delay=".3" key={item.id || index}>
                       <h2 className="accordion-header">
                         <button
                           className={`tp-faq-button ${!isOpen ? 'collapsed' : ''}`}
