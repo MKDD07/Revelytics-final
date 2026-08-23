@@ -2,7 +2,41 @@
  * =========================================================================
  * Revlytics Cloudflare Worker & D1 Database API
  * Domain: https://revelytics.mkmkataria07.workers.dev
- * Database ID: 6f0f1928-9284-4184-8b0e-333ada672515
+ * Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
+ * =========================================================================
+ *
+ * NOTE ON SCHEMA:
+ * The tables `index_faqs`, `service_faqs`, and `faq_page` already exist in
+ * the D1 database (created manually — see schema below). The `/api/setup`
+ * route no longer tries to (re)create or reseed them, since doing so was
+ * redundant and, for `service_faqs`, actually mismatched the real column
+ * set (real table has `service_slug NOT NULL`, `meta_title`,
+ * `meta_description`, `schema_type` — none of which the old worker knew
+ * about). All read/write routes below now target the real columns.
+ *
+ * CREATE TABLE index_faqs (
+ *   id INTEGER PRIMARY KEY AUTOINCREMENT,
+ *   question TEXT NOT NULL, answer TEXT,
+ *   sort_order INTEGER NOT NULL DEFAULT 0,
+ *   is_active INTEGER NOT NULL DEFAULT 1
+ * );
+ *
+ * CREATE TABLE service_faqs (
+ *   id INTEGER PRIMARY KEY AUTOINCREMENT,
+ *   service_slug TEXT NOT NULL, question TEXT NOT NULL,
+ *   answer TEXT, meta_title TEXT, meta_description TEXT,
+ *   schema_type TEXT DEFAULT 'FAQPage',
+ *   sort_order INTEGER NOT NULL DEFAULT 0,
+ *   is_active INTEGER NOT NULL DEFAULT 1
+ * );
+ *
+ * CREATE TABLE faq_page (
+ *   id INTEGER PRIMARY KEY AUTOINCREMENT,
+ *   subheading TEXT NOT NULL, section_sort_order INTEGER NOT NULL DEFAULT 0,
+ *   question TEXT NOT NULL, answer TEXT,
+ *   question_sort_order INTEGER NOT NULL DEFAULT 0,
+ *   is_active INTEGER NOT NULL DEFAULT 1
+ * );
  * =========================================================================
  */
 
@@ -126,14 +160,14 @@ export default {
         return jsonResponse({
           success: true,
           service: 'Revlytics Cloudflare D1 Worker API',
-          domain: 'https://revelytics-final.mkmkataria07.workers.dev',
+          domain: 'https://revelytics.mkmkataria07.workers.dev',
           databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
           status: 'healthy',
           endpoints: [
-            '/api/setup (POST/GET to initialize database schema & seeds)',
+            '/api/setup (POST/GET to initialize core schema & seeds — index_faqs/service_faqs/faq_page are pre-existing and untouched)',
             '/api/blogs (GET, POST, PUT, DELETE)',
             '/api/services (GET, POST, PUT, DELETE)',
-            '/api/faqs (GET, POST, PUT, DELETE)',
+            '/api/faqs (GET, POST, DELETE) — supports ?type=general|index|page|service',
             '/api/inquiries (GET, POST)',
             '/api/keys (GET, POST, verify)',
           ],
@@ -142,9 +176,12 @@ export default {
 
       // -----------------------------------------------------------------------
       // DATABASE SETUP & AUTO-MIGRATION ROUTE
+      // Only creates/seeds tables that are actually owned by this worker.
+      // index_faqs, service_faqs, and faq_page already exist in D1 with
+      // their own schema (see header comment) and are intentionally
+      // NOT created or reseeded here.
       // -----------------------------------------------------------------------
       if (path === '/api/setup' || path === '/api/init') {
-        // Create tables
         await env.DB.batch([
           env.DB.prepare(`
             CREATE TABLE IF NOT EXISTS api_keys (
@@ -196,40 +233,6 @@ export default {
             );
           `),
           env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS faq_page (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              subheading TEXT NOT NULL,
-              section_sort_order INTEGER NOT NULL DEFAULT 0,
-              question TEXT NOT NULL,
-              answer TEXT,
-              question_sort_order INTEGER NOT NULL DEFAULT 0,
-              is_active INTEGER NOT NULL DEFAULT 1
-            );
-          `),
-          // NEW: index_faqs table (homepage FAQs) — was missing, caused fallback to faq_page
-          env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS index_faqs (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              question TEXT NOT NULL,
-              answer TEXT NOT NULL,
-              sort_order INTEGER NOT NULL DEFAULT 0,
-              is_active INTEGER NOT NULL DEFAULT 1,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-          `),
-          // NEW: service_faqs table — was missing too
-          env.DB.prepare(`
-            CREATE TABLE IF NOT EXISTS service_faqs (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              service_slug TEXT,
-              question TEXT NOT NULL,
-              answer TEXT NOT NULL,
-              sort_order INTEGER NOT NULL DEFAULT 0,
-              is_active INTEGER NOT NULL DEFAULT 1,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-          `),
-          env.DB.prepare(`
             CREATE TABLE IF NOT EXISTS inquiries (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               name TEXT NOT NULL,
@@ -265,22 +268,6 @@ export default {
             (4, 'Can you integrate with our existing CRS and PMS booking engines?', 'Yes! We seamlessly integrate with major booking engines including SynXis, Sabre, Cloudbeds, Mews, SiteMinder, and custom direct booking APIs.', 4),
             (5, 'Do you provide ongoing monthly growth and design retainers?', 'Yes, we offer dedicated monthly partnerships covering continuous UX improvements, CRO experimentation, SEO optimization, and campaign assets.', 5);
           `),
-          // Seed faq_page (dedicated FAQ page)
-          env.DB.prepare(`
-            INSERT OR IGNORE INTO faq_page (id, subheading, section_sort_order, question, answer, question_sort_order, is_active) VALUES
-            (1, 'Our FAQs', 1, 'What is Revlytics?', 'Revlytics is a full-service travel digital acceleration agency helping luxury resorts, boutique hotels, and global destination brands scale direct bookings through high-performance design, custom engineering, and growth strategy.', 1, 1),
-            (2, 'Our FAQs', 1, 'How long does a typical project take?', 'Project timelines vary depending on scope and requirements, but most design and development projects range between 2 to 6 weeks.', 2, 1),
-            (3, 'Our FAQs', 1, 'What makes Revlytics different from other agencies?', 'We focus on end-to-end strategy, rapid execution, and data-driven designs tailored specifically to scale modern luxury travel and hospitality brands.', 3, 1),
-            (4, 'Our FAQs', 1, 'Can you handle both design and development?', 'Yes! We provide full-stack services including brand strategy, UI/UX design, custom web development, and digital marketing.', 4, 1),
-            (5, 'Our FAQs', 1, 'Do you offer ongoing support after project delivery?', 'Absolutely. We provide flexible maintenance, optimization, and dedicated post-launch support packages to ensure long-term success.', 5, 1);
-          `),
-          // NEW: Seed index_faqs (homepage FAQs) — distinct copy so it's visibly separate from faq_page
-          env.DB.prepare(`
-            INSERT OR IGNORE INTO index_faqs (id, question, answer, sort_order, is_active) VALUES
-            (1, 'What does Revlytics do?', 'We help luxury resorts and hospitality brands increase direct bookings through design, engineering, and growth strategy.', 1, 1),
-            (2, 'Who is Revlytics for?', 'Boutique hotels, luxury resorts, and global destination brands looking to reduce OTA dependency and grow direct revenue.', 2, 1),
-            (3, 'How do I get started?', 'Reach out through our contact form and our team will schedule an initial discovery call within 48 hours.', 3, 1);
-          `),
           // Seed blogs
           env.DB.prepare(`
             INSERT OR IGNORE INTO blogs (id, slug, title, tag, image_url, summary) VALUES
@@ -292,7 +279,7 @@ export default {
 
         return jsonResponse({
           success: true,
-          message: 'Cloudflare D1 tables initialized and seeded successfully.',
+          message: 'Core Cloudflare D1 tables initialized and seeded successfully. (index_faqs, service_faqs, faq_page were left untouched — they already exist.)',
           databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
         });
       }
@@ -452,14 +439,14 @@ export default {
       }
 
       // -----------------------------------------------------------------------
-      // 3. FAQS API
+      // 3. FAQS API (general `faqs`, `index_faqs`, `faq_page`, `service_faqs`)
       // -----------------------------------------------------------------------
       if (path === '/api/faqs' || path === '/api/index-faqs' || path === '/api/faq-page' || path === '/api/service-faqs') {
         if (method === 'GET') {
           const type = url.searchParams.get('type') || (path === '/api/index-faqs' ? 'index' : path === '/api/faq-page' ? 'page' : path === '/api/service-faqs' ? 'service' : null);
           const serviceSlug = url.searchParams.get('service') || url.searchParams.get('slug');
 
-          // If asking for faq_page (dedicated FAQ page)
+          // faq_page (dedicated FAQ page)
           if (type === 'page' || path === '/api/faq-page') {
             try {
               const res = await env.DB.prepare(
@@ -472,7 +459,7 @@ export default {
             }
           }
 
-          // If asking for index_faqs (homepage FAQs)
+          // index_faqs (homepage FAQs)
           if (type === 'index' || path === '/api/index-faqs') {
             try {
               const res = await env.DB.prepare(
@@ -485,10 +472,11 @@ export default {
             }
           }
 
-          // If asking for service_faqs
+          // service_faqs — real schema includes meta_title, meta_description, schema_type
           if (type === 'service' || path === '/api/service-faqs' || serviceSlug) {
             try {
-              let query = 'SELECT * FROM service_faqs WHERE is_active = 1';
+              let query =
+                'SELECT id, service_slug, question, answer, meta_title, meta_description, schema_type, sort_order, is_active FROM service_faqs WHERE is_active = 1';
               const params: any[] = [];
               if (serviceSlug) {
                 query += ' AND service_slug = ?';
@@ -505,7 +493,7 @@ export default {
             }
           }
 
-          // If asking for general / faqs table
+          // general faqs table
           if (type === 'general' || type === 'faqs') {
             try {
               const { results } = await env.DB.prepare(
@@ -518,9 +506,7 @@ export default {
             }
           }
 
-          // No type specified at all: default to general faqs table only.
-          // (Removed the old index->page->faqs silent-fallback chain that
-          // caused index_faqs requests to render faq_page content.)
+          // No type specified: default to general faqs table only.
           try {
             const { results } = await env.DB.prepare(
               'SELECT * FROM faqs WHERE is_active = 1 ORDER BY order_index ASC, id ASC'
@@ -538,7 +524,6 @@ export default {
           const body = (await request.json()) as any;
           const type = body.type || url.searchParams.get('type');
 
-          // Explicit table targeting based on `type` in body, defaulting to `faqs`.
           if (type === 'index') {
             const result = await env.DB.prepare(`
               INSERT INTO index_faqs (question, answer, sort_order, is_active)
@@ -560,11 +545,23 @@ export default {
           }
 
           if (type === 'service') {
+            // service_slug is NOT NULL in the real schema — required.
+            if (!body.service_slug && !body.serviceSlug) {
+              return jsonResponse({ error: 'service_slug is required for service FAQs' }, 400);
+            }
             const result = await env.DB.prepare(`
-              INSERT INTO service_faqs (service_slug, question, answer, sort_order, is_active)
-              VALUES (?, ?, ?, ?, 1)
+              INSERT INTO service_faqs (service_slug, question, answer, meta_title, meta_description, schema_type, sort_order, is_active)
+              VALUES (?, ?, ?, ?, ?, ?, ?, 1)
             `)
-              .bind(body.service_slug || body.serviceSlug || null, body.question, body.answer, body.sort_order || 0)
+              .bind(
+                body.service_slug || body.serviceSlug,
+                body.question,
+                body.answer,
+                body.meta_title || null,
+                body.meta_description || null,
+                body.schema_type || 'FAQPage',
+                body.sort_order || 0
+              )
               .run();
             return jsonResponse({ success: true, id: result.meta.last_row_id }, 201);
           }
@@ -696,9 +693,10 @@ export default {
         if (method === 'GET') {
           const query = url.searchParams.get('query') || 'luxury resort travel';
           const perPage = url.searchParams.get('per_page') || '15';
-          const apiKey =
-            env.PEXELS_API_KEY ||
-            'y6WP5reQNH7abdL2uzdLTyV8pq0kMmF3CHf7ZNkiHo98DXIvORUOBSfi';
+          const apiKey = env.PEXELS_API_KEY;
+          if (!apiKey) {
+            return jsonResponse({ error: 'PEXELS_API_KEY is not configured on this worker.' }, 500);
+          }
 
           const res = await fetch(
             `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
@@ -715,9 +713,10 @@ export default {
         if (method === 'GET') {
           const query = url.searchParams.get('query') || 'tropical travel';
           const perPage = url.searchParams.get('per_page') || '10';
-          const apiKey =
-            env.PEXELS_API_KEY ||
-            'y6WP5reQNH7abdL2uzdLTyV8pq0kMmF3CHf7ZNkiHo98DXIvORUOBSfi';
+          const apiKey = env.PEXELS_API_KEY;
+          if (!apiKey) {
+            return jsonResponse({ error: 'PEXELS_API_KEY is not configured on this worker.' }, 500);
+          }
 
           const res = await fetch(
             `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
