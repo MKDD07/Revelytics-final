@@ -38,6 +38,7 @@ export interface Env {
   ENVIRONMENT?: string;
   API_URL?: string;
   MASTER_API_KEY?: string;
+  PEXELS_API_KEY?: string;
 }
 
 // Global CORS Headers
@@ -532,6 +533,47 @@ export default {
             authenticated: auth.valid,
             keyData: auth.keyData || null,
           });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 6. PEXELS API PROXY (Using worker PEXELS_API_KEY)
+      // -----------------------------------------------------------------------
+      if (path === '/api/pexels/photos' || path === '/api/pexels') {
+        if (method === 'GET') {
+          const query = url.searchParams.get('query') || 'luxury resort travel';
+          const perPage = url.searchParams.get('per_page') || '15';
+          const apiKey =
+            env.PEXELS_API_KEY ||
+            'y6WP5reQNH7abdL2uzdLTyV8pq0kMmF3CHf7ZNkiHo98DXIvORUOBSfi';
+
+          const res = await fetch(
+            `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
+            {
+              headers: { Authorization: apiKey },
+            }
+          );
+          const data = await res.json();
+          return jsonResponse(data, res.status);
+        }
+      }
+
+      if (path === '/api/pexels/videos') {
+        if (method === 'GET') {
+          const query = url.searchParams.get('query') || 'tropical travel';
+          const perPage = url.searchParams.get('per_page') || '10';
+          const apiKey =
+            env.PEXELS_API_KEY ||
+            'y6WP5reQNH7abdL2uzdLTyV8pq0kMmF3CHf7ZNkiHo98DXIvORUOBSfi';
+
+          const res = await fetch(
+            `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
+            {
+              headers: { Authorization: apiKey },
+            }
+          );
+          const data = await res.json();
+          return jsonResponse(data, res.status);
         }
       }
 
