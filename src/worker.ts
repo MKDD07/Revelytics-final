@@ -126,8 +126,8 @@ export default {
         return jsonResponse({
           success: true,
           service: 'Revlytics Cloudflare D1 Worker API',
-          domain: 'https://revelytics.mkmkataria07.workers.dev',
-          databaseId: '6f0f1928-9284-4184-8b0e-333ada672515',
+          domain: 'https://revelytics-final.mkmkataria07.workers.dev',
+          databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
           status: 'healthy',
           endpoints: [
             '/api/setup (POST/GET to initialize database schema & seeds)',
@@ -293,7 +293,7 @@ export default {
         return jsonResponse({
           success: true,
           message: 'Cloudflare D1 tables initialized and seeded successfully.',
-          databaseId: '6f0f1928-9284-4184-8b0e-333ada672515',
+          databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
         });
       }
 
