@@ -41,9 +41,9 @@ const FAQ_DATA = [
 
 const Faq1 = () => {
   // Track open item index (default opens first item: 0)
-  const [openIndex, setOpenIndex] = useState(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const toggleFaq = (index) => {
+  const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 

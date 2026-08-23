@@ -6,8 +6,35 @@
  * =========================================================================
  */
 
+// Cloudflare D1 Type Definitions
+export interface D1Result<T = unknown> {
+  results: T[];
+  success: boolean;
+  meta: {
+    last_row_id: number;
+    changes: number;
+    duration: number;
+    rows_read: number;
+    rows_written: number;
+  };
+}
+
+export interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  first<T = unknown>(colName?: string): Promise<T | null>;
+  run<T = unknown>(): Promise<D1Result<T>>;
+  all<T = unknown>(): Promise<D1Result<T>>;
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+  exec(query: string): Promise<D1Result>;
+}
+
 export interface Env {
   DB: D1Database;
+  ASSETS?: { fetch: (request: Request) => Promise<Response> };
   ENVIRONMENT?: string;
   API_URL?: string;
   MASTER_API_KEY?: string;
@@ -76,11 +103,24 @@ export default {
       });
     }
 
+    // 2. Serve Static Frontend Assets (if deployed with assets)
+    if (!path.startsWith('/api') && env.ASSETS) {
+      const response = await env.ASSETS.fetch(request);
+      if (response.status !== 404) {
+        return response;
+      }
+    }
+
     try {
       // -----------------------------------------------------------------------
       // ROOT & HEALTH CHECK
       // -----------------------------------------------------------------------
       if (path === '/' || path === '/api' || path === '/api/health') {
+        // If assets binding is present, let root serve index.html
+        if (env.ASSETS && path === '/') {
+          return await env.ASSETS.fetch(request);
+        }
+
         return jsonResponse({
           success: true,
           service: 'Revlytics Cloudflare D1 Worker API',
