@@ -152,7 +152,7 @@ const WhyChooseUs: React.FC<ServiceDetailsWhyChooseUsProps> = ({ slug: propSlug 
   return (
     <>
       {/* Why Choose Us / Service FAQ 1 Section */}
-      <div className="tp-faq-area pb-130">
+      <div className="tp-faq-area pb-130 pt-60">
         <div className="container">
           <div className="row">
             <div className="col-xxl-5 col-xl-3">

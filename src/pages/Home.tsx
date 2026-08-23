@@ -35,7 +35,11 @@ const Home: React.FC = () => {
       <About1 />
 
       {/* 4. Travel Specialties & Strategic Capabilities */}
-      <ResumeSpecialties />
+      <ResumeSpecialties
+        bannerHeight="600px"
+        showCategoryBanner={true}
+        showServicesList={false}
+      />
 
       {/* 5. Core Travel Services (Booking UX, Branding, SEO) */}
       <Service1 />

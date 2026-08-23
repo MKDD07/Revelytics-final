@@ -18,7 +18,7 @@ const Faq = () => {
         if (isMounted) {
           // Limit to first 5 items to match the layout size, or show all. 
           // We'll show all but flatten the groups since this layout doesn't use subheadings.
-          setFaqs(data);
+         setFaqs(data);
         }
       } catch (error) {
         console.error('Failed to load portfolio FAQs:', error);
@@ -38,7 +38,7 @@ const Faq = () => {
 
   return (
     <>{ /* Portfolio 2 FAQ Section (from portfolio-2-light.html) */ }
-    <div id="faq" className="tp-faq-area pb-130">
+    <div id="faq" className="tp-faq-area pb-130 pt-60">
        <div className="container">
           <div className="row">
              <div className="col-xxl-4 col-xl-3">

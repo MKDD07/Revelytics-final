@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import { fetchServices, type ServiceItem } from '../../../services/api';
 import { searchPexelsPhotos } from '../../../services/pexels';
 
 // ==================================================
-// START: ResumeSpecialties (Category Grouped with Parallax Banners)
-// Connected with D1 `services` Table & GSAP Parallax
+// START: ResumeSpecialties (Stacking Sticky Parallax Cards)
+// Supports GSAP ScrollTrigger Card Stacking, Configurable Card Size, Descriptions & CTA Buttons
 // ==================================================
 
 export interface ResumeSpecialtiesProps {
@@ -13,6 +14,9 @@ export interface ResumeSpecialtiesProps {
   initialServices?: ServiceItem[];
   specialtiesData?: ServiceItem[];
   limit?: number;
+  bannerHeight?: string | number; // Configurable Card Size (default: 600px)
+  showCategoryBanner?: boolean; // Enable or disable category banners
+  showServicesList?: boolean; // Enable or disable services list container
 }
 
 const FALLBACK_CATEGORY_IMAGES: Record<string, string> = {
@@ -28,6 +32,21 @@ const FALLBACK_CATEGORY_IMAGES: Record<string, string> = {
     'https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&w=1200&fit=crop',
   'digital-marketing':
     'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg?auto=compress&cs=tinysrgb&w=1200&fit=crop',
+};
+
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'web-design':
+    'Crafting user-centric UI/UX architectures, interactive wireframes, and scalable design systems that drive customer engagement and product adoption.',
+  'web-development':
+    'Building modern, performant web applications with cutting-edge frontend frameworks, optimized rendering, and robust backend architectures.',
+  'api-integration':
+    'Architecting high-speed RESTful APIs, third-party connectors, and automated cloud workflows built for maximum reliability and security.',
+  'app-development':
+    'Developing cross-platform and native iOS & Android applications engineered for fluid 60fps performance and intuitive user journeys.',
+  'e-commerce-solutions':
+    'Creating high-converting digital storefronts, frictionless checkout flows, and automated inventory systems for modern commerce.',
+  'digital-marketing':
+    'Driving sustainable revenue growth through precision SEO optimization, programmatic campaigns, and conversion rate optimization.',
 };
 
 const DEFAULT_IMAGE =
@@ -48,87 +67,76 @@ const normalizeSlug = (title: string, existingSlug?: string): string => {
 interface CategorySection {
   slug: string;
   name: string;
+  primaryServiceSlug: string;
   items: ServiceItem[];
 }
 
 const CategoryBanner: React.FC<{
   categoryName: string;
   categorySlug: string;
+  primaryServiceSlug: string;
   serviceCount: number;
   bannerImage: string;
-}> = ({ categoryName, categorySlug, serviceCount, bannerImage }) => {
+  height: string;
+  onNavigate: (path: string, e: React.MouseEvent) => void;
+}> = ({
+  categoryName,
+  categorySlug,
+  primaryServiceSlug,
+  serviceCount,
+  bannerImage,
+  height,
+  onNavigate,
+}) => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // GSAP ScrollTrigger Parallax for each category banner
-  useEffect(() => {
-    if (!bannerRef.current || !imgRef.current) return;
-    const gsap = (window as any).gsap;
-    const ScrollTrigger = (window as any).ScrollTrigger;
-
-    if (gsap && ScrollTrigger) {
-      const tween = gsap.fromTo(
-        imgRef.current,
-        { yPercent: -12, scale: 1.12 },
-        {
-          yPercent: 12,
-          scale: 1.12,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: bannerRef.current,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: 1.2,
-            invalidateOnRefresh: true,
-          },
-        }
-      );
-
-      return () => {
-        if (tween.scrollTrigger) {
-          tween.scrollTrigger.kill();
-        }
-        tween.kill();
-      };
-    }
-  }, [bannerImage]);
+  const description =
+    CATEGORY_DESCRIPTIONS[categorySlug] ||
+    `Explore our specialized capabilities and proven frameworks engineered to elevate your ${categoryName.toLowerCase()} solutions.`;
 
   return (
     <div
       ref={bannerRef}
-      className="category-parallax-banner mb-40 mt-60 fix position-relative"
+      className="category-parallax-banner category-stacking-card mb-40 mt-30 fix position-relative"
       id={`category-${categorySlug}`}
       style={{
-        height: '400px',
-        borderRadius: '20px',
+        height,
+        borderRadius: '24px',
         overflow: 'hidden',
         position: 'relative',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+        willChange: 'transform, opacity',
+        transformOrigin: 'top center',
+        backgroundColor: '#0c0c0c',
       }}
     >
+      {/* Background Image */}
       <img
         ref={imgRef}
         src={bannerImage}
         alt={categoryName}
         style={{
           position: 'absolute',
-          top: '-15%',
+          top: 0,
           left: 0,
           width: '100%',
-          height: '130%',
+          height: '100%',
           objectFit: 'cover',
-          willChange: 'transform',
         }}
       />
+
+      {/* Dark Cinematic Gradient Overlay */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.7) 100%)',
+            'linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.75) 100%)',
           pointerEvents: 'none',
         }}
       />
+
       {/* Large Decorative Duplicate Solid Overlay Text from Right */}
       <div
         className="category-watermark-text position-absolute user-select-none pointer-events-none d-none d-md-block"
@@ -136,14 +144,14 @@ const CategoryBanner: React.FC<{
           right: '-25px',
           top: '50%',
           transform: 'translateY(-50%)',
-          fontSize: 'clamp(85px, 13vw, 190px)',
+          fontSize: 'clamp(90px, 14vw, 210px)',
           fontWeight: 900,
           lineHeight: 0.8,
           textTransform: 'uppercase',
           whiteSpace: 'nowrap',
           color: 'rgba(255, 255, 255, 0.08)',
           zIndex: 1,
-          letterSpacing: '-3px',
+          letterSpacing: '-4px',
           fontFamily: 'var(--tp-ff-sequel-bold, sans-serif)',
           pointerEvents: 'none',
         }}
@@ -151,29 +159,24 @@ const CategoryBanner: React.FC<{
         {categoryName}
       </div>
 
+      {/* Foreground Content */}
       <div
-        className="d-flex align-items-center justify-content-between h-100 p-4 p-md-5 position-relative"
+        className="d-flex flex-column justify-content-between h-100 p-4 p-md-5 position-relative"
         style={{ zIndex: 2 }}
       >
-        <div>
+        {/* Top Header Badge */}
+        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
           <span
-            className="text-uppercase fw-600 mb-2 d-inline-block"
+            className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
             style={{
-              fontSize: '13px',
+              fontSize: '12px',
               letterSpacing: '2px',
-              color: 'var(--tp-theme-primary, #ff3c00)',
+              color: '#ffffff',
+              backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
             }}
           >
             Service Category
           </span>
-          <h3
-            className="m-0 text-white tp-ff-sequel-bold-head"
-            style={{ fontSize: 'clamp(26px, 3.5vw, 42px)' }}
-          >
-            {categoryName}
-          </h3>
-        </div>
-        <div className="d-none d-sm-block text-end">
           <span
             className="badge rounded-pill px-3 py-2"
             style={{
@@ -186,6 +189,55 @@ const CategoryBanner: React.FC<{
           >
             {serviceCount} {serviceCount === 1 ? 'Capability' : 'Capabilities'}
           </span>
+        </div>
+
+        {/* Bottom Content with Heading, Description & Action Button */}
+        <div style={{ maxWidth: '680px' }}>
+          <h3
+            className="m-0 text-white tp-ff-sequel-bold-head mb-3"
+            style={{ fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1.1 }}
+          >
+            {categoryName}
+          </h3>
+          <p
+            className="text-white mb-4"
+            style={{
+              fontSize: 'clamp(15px, 1.25vw, 18px)',
+              lineHeight: 1.6,
+              opacity: 0.9,
+              maxWidth: '560px',
+            }}
+          >
+            {description}
+          </p>
+          <a
+            href={`/services/${primaryServiceSlug}`}
+            onClick={(e) => onNavigate(`/services/${primaryServiceSlug}`, e)}
+            className="d-inline-flex align-items-center gap-2 text-decoration-none"
+            style={{
+              padding: '14px 30px',
+              borderRadius: '50px',
+              fontWeight: 600,
+              fontSize: '15px',
+              backgroundColor: '#ffffff',
+              color: '#000000',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
+              transition: 'transform 0.25s ease, background-color 0.25s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--tp-theme-primary, #ff3c00)';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffffff';
+              e.currentTarget.style.color = '#000000';
+              e.currentTarget.style.transform = 'none';
+            }}
+          >
+            <span>Explore {categoryName}</span>
+            <ArrowUpRight size={18} />
+          </a>
         </div>
       </div>
     </div>
@@ -204,6 +256,9 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   initialServices,
   specialtiesData,
   limit = 0,
+  bannerHeight = '600px',
+  showCategoryBanner = true,
+  showServicesList = true,
 }) => {
   const [services, setServices] = useState<ServiceItem[]>(
     initialServices || specialtiesData || []
@@ -216,6 +271,11 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   );
 
   const imageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  const cardHeightStr = useMemo(() => {
+    if (typeof bannerHeight === 'number') return `${bannerHeight}px`;
+    return bannerHeight || '600px';
+  }, [bannerHeight]);
 
   // 1. Fetch Services from D1
   useEffect(() => {
@@ -247,58 +307,39 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   const categorySections: CategorySection[] = useMemo(() => {
     if (!services || services.length === 0) return [];
 
-    // If limit is set (e.g. Home page limit=6), select one flagship per category
-    if (limit && limit > 0) {
-      const seenCategories = new Set<string>();
-      const flagshipItems: ServiceItem[] = [];
-
-      for (const item of services) {
-        const catSlug =
-          item.category_slug ||
-          (item.category_name && item.category_name.toLowerCase().replace(/[^a-z0-9]+/g, '-')) ||
-          'general';
-
-        if (!seenCategories.has(catSlug)) {
-          seenCategories.add(catSlug);
-          flagshipItems.push(item);
-          if (flagshipItems.length === limit) break;
-        }
-      }
-
-      return [
-        {
-          slug: 'featured-services',
-          name: 'Featured Capabilities',
-          items: flagshipItems,
-        },
-      ];
-    }
-
-    // When limit is 0 (Services page), group all services under their respective categories
-    const groups: Record<string, { name: string; items: ServiceItem[] }> = {};
+    const groups: Record<string, { name: string; primarySlug: string; items: ServiceItem[] }> = {};
 
     for (const item of services) {
       const catName = item.category_name || item.category || 'Core Services';
       const catSlug =
         item.category_slug || catName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const serviceSlug = item.service_slug || 'ui-ux-design';
 
       if (!groups[catSlug]) {
         groups[catSlug] = {
           name: catName,
+          primarySlug: serviceSlug,
           items: [],
         };
       }
       groups[catSlug].items.push(item);
     }
 
-    return Object.keys(groups).map((slug) => ({
+    let list = Object.keys(groups).map((slug) => ({
       slug,
       name: groups[slug].name,
+      primaryServiceSlug: groups[slug].primarySlug,
       items: groups[slug].items,
     }));
+
+    if (limit && limit > 0) {
+      list = list.slice(0, limit);
+    }
+
+    return list;
   }, [services, limit]);
 
-  // 3. Fetch Pexels Photography for each service & category banner
+  // 3. Fetch Pexels Photography
   useEffect(() => {
     if (services.length === 0) return;
 
@@ -308,7 +349,6 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
       const imgMap: Record<number, string> = {};
       const bannerMap: Record<string, string> = {};
 
-      // Category Banners
       await Promise.all(
         categorySections.map(async (cat) => {
           if (FALLBACK_CATEGORY_IMAGES[cat.slug]) {
@@ -321,12 +361,11 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
               bannerMap[cat.slug] = photos[0];
             }
           } catch {
-            // fallback used
+            // fallback
           }
         })
       );
 
-      // Service hover cards
       await Promise.all(
         services.map(async (s) => {
           const query = `${s.category_name || 'technology'} ${s.title}`;
@@ -362,7 +401,52 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
     };
   }, [categorySections, services]);
 
-  // 4. GSAP Hover Interactions allowing overflow on top of other cards
+  // 4. GSAP Stacking / Sticky Card Animation
+  // Cards pin at top, and as the next card arrives at viewport center, the current card scales down to 80% and moves up
+  useEffect(() => {
+    if (!showCategoryBanner || showServicesList) return;
+
+    const timer = setTimeout(() => {
+      const gsap = (window as any).gsap;
+      const ScrollTrigger = (window as any).ScrollTrigger;
+      if (!gsap || !ScrollTrigger) return;
+
+      const cards = document.querySelectorAll('.category-stacking-card');
+      if (cards.length === 0) return;
+
+      const triggers: any[] = [];
+
+      cards.forEach((card, index) => {
+        if (index < cards.length - 1) {
+          const nextCard = cards[index + 1];
+          const st = ScrollTrigger.create({
+            trigger: card,
+            start: 'top top+=90',
+            endTrigger: nextCard,
+            end: 'top top+=90',
+            pin: true,
+            pinSpacing: false,
+            scrub: true,
+            animation: gsap.to(card, {
+              scale: 0.8,
+              opacity: 0.6,
+              yPercent: -8,
+              ease: 'none',
+            }),
+          });
+          triggers.push(st);
+        }
+      });
+
+      return () => {
+        triggers.forEach((t) => t.kill());
+      };
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [categorySections, showCategoryBanner, showServicesList]);
+
+  // 5. GSAP Hover Handlers
   const handleMouseEnter = (id: number, e: React.MouseEvent<HTMLAnchorElement>) => {
     e.currentTarget.style.zIndex = '30';
     const el = imageRefs.current[id];
@@ -420,10 +504,9 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
     }
   };
 
-  const handleNavigateToServiceDetails = (slug: string, e: React.MouseEvent) => {
+  const handleNavigate = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    const targetPath = `/service-details/${slug}`;
-    window.history.pushState({}, '', targetPath);
+    window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -459,132 +542,137 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
 
                 return (
                   <div key={category.slug} className="category-service-group mb-60">
-                    {/* Category Top Parallax Banner (shown when divided by category) */}
-                    {limit === 0 && (
+                    {/* Category Stacking Sticky Banner */}
+                    {showCategoryBanner && (
                       <CategoryBanner
                         categoryName={category.name}
                         categorySlug={category.slug}
+                        primaryServiceSlug={category.primaryServiceSlug}
                         serviceCount={category.items.length}
                         bannerImage={bannerPhoto}
+                        height={cardHeightStr}
+                        onNavigate={handleNavigate}
                       />
                     )}
 
                     {/* Category Services List Container */}
-                    <div
-                      className="inner-service-2-wrap about-me-resume-wrap mt-20"
-                      style={{ overflow: 'visible' }}
-                    >
-                      {category.items.map((item, index) => {
-                        const serviceSlug = normalizeSlug(item.title, item.service_slug);
-                        const displayDateOrCategory =
-                          item.subheading ||
-                          item.category_name ||
-                          item.category ||
-                          item.years ||
-                          `0${index + 1}`;
+                    {showServicesList && (
+                      <div
+                        className="inner-service-2-wrap about-me-resume-wrap mt-20"
+                        style={{ overflow: 'visible' }}
+                      >
+                        {category.items.map((item, index) => {
+                          const serviceSlug = normalizeSlug(item.title, item.service_slug);
+                          const displayDateOrCategory =
+                            item.subheading ||
+                            item.category_name ||
+                            item.category ||
+                            item.years ||
+                            `0${index + 1}`;
 
-                        const photoUrl =
-                          serviceImages[item.id] ||
-                          (item.category_slug && FALLBACK_CATEGORY_IMAGES[item.category_slug]) ||
-                          DEFAULT_IMAGE;
+                          const photoUrl =
+                            serviceImages[item.id] ||
+                            (item.category_slug && FALLBACK_CATEGORY_IMAGES[item.category_slug]) ||
+                            DEFAULT_IMAGE;
 
-                        const currentRotation = ROTATION_ANGLES[index % ROTATION_ANGLES.length];
+                          const currentRotation = ROTATION_ANGLES[index % ROTATION_ANGLES.length];
 
-                        return (
-                          <a
-                            key={item.id || serviceSlug || index}
-                            id={`service-${serviceSlug}`}
-                            href={`/service-details/${serviceSlug}`}
-                            data-service-slug={serviceSlug}
-                            data-slug={serviceSlug}
-                            onClick={(e) => handleNavigateToServiceDetails(serviceSlug, e)}
-                            onMouseEnter={(e) => handleMouseEnter(item.id, e)}
-                            onMouseMove={(e) => handleMouseMove(item.id, e)}
-                            onMouseLeave={(e) => handleMouseLeave(item.id, e)}
-                            className="about-me-resume-item tp_fade_anim d-block text-decoration-none position-relative"
-                            data-delay=".3"
-                            style={{
-                              cursor: 'pointer',
-                              overflow: 'visible',
-                              position: 'relative',
-                              zIndex: 1,
-                              border: 'none',
-                              boxShadow: 'none',
-                              outline: 'none',
-                            }}
-                          >
-                            <div
-                              className="row align-items-center position-relative"
-                              style={{ zIndex: 2 }}
-                            >
-                              <div className="col-lg-2">
-                                <div className="about-me-resume-date mb-30">
-                                  <span>{displayDateOrCategory}</span>
-                                </div>
-                              </div>
-                              <div className="col-lg-5">
-                                <div className="about-me-resume-info ml-40 mb-30">
-                                  <h3 className="about-me-resume-title tp-ff-sequel-semi-bold">
-                                    <span>{item.title}</span>
-                                  </h3>
-                                </div>
-                              </div>
-                              <div className="col-lg-5">
-                                <div className="about-me-resume-dec ml-50 mb-30">
-                                  <p>{item.description}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* GSAP Hover Service Image - Vertical Card that overflows freely */}
-                            <div
-                              ref={(el) => {
-                                imageRefs.current[item.id] = el;
-                              }}
-                              className="service-card-hover-image d-none d-md-block"
+                          return (
+                            <a
+                              key={item.id || serviceSlug || index}
+                              id={`service-${serviceSlug}`}
+                              href={`/service-details/${serviceSlug}`}
+                              data-service-slug={serviceSlug}
+                              data-slug={serviceSlug}
+                              onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
+                              onMouseEnter={(e) => handleMouseEnter(item.id, e)}
+                              onMouseMove={(e) => handleMouseMove(item.id, e)}
+                              onMouseLeave={(e) => handleMouseLeave(item.id, e)}
+                              className="about-me-resume-item tp_fade_anim d-block text-decoration-none position-relative"
+                              data-delay=".3"
                               style={{
-                                position: 'absolute',
-                                left: '40px',
-                                top: '50%',
-                                marginTop: '-160px',
-                                width: '220px',
-                                height: '320px',
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                opacity: 0,
-                                pointerEvents: 'none',
-                                zIndex: 50,
-                                boxShadow: 'none',
+                                cursor: 'pointer',
+                                overflow: 'visible',
+                                position: 'relative',
+                                zIndex: 1,
                                 border: 'none',
+                                boxShadow: 'none',
                                 outline: 'none',
-                                transform: `rotate(${currentRotation})`,
                               }}
                             >
-                              <img
-                                src={photoUrl}
-                                alt={item.title}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  display: 'block',
-                                  border: 'none',
-                                  boxShadow: 'none',
-                                }}
-                              />
                               <div
+                                className="row align-items-center position-relative"
+                                style={{ zIndex: 2 }}
+                              >
+                                <div className="col-lg-2">
+                                  <div className="about-me-resume-date mb-30">
+                                    <span>{displayDateOrCategory}</span>
+                                  </div>
+                                </div>
+                                <div className="col-lg-5">
+                                  <div className="about-me-resume-info ml-40 mb-30">
+                                    <h3 className="about-me-resume-title tp-ff-sequel-semi-bold">
+                                      <span>{item.title}</span>
+                                    </h3>
+                                  </div>
+                                </div>
+                                <div className="col-lg-5">
+                                  <div className="about-me-resume-dec ml-50 mb-30">
+                                    <p>{item.description}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* GSAP Hover Service Image - Vertical Card */}
+                              <div
+                                ref={(el) => {
+                                  imageRefs.current[item.id] = el;
+                                }}
+                                className="service-card-hover-image d-none d-md-block"
                                 style={{
                                   position: 'absolute',
-                                  inset: 0,
-                                  background:
-                                    'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%)',
+                                  left: '40px',
+                                  top: '50%',
+                                  marginTop: '-160px',
+                                  width: '220px',
+                                  height: '320px',
+                                  borderRadius: '16px',
+                                  overflow: 'hidden',
+                                  opacity: 0,
+                                  pointerEvents: 'none',
+                                  zIndex: 50,
+                                  boxShadow: 'none',
+                                  border: 'none',
+                                  outline: 'none',
+                                  transform: `rotate(${currentRotation})`,
                                 }}
-                              />
-                            </div>
-                          </a>
-                        );
-                      })}
-                    </div>
+                              >
+                                <img
+                                  src={photoUrl}
+                                  alt={item.title}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    display: 'block',
+                                    border: 'none',
+                                    boxShadow: 'none',
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background:
+                                      'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%)',
+                                  }}
+                                />
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })
