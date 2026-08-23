@@ -36,7 +36,7 @@ img {
 .tp-hover-img,
 .tp-about-thumb,
 .cs-portfolio-thumb {
-  transform: none !important;
+  transform: none;
   opacity: 1 !important;
   visibility: visible !important;
   animation: none !important;

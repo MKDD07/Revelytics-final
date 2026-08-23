@@ -370,10 +370,15 @@ export default {
       // -----------------------------------------------------------------------
       if (path === '/api/services') {
         if (method === 'GET') {
-          const { results } = await env.DB.prepare(
-            'SELECT * FROM services WHERE is_active = 1 ORDER BY order_index ASC, id ASC'
-          ).all();
-          return jsonResponse({ success: true, count: results.length, data: results });
+          try {
+            const { results } = await env.DB.prepare(
+              'SELECT * FROM services ORDER BY sort_order ASC, id ASC'
+            ).all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          } catch {
+            const { results } = await env.DB.prepare('SELECT * FROM services').all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          }
         }
 
         if (method === 'POST') {
@@ -382,16 +387,17 @@ export default {
 
           const body = (await request.json()) as any;
           const result = await env.DB.prepare(`
-            INSERT INTO services (title, category, description, image_url, link, order_index)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO services (category_slug, category_name, service_slug, title, subheading, description, sort_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
           `)
             .bind(
+              body.category_slug || (body.category_name || body.title || 'service').toLowerCase().replace(/\s+/g, '-'),
+              body.category_name || body.category || 'General',
+              body.service_slug || (body.title || '').toLowerCase().replace(/\s+/g, '-'),
               body.title,
-              body.category || 'Service',
+              body.subheading || '',
               body.description || '',
-              body.image_url || '',
-              body.link || '#services',
-              body.order_index || 0
+              body.sort_order ?? 0
             )
             .run();
 
@@ -403,7 +409,7 @@ export default {
         const id = path.split('/api/services/')[1];
 
         if (method === 'GET') {
-          const service = await env.DB.prepare('SELECT * FROM services WHERE id = ?').bind(id).first();
+          const service = await env.DB.prepare('SELECT * FROM services WHERE id = ? OR service_slug = ?').bind(id, id).first();
           if (!service) return jsonResponse({ error: 'Service not found' }, 404);
           return jsonResponse({ success: true, data: service });
         }
@@ -415,15 +421,25 @@ export default {
           const body = (await request.json()) as any;
           await env.DB.prepare(`
             UPDATE services SET 
+              category_slug = COALESCE(?, category_slug),
+              category_name = COALESCE(?, category_name),
+              service_slug = COALESCE(?, service_slug),
               title = COALESCE(?, title),
-              category = COALESCE(?, category),
+              subheading = COALESCE(?, subheading),
               description = COALESCE(?, description),
-              image_url = COALESCE(?, image_url),
-              link = COALESCE(?, link),
-              order_index = COALESCE(?, order_index)
+              sort_order = COALESCE(?, sort_order)
             WHERE id = ?
           `)
-            .bind(body.title, body.category, body.description, body.image_url, body.link, body.order_index, id)
+            .bind(
+              body.category_slug,
+              body.category_name,
+              body.service_slug,
+              body.title,
+              body.subheading,
+              body.description,
+              body.sort_order,
+              id
+            )
             .run();
 
           return jsonResponse({ success: true, message: 'Service updated successfully' });
@@ -435,6 +451,57 @@ export default {
 
           await env.DB.prepare('DELETE FROM services WHERE id = ?').bind(id).run();
           return jsonResponse({ success: true, message: 'Service deleted successfully' });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 2b. SERVICE DETAILS API (`service_details` table)
+      // -----------------------------------------------------------------------
+      if (path === '/api/service-details' || path.startsWith('/api/service-details/')) {
+        if (method === 'GET') {
+          const slug = path.startsWith('/api/service-details/')
+            ? path.split('/api/service-details/')[1]
+            : url.searchParams.get('slug');
+
+          if (slug) {
+            try {
+              let detail = (await env.DB.prepare('SELECT * FROM service_details WHERE slug = ?').bind(slug).first()) as any;
+              if (!detail) {
+                const service = (await env.DB.prepare('SELECT * FROM services WHERE service_slug = ?').bind(slug).first()) as any;
+                if (service) {
+                  detail = {
+                    id: service.id,
+                    slug: service.service_slug,
+                    service_name: service.title,
+                    category: service.category_name || 'Web Design'
+                  };
+                }
+              }
+              if (!detail) return jsonResponse({ error: 'Service detail not found' }, 404);
+              return jsonResponse({ success: true, data: detail });
+            } catch {
+              const service = (await env.DB.prepare('SELECT * FROM services WHERE service_slug = ?').bind(slug).first()) as any;
+              if (service) {
+                return jsonResponse({
+                  success: true,
+                  data: {
+                    id: service.id,
+                    slug: service.service_slug,
+                    service_name: service.title,
+                    category: service.category_name || 'Web Design'
+                  }
+                });
+              }
+              return jsonResponse({ error: 'Failed to retrieve service detail' }, 500);
+            }
+          }
+
+          try {
+            const { results } = await env.DB.prepare('SELECT * FROM service_details').all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          } catch {
+            return jsonResponse({ success: true, count: 0, data: [] });
+          }
         }
       }
 

@@ -17,8 +17,8 @@ const Services: React.FC = () => {
       {/* Interactive Travel Services (Booking UX, Luxury Resort Branding, Travel Ads) */}
       <ServiceList />
 
-      {/* Travel Capabilities & Specialties Breakdown */}
-      <ResumeSpecialties />
+      {/* Complete Services List Breakdown (All Services) */}
+      <ResumeSpecialties limit={0} />
 
       {/* Destination & Hospitality Gallery */}
       <ServiceGallery />

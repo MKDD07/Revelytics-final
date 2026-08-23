@@ -32,12 +32,19 @@ export interface BlogItem {
 
 export interface ServiceItem {
   id: number;
+  category_slug?: string;
+  category_name?: string;
+  service_slug?: string;
   title: string;
-  category?: string;
+  subheading?: string;
   description?: string;
+  sort_order?: number;
+  // Legacy / UI helper fields
+  category?: string;
   image_url?: string;
   link?: string;
   order_index?: number;
+  years?: string;
 }
 
 export interface FaqItem {
@@ -135,6 +142,51 @@ export async function createBlog(
 /**
  * Fetch all active services from D1
  */
+export interface ProcessStep {
+  step: string;
+  title: string;
+  description: string;
+}
+
+export interface WhyChooseItem {
+  id?: string;
+  number?: string;
+  icon?: string;
+  title: string;
+  description: string;
+}
+
+export interface ServiceFaq {
+  question: string;
+  answer: string;
+}
+
+export interface ServiceDetailItem {
+  id: number;
+  slug: string;
+  service_name: string;
+  category?: string;
+  features?: string | string[];
+  pexels_query?: string;
+  image_url?: string;
+  process_title?: string;
+  process_steps?: string | ProcessStep[];
+  process_cta_text?: string;
+  process_cta_link?: string;
+  pexels_query_2?: string;
+  banner_pexels_query?: string;
+  banner_image_url?: string;
+  why_choose_subtitle?: string;
+  why_choose_title?: string;
+  why_choose_items?: string | WhyChooseItem[];
+  faqs?: string | ServiceFaq[];
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  og_image?: string;
+  schema_markup?: string | Record<string, any>;
+}
+
 export async function fetchServices(): Promise<ServiceItem[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/services`);
@@ -143,6 +195,34 @@ export async function fetchServices(): Promise<ServiceItem[]> {
   } catch (err) {
     console.warn('Failed to fetch services from D1 API:', err);
     return [];
+  }
+}
+
+/**
+ * Fetch service detail by slug from D1 (service_details table)
+ */
+export async function fetchServiceDetailBySlug(slug: string): Promise<ServiceDetailItem | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/service-details/${encodeURIComponent(slug)}`);
+    if (!res.ok) {
+      // fallback to searching in services table
+      const services = await fetchServices();
+      const match = services.find((s) => s.service_slug === slug || s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug);
+      if (match) {
+        return {
+          id: match.id,
+          slug: match.service_slug || slug,
+          service_name: match.title,
+          category: match.category_name || match.category || 'Web Design',
+        };
+      }
+      return null;
+    }
+    const json = await res.json();
+    return json.data || null;
+  } catch (err) {
+    console.warn(`Failed to fetch service detail for ${slug}:`, err);
+    return null;
   }
 }
 

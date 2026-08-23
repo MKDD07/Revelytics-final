@@ -1,132 +1,315 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { fetchServices, type ServiceItem } from '../../../services/api';
+import { searchPexelsPhotos } from '../../../services/pexels';
 
 // ==================================================
-// START: ServiceList
+// START: ServiceList (Interactive Category Showcase)
+// Connected with D1 `services` Table & Smooth Scroll To Category
 // ==================================================
 
-const ServiceList = () => {
+const FALLBACK_CATEGORY_IMAGES: Record<string, string> = {
+  'web-design':
+    'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+  'web-development':
+    'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+  'api-integration':
+    'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+  'app-development':
+    'https://images.pexels.com/photos/1092646/pexels-photo-1092646.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+  'e-commerce-solutions':
+    'https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+  'digital-marketing':
+    'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+};
+
+const DEFAULT_SERVICE_IMAGE =
+  'https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop';
+
+const ServiceList: React.FC = () => {
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // 1. Fetch live services from D1
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadServices() {
+      try {
+        const data = await fetchServices();
+        if (isMounted && data && data.length > 0) {
+          setServices(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load services in ServiceList:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadServices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Extract distinct categories with a primary service slug
+  const distinctCategories = useMemo(() => {
+    if (!services || services.length === 0) {
+      return [
+        { name: 'Web Design', slug: 'web-design', serviceSlug: 'ui-ux-design' },
+        { name: 'Web Development', slug: 'web-development', serviceSlug: 'frontend-development' },
+        { name: 'API Integration', slug: 'api-integration', serviceSlug: 'rest-api-integration' },
+        { name: 'App Development', slug: 'app-development', serviceSlug: 'ios-app-development' },
+        { name: 'E-Commerce Solutions', slug: 'e-commerce-solutions', serviceSlug: 'online-store-setup' },
+        { name: 'Digital Marketing', slug: 'digital-marketing', serviceSlug: 'seo-optimization' },
+      ];
+    }
+
+    const seen = new Set<string>();
+    const list: { name: string; slug: string; serviceSlug: string }[] = [];
+
+    for (const s of services) {
+      const catName = s.category_name || s.category || 'Services';
+      const catSlug = s.category_slug || catName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const serviceSlug = s.service_slug || 'ui-ux-design';
+
+      if (!seen.has(catSlug)) {
+        seen.add(catSlug);
+        list.push({
+          name: catName,
+          slug: catSlug,
+          serviceSlug,
+        });
+      }
+    }
+
+    return list;
+  }, [services]);
+
+  // 3. Fetch Pexels Photography for each category
+  useEffect(() => {
+    if (distinctCategories.length === 0) return;
+
+    let isMounted = true;
+
+    async function loadImages() {
+      const imgMap: Record<string, string> = {};
+
+      await Promise.all(
+        distinctCategories.map(async (cat) => {
+          const query = `${cat.name} digital technology modern creative`;
+          try {
+            const photos = await searchPexelsPhotos(query, 1, 'portrait');
+            if (photos && photos.length > 0) {
+              imgMap[cat.slug] = photos[0];
+            } else if (FALLBACK_CATEGORY_IMAGES[cat.slug]) {
+              imgMap[cat.slug] = FALLBACK_CATEGORY_IMAGES[cat.slug];
+            }
+          } catch {
+            if (FALLBACK_CATEGORY_IMAGES[cat.slug]) {
+              imgMap[cat.slug] = FALLBACK_CATEGORY_IMAGES[cat.slug];
+            }
+          }
+        })
+      );
+
+      if (isMounted && Object.keys(imgMap).length > 0) {
+        setCategoryImages((prev) => ({ ...prev, ...imgMap }));
+      }
+    }
+
+    loadImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [distinctCategories]);
+
+  // Scroll down smoothly to the selected category container
+  const handleCategoryClick = (catSlug: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const targetElement = document.getElementById(`category-${catSlug}`);
+    if (targetElement) {
+      const headerOffset = 100;
+      const elementPosition = targetElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    } else {
+      const aboutEl = document.getElementById('about');
+      if (aboutEl) {
+        aboutEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const activeCategory = distinctCategories[activeIndex] || distinctCategories[0];
+  const activeImageUrl =
+    (activeCategory && categoryImages[activeCategory.slug]) ||
+    (activeCategory && FALLBACK_CATEGORY_IMAGES[activeCategory.slug]) ||
+    DEFAULT_SERVICE_IMAGE;
+
   return (
-    <>{ /* Service List (from service-light.html) */ }
-    <div id="service" className="tp-service-area tp-panel-pin-area tp-bg-grey pt-145 pb-90">
-       <div className="container">
+    <>
+      {/* Service List with Pinned Image Showcase */}
+      <div id="service" className="tp-service-area tp-panel-pin-area tp-bg-grey pt-145 pb-90">
+        <div className="container">
           <div className="row align-items-end">
-             <div className="col-xxl-11 col-xl-12">
-                <div className="tp-about-title-wrap mb-30">
-                   <h2 className="tp-section-title reveal-text">At cunnet, we don&rsquo;t just build website<br />
-                      or campaigns we craft purpose-driven
-                      digital journeys.
-                   </h2>
-                </div>
-             </div>
+            <div className="col-xxl-11 col-xl-12">
+              <div className="tp-about-title-wrap mb-30">
+                <h2 className="tp-section-title reveal-text">
+                  At Revlytics, we don&rsquo;t just build websites
+                  <br /> or campaigns, we craft purpose-driven
+                  <br /> digital ecosystems.
+                </h2>
+              </div>
+            </div>
           </div>
+
           <div className="tp-about-border mt-20 pt-40">
-             <div className="row">
-                <div className="col-lg-4 mb-40">
-                   <div className="tp-service-content mr-60 mt-20">
-                      <div className="tp-service-sales-wrap tp-panel-pin fix p-relative">
-                         <div className="tp-service-img-wrapper image-container">
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service.jpg" alt="Service Image" />
-                            </div>
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service-2.jpg" alt="Service Image" />
-                            </div>
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service-3.jpg" alt="Service Image" />
-                            </div>
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service-4.jpg" alt="Service Image" />
-                            </div>
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service-4.jpg" alt="Service Image" />
-                            </div>
-                            <div className="hover-image">
-                               <img className="thumb" src="assets/img/service/service-4.jpg" alt="Service Image" />
-                            </div>
-                         </div>
-                      </div>
-                   </div>
+            <div className="row">
+              {/* Left Pinned Image Container */}
+              <div className="col-lg-4 mb-40">
+                <div className="tp-service-content mr-60 mt-20">
+                  <div
+                    className="tp-service-sales-wrap tp-panel-pin fix p-relative"
+                    style={{
+                      width: '100%',
+                      maxWidth: '350px',
+                      height: '450px',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    <div className="tp-service-img-wrapper image-container" style={{ width: '100%', height: '100%', position: 'relative' }}>
+                      <img
+                        key={activeImageUrl}
+                        className="thumb"
+                        src={activeImageUrl}
+                        alt={activeCategory ? activeCategory.name : 'Service Image'}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                          borderRadius: '20px',
+                          transition: 'opacity 0.4s ease, transform 0.4s ease',
+                          animation: 'fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background:
+                            'linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 100%)',
+                          borderRadius: '20px',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                      {activeCategory && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: '24px',
+                            left: '24px',
+                            right: '24px',
+                            color: '#ffffff',
+                            zIndex: 2,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '13px',
+                              letterSpacing: '1.5px',
+                              textTransform: 'uppercase',
+                              opacity: 0.85,
+                              fontWeight: 600,
+                            }}
+                          >
+                            Category
+                          </span>
+                          <h4 style={{ margin: '4px 0 0 0', color: '#ffffff', fontSize: '22px', fontWeight: 700 }}>
+                            {activeCategory.name}
+                          </h4>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="col-lg-8 mb-40">
-                   <div className="tp-service-list-wrap ml-60">
-                      <div className="tp-service-item service-item mb-5 active" data-img="assets/img/service/service.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Branding
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
+              </div>
+
+              {/* Right Category & Service Selection List */}
+              <div className="col-lg-8 mb-40">
+                <div className="tp-service-list-wrap ml-60">
+                  {distinctCategories.map((cat, idx) => {
+                    const isActive = activeIndex === idx;
+                    const catImage =
+                      categoryImages[cat.slug] ||
+                      FALLBACK_CATEGORY_IMAGES[cat.slug] ||
+                      DEFAULT_SERVICE_IMAGE;
+
+                    return (
+                      <div
+                        key={cat.slug || idx}
+                        className={`tp-service-item service-item mb-5 ${isActive ? 'active' : ''}`}
+                        data-img={catImage}
+                        onMouseEnter={() => setActiveIndex(idx)}
+                        style={{
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer',
+                          padding: '12px 0',
+                          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                        }}
+                      >
+                        <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block m-0 w-100">
+                          <a
+                            href={`#category-${cat.slug}`}
+                            onClick={(e) => handleCategoryClick(cat.slug, e)}
+                            className="text-decoration-none d-flex align-items-center justify-content-between"
+                            style={{
+                              color: isActive ? 'var(--tp-theme-primary, #ff3c00)' : 'inherit',
+                              transition: 'color 0.25s ease',
+                              gap: '20px',
+                            }}
+                          >
+                            <span>{cat.name}</span>
+                            <span
+                              className="tp-service-icon d-inline-block"
+                              style={{
+                                transform: isActive ? 'rotate(45deg)' : 'none',
+                                transition: 'transform 0.3s ease, color 0.3s ease',
+                              }}
+                            >
+                              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                  d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z"
+                                  fill="currentColor"
+                                />
+                              </svg>
+                            </span>
+                          </a>
+                        </h2>
                       </div>
-                      <div className="tp-service-item service-item mb-5" data-img="assets/img/service/service-2.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Infodesign
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
-                      </div>
-                      <div className="tp-service-item service-item mb-5" data-img="assets/img/service/service-3.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Digital
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
-                      </div>
-                      <div className="tp-service-item service-item mb-5" data-img="assets/img/service/service-4.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Editorial
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
-                      </div>
-                      <div className="tp-service-item service-item mb-5" data-img="assets/img/service/service-4.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Raum
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
-                      </div>
-                      <div className="tp-service-item service-item mb-5" data-img="assets/img/service/service-4.jpg">
-                         <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                            <a href="service-details-light.html">Champagne
-                               <span className="tp-service-icon d-inline-block">
-                                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                     <path d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z" fill="currentColor" />
-                                  </svg>
-                               </span>
-                            </a>
-                         </h2>
-                      </div>
-                   </div>
+                    );
+                  })}
                 </div>
-             </div>
+              </div>
+            </div>
           </div>
-       </div>
-    </div>
-    { /* tp-service-area-end */ }</>
+        </div>
+      </div>
+      {/* tp-service-area-end */}
+    </>
   );
 };
 
 export default ServiceList;
-
-// ==================================================
-// END: ServiceList
-// ==================================================

@@ -3878,7 +3878,7 @@ body.tp-magic-cursor #magic-cursor {
   background: var(--tp-common-white);
 }
 .cs-header-style .tp-main-menu nav ul li:hover.has-dropdown > a {
-  color: var(--tp-common-black);
+  color: var(--tp-theme-primary);
   background: var(--tp-common-white);
 }
 .cs-header-style .tp-header-sidebar-btn span {
@@ -8396,7 +8396,8 @@ body.tp-magic-cursor #magic-cursor {
   }
 }
 .inner-service-2-wrap .about-me-resume-date span {
-  font-size: 24px;
+  font-size: 17px;
+  color: var(--tp-theme-primary);
   margin-top: 20px;
   display: inline-block;
 }
@@ -8406,13 +8407,13 @@ body.tp-magic-cursor #magic-cursor {
   }
 }
 .inner-service-2-wrap .about-me-resume-title {
-  font-size: 92px;
+  font-size: 48px;
   line-height: 104%;
   letter-spacing: -0.05em;
 }
 @media only screen and (min-width: 992px) and (max-width: 1199px), only screen and (min-width: 768px) and (max-width: 991px), only screen and (min-width: 576px) and (max-width: 767px), (max-width: 574.98px) {
   .inner-service-2-wrap .about-me-resume-title {
-    font-size: 70px;
+    font-size: 56px;
   }
 }
 .inner-service-2-wrap .about-me-resume-title a:hover {

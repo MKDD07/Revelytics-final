@@ -134,9 +134,10 @@ export async function searchPexelsVideos(
  */
 export async function searchPexelsPhotos(
   query: string = 'travel resort',
-  perPage: number = 10
+  perPage: number = 10,
+  orientation: 'landscape' | 'portrait' | 'square' = 'portrait'
 ): Promise<string[]> {
-  const cacheKey = `pexels_photos_${query.toLowerCase().trim()}_${perPage}`;
+  const cacheKey = `pexels_photos_${query.toLowerCase().trim()}_${perPage}_${orientation}`;
 
   if (memoryPhotoCache.has(cacheKey)) {
     return memoryPhotoCache.get(cacheKey)!;
@@ -145,7 +146,7 @@ export async function searchPexelsPhotos(
   try {
     const encodedQuery = encodeURIComponent(query.trim());
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodedQuery}&per_page=${perPage}&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${encodedQuery}&per_page=${perPage}&orientation=${orientation}`,
       {
         headers: {
           Authorization: PEXELS_API_KEY,

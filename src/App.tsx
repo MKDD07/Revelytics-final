@@ -14,26 +14,76 @@ import {
   Contact,
 } from './pages';
 
-type RouteType = 'home' | 'services' | 'service-details' | 'blog' | 'blog-details' | 'faq' | 'contact';
+export type RouteType =
+  | 'home'
+  | 'services'
+  | 'service-details'
+  | 'blog'
+  | 'blog-details'
+  | 'faq'
+  | 'contact';
+
+interface RouteState {
+  route: RouteType;
+  slug?: string;
+}
+
+const validRoutes: RouteType[] = [
+  'home',
+  'services',
+  'service-details',
+  'blog',
+  'blog-details',
+  'faq',
+  'contact',
+];
+
+const getRouteFromLocation = (): RouteState => {
+  // 1. Check HTML5 Pathname (e.g. /service-details/ui-ux-design, /services)
+  const path = window.location.pathname.replace(/^\/|\/$/g, '');
+  const pathParts = path.split('/');
+  const firstPathSegment = pathParts[0]?.toLowerCase() as RouteType;
+
+  if (firstPathSegment && validRoutes.includes(firstPathSegment)) {
+    return {
+      route: firstPathSegment,
+      slug: pathParts[1] || undefined,
+    };
+  }
+
+  // 2. Check Hash Routing Fallback (e.g. #service-details?service=ui-ux-design or #service-details/ui-ux-design)
+  const rawHash = window.location.hash.replace('#', '').toLowerCase();
+  if (rawHash) {
+    const hashBase = rawHash.split('?')[0].split('/')[0] as RouteType;
+    if (validRoutes.includes(hashBase)) {
+      const searchParams = new URLSearchParams(rawHash.split('?')[1] || '');
+      const slug = rawHash.split('/')[1] || searchParams.get('service') || searchParams.get('slug') || undefined;
+      return {
+        route: hashBase,
+        slug,
+      };
+    }
+  }
+
+  return { route: 'home' };
+};
 
 function App() {
-  const [currentRoute, setCurrentRoute] = useState<RouteType>('home');
+  const [routeState, setRouteState] = useState<RouteState>(getRouteFromLocation());
 
-  // Handle URL hash routing
+  // Listen to both popstate and hashchange events
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase() as RouteType;
-      const validRoutes: RouteType[] = ['home', 'services', 'service-details', 'blog', 'blog-details', 'faq', 'contact'];
-      if (validRoutes.includes(hash)) {
-        setCurrentRoute(hash);
-      } else if (!hash) {
-        setCurrentRoute('home');
-      }
+    const handleLocationChange = () => {
+      setRouteState(getRouteFromLocation());
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   // Re-run theme initializations whenever the route or page component changes
@@ -63,20 +113,21 @@ function App() {
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [currentRoute]);
+  }, [routeState.route, routeState.slug]);
 
-  const handleNavigate = (route: string) => {
-    const cleanRoute = route.replace('#', '') as RouteType;
-    setCurrentRoute(cleanRoute);
-    window.location.hash = cleanRoute;
+  const handleNavigate = (target: string) => {
+    const clean = target.replace('#', '').replace(/^\//, '');
+    const path = clean === 'home' || !clean ? '/' : `/${clean}`;
+    window.history.pushState({}, '', path);
+    setRouteState(getRouteFromLocation());
   };
 
   const renderCurrentPage = () => {
-    switch (currentRoute) {
+    switch (routeState.route) {
       case 'services':
         return <Services />;
       case 'service-details':
-        return <ServiceDetails />;
+        return <ServiceDetails slug={routeState.slug} />;
       case 'blog':
         return <Blog />;
       case 'blog-details':
@@ -100,7 +151,7 @@ function App() {
       <div id="smooth-wrapper">
         <div id="smooth-content">
           {/* Header Navigation */}
-          <Header1 currentRoute={currentRoute} onNavigate={handleNavigate} />
+          <Header1 currentRoute={routeState.route} onNavigate={handleNavigate} />
 
           {/* Dynamic Page Content */}
           <main id="main-content">

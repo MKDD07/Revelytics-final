@@ -17,6 +17,7 @@ import {
   Faq1,
   Blog1,
   Cta1,
+  FaqAccordion,
   Awards1,
   Portfolio1,
 } from '../components';
@@ -65,8 +66,10 @@ const Home: React.FC = () => {
       <Testimonial1 />
 
       {/* 12. Travel Agency FAQ */}
-      <Faq1 />
-
+<FaqAccordion
+  dbSource="index_faqs"
+  initialFaqs={[]}   // empty on purpose — don't seed with another table's data
+/>
       {/* 13. Travel Insights & Destination Trends */}
       <Blog1 />
       {/* 11. Travel Discovery & Direct Inquiries */}
