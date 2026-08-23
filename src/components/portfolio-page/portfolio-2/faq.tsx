@@ -1,10 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchFaqPage, type FaqItem } from '../../../services/api';
 
 // ==================================================
 // START: Faq
 // ==================================================
 
 const Faq = () => {
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [openKey, setOpenKey] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFaqs() {
+      try {
+        const data = await fetchFaqPage();
+        if (isMounted) {
+          // Limit to first 5 items to match the layout size, or show all. 
+          // We'll show all but flatten the groups since this layout doesn't use subheadings.
+          setFaqs(data);
+        }
+      } catch (error) {
+        console.error('Failed to load portfolio FAQs:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadFaqs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const toggleFaq = (index: number) => {
+    setOpenKey(openKey === index ? -1 : index);
+  };
+
   return (
     <>{ /* Portfolio 2 FAQ Section (from portfolio-2-light.html) */ }
     <div id="faq" className="tp-faq-area pb-130">
@@ -19,62 +50,48 @@ const Faq = () => {
                 <div className="tp-faq tp-service-details-faq-two tp-service-details-faq mb-30">
                    <h2 className="tp-section-title reveal-text fs-72 mb-40">Explore Answers to<br />
                    Our Most Asked Questions</h2>
-                   <div className="accordion" id="accordionExample2">
-                      <div className="tp-faq-item tp_fade_anim" data-delay=".3">
-                         <h2 className="accordion-header">
-                            <button className="tp-faq-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqOne" aria-expanded="true" aria-controls="faqOne"><span>01</span>What industries do you serve?</button>
-                         </h2>
-                         <div id="faqOne" className="tp-faq-collapse collapse show" data-bs-parent="#accordionExample2">
-                            <div className="tp-faq-body">
-                               <p>Track Your Income and Expenses: With our app, you can easily track your income<br />
-                               and expenses, so you always know where your money is going.</p>
+                   <div className="accordion" id="portfolioFaqAccordion">
+                      {loading ? (
+                        <div className="text-center py-5">
+                          <div className="spinner-border text-danger" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                        </div>
+                      ) : faqs.length === 0 ? (
+                        <p className="text-muted text-center py-5">No FAQ records found.</p>
+                      ) : (
+                        faqs.map((item, index) => {
+                          const isOpen = openKey === index;
+                          const collapseId = `portfolioFaqCollapse-${index}`;
+                          const numStr = String(index + 1).padStart(2, '0');
+
+                          return (
+                            <div className="tp-faq-item tp_fade_anim" data-delay=".3" key={item.id || index}>
+                              <h2 className="accordion-header">
+                                <button 
+                                  className={`tp-faq-button ${!isOpen ? 'collapsed' : ''}`}
+                                  type="button" 
+                                  onClick={() => toggleFaq(index)}
+                                  aria-expanded={isOpen} 
+                                  aria-controls={collapseId}
+                                >
+                                  <span>{numStr}</span>
+                                  {item.question}
+                                </button>
+                              </h2>
+                              <div 
+                                id={collapseId} 
+                                className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}
+                                data-bs-parent="#portfolioFaqAccordion"
+                              >
+                                <div className="tp-faq-body">
+                                  <p>{item.answer}</p>
+                                </div>
+                              </div>
                             </div>
-                         </div>
-                      </div>
-                      <div className="tp-faq-item tp_fade_anim" data-delay=".3">
-                         <h2 className="accordion-header">
-                            <button className="tp-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwo" aria-expanded="false" aria-controls="faqTwo"><span>02</span>How do you protect client data and privacy?</button>
-                         </h2>
-                         <div id="faqTwo" className="tp-faq-collapse collapse" data-bs-parent="#accordionExample2">
-                            <div className="tp-faq-body">
-                               <p>Track Your Income and Expenses: With our app, you can easily track your income<br />
-                               and expenses, so you always know where your money is going.</p>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="tp-faq-item tp_fade_anim" data-delay=".3">
-                         <h2 className="accordion-header">
-                            <button className="tp-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThree" aria-expanded="false" aria-controls="faqThree"><span>03</span>Do you provide support after the project is done?</button>
-                         </h2>
-                         <div id="faqThree" className="tp-faq-collapse collapse" data-bs-parent="#accordionExample2">
-                            <div className="tp-faq-body">
-                               <p>Track Your Income and Expenses: With our app, you can easily track your income<br />
-                               and expenses, so you always know where your money is going.</p>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="tp-faq-item tp_fade_anim" data-delay=".3">
-                         <h2 className="accordion-header">
-                            <button className="tp-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFour" aria-expanded="false" aria-controls="faqFour"><span>04</span>How long does an average AI project take?</button>
-                         </h2>
-                         <div id="faqFour" className="tp-faq-collapse collapse" data-bs-parent="#accordionExample2">
-                            <div className="tp-faq-body">
-                               <p>Track Your Income and Expenses: With our app, you can easily track your income<br />
-                               and expenses, so you always know where your money is going.</p>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="tp-faq-item tp_fade_anim" data-delay=".3">
-                         <h2 className="accordion-header">
-                            <button className="tp-faq-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFive" aria-expanded="false" aria-controls="faqFive"><span>05</span>Is my data safe and secure?</button>
-                         </h2>
-                         <div id="faqFive" className="tp-faq-collapse collapse" data-bs-parent="#accordionExample2">
-                            <div className="tp-faq-body">
-                               <p>Track Your Income and Expenses: With our app, you can easily track your income<br />
-                               and expenses, so you always know where your money is going.</p>
-                            </div>
-                         </div>
-                      </div>
+                          );
+                        })
+                      )}
                    </div>
                 </div>
              </div>
@@ -90,3 +107,4 @@ export default Faq;
 // ==================================================
 // END: Faq
 // ==================================================
+

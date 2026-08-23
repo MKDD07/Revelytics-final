@@ -31,7 +31,7 @@ interface FaqGroup {
 }
 
 const DB_OPTIONS: { id: FaqDbSource; label: string; table: string; badge: string }[] = [
-  { id: 'faq_page', label: 'Dedicated FAQ Page', table: 'faq_page', badge: 'D1 Table' },
+  { id: 'faq_pages', label: 'Dedicated FAQ Page', table: 'faq_page', badge: 'D1 Table' },
   { id: 'index_faqs', label: 'Homepage FAQs', table: 'index_faqs', badge: 'D1 Table' },
   { id: 'service_faqs', label: 'Service FAQs', table: 'service_faqs', badge: 'D1 Table' },
   { id: 'faqs', label: 'General FAQs', table: 'faqs', badge: 'D1 Table' },

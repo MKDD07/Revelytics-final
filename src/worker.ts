@@ -1,7 +1,7 @@
 /**
  * =========================================================================
  * Revlytics Cloudflare Worker & D1 Database API
- * Domain: https://revelytics.mkmkataria07.workers.dev
+ * Domain: https://revelytics-final.mkmkataria07.workers.dev/
  * Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
  * =========================================================================
  *
@@ -160,7 +160,7 @@ export default {
         return jsonResponse({
           success: true,
           service: 'Revlytics Cloudflare D1 Worker API',
-          domain: 'https://revelytics.mkmkataria07.workers.dev',
+          domain: 'https://revelytics-final.mkmkataria07.workers.dev/',
           databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
           status: 'healthy',
           endpoints: [
