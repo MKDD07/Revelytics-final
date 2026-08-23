@@ -313,11 +313,11 @@ const FaqAccordion: React.FC<FaqAccordionProps> = ({ initialFaqs = ALL_FAQ_PAGE_
               </div>
               <div className="col-xxl-8 col-xl-9">
                 <div className="tp-faq tp-service-details-faq-two tp-service-details-faq mb-30">
-                  <div className="accordion" id={`accordionGroup${groupIdx}`}>
+                  <div className="accordion" id={`faqPageAccordionGroup${groupIdx}`}>
                     {group.items.map((item, itemIdx) => {
                       globalCounter += 1;
-                      const itemKey = `group-${groupIdx}-item-${itemIdx}`;
-                      const collapseId = `collapseGroup${groupIdx}Item${itemIdx}`;
+                      const itemKey = `faq-page-${groupIdx}-${itemIdx}`;
+                      const collapseId = `faqPageCollapse-${groupIdx}-${itemIdx}`;
                       const isOpen = openKey === itemKey;
                       const numStr = String(globalCounter).padStart(2, '0');
 
@@ -338,7 +338,7 @@ const FaqAccordion: React.FC<FaqAccordionProps> = ({ initialFaqs = ALL_FAQ_PAGE_
                           <div
                             id={collapseId}
                             className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}
-                            data-bs-parent={`#accordionGroup${groupIdx}`}
+                            data-bs-parent={`#faqPageAccordionGroup${groupIdx}`}
                           >
                             <div className="tp-faq-body">
                               <p>{item.answer}</p>

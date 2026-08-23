@@ -104,9 +104,10 @@ const Faq1: React.FC = () => {
           {/* Right Column - Dynamic Accordion */}
           <div className="col-xl-7">
             <div className="tp-faq ml-115">
-              <div className="accordion" id="accordionExample">
+              <div className="accordion" id="indexFaqAccordion">
                 {faqs.map((item, index) => {
                   const isOpen = openIndex === index;
+                  const collapseId = `indexFaqCollapse${item.id || index}`;
 
                   return (
                     <div className="tp-faq-item tp_fade_anim" data-delay=".3" key={item.id || index}>
@@ -116,11 +117,16 @@ const Faq1: React.FC = () => {
                           type="button"
                           onClick={() => toggleFaq(index)}
                           aria-expanded={isOpen}
+                          aria-controls={collapseId}
                         >
                           {item.question}
                         </button>
                       </h2>
-                      <div className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}>
+                      <div
+                        id={collapseId}
+                        className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}
+                        data-bs-parent="#indexFaqAccordion"
+                      >
                         <div className="tp-faq-body">
                           <p>{item.answer}</p>
                         </div>
