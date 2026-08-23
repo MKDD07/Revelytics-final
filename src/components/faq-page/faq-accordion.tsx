@@ -121,23 +121,29 @@ const FaqAccordion = () => {
                     {group.items.map((item, itemIdx) => {
                       globalCounter += 1;
                       const itemKey = `group-${groupIdx}-item-${itemIdx}`;
+                      const collapseId = `collapseGroup${groupIdx}Item${itemIdx}`;
                       const isOpen = openKey === itemKey;
                       const numStr = String(globalCounter).padStart(2, '0');
 
                       return (
-                        <div className="tp-faq-item" key={item.id || itemKey}>
+                        <div className="tp-faq-item tp_fade_anim" data-delay=".3" key={item.id || itemKey}>
                           <h2 className="accordion-header">
                             <button
                               className={`tp-faq-button ${!isOpen ? 'collapsed' : ''}`}
                               type="button"
                               onClick={() => toggleFaq(itemKey)}
                               aria-expanded={isOpen}
+                              aria-controls={collapseId}
                             >
                               <span>{numStr}</span>
                               {item.question}
                             </button>
                           </h2>
-                          <div className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}>
+                          <div
+                            id={collapseId}
+                            className={`tp-faq-collapse collapse ${isOpen ? 'show' : ''}`}
+                            data-bs-parent={`#accordionGroup${groupIdx}`}
+                          >
                             <div className="tp-faq-body">
                               <p>{item.answer}</p>
                             </div>
