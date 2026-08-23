@@ -2,6 +2,10 @@ name = "revelytics"
 main = "src/worker.ts"
 compatibility_date = "2024-09-23"
 
+# Auto-build frontend before deploying
+[build]
+command = "npm run build"
+
 # Static Frontend Assets (serves the React UI on revelytics.mkmkataria07.workers.dev)
 [assets]
 directory = "./dist"
