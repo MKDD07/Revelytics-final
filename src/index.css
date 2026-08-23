@@ -1,0 +1,86 @@
+/* Global Reset & Base Styles */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Ensure Header text is crisp pure white on blur background */
+.cs-header-wrap .tp-main-menu ul li a,
+.cs-header-wrap .tp-header-search-btn,
+.cs-header-wrap .hamburger-open-btn {
+  color: #222 !important;
+}
+
+.cs-header-wrap .tp-submenu li a {
+  color: #111827 !important;
+}
+
+.cs-header-wrap .tp-submenu li a:hover {
+  color: #ef4444 !important;
+}
+
+/* Ensure all images display crisp and direct */
+img {
+  max-width: 100%;
+  height: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation: none !important;
+}
+
+.anim-zoomin,
+.anim-zoomin-wrap,
+.scale-up-img,
+.scale-up,
+.mil-scale-img,
+.tp-hover-img,
+.tp-about-thumb,
+.cs-portfolio-thumb {
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation: none !important;
+}
+
+.tp-hover-img canvas {
+  display: none !important;
+}
+
+.tp-hover-img img {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* Prevent GSAP opacity 0 freeze on headings and content */
+.tp_fade_anim,
+.reveal-text,
+.reveal-text span,
+.tp-text-perspective,
+.tp-char-animation,
+.tp-title-anim,
+.tp_title_anim,
+.split-line {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure active service images switch cleanly */
+.tp-service-img-wrapper .hover-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  z-index: 1 !important;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+
+.tp-service-img-wrapper .hover-image.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 5 !important;
+  pointer-events: auto;
+}
