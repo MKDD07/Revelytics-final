@@ -3878,7 +3878,7 @@ body.tp-magic-cursor #magic-cursor {
   background: var(--tp-common-white);
 }
 .cs-header-style .tp-main-menu nav ul li:hover.has-dropdown > a {
-  color: var(--tp-theme-primary);
+  color: var(--tp-common-black);
   background: var(--tp-common-white);
 }
 .cs-header-style .tp-header-sidebar-btn span {
@@ -8413,7 +8413,7 @@ body.tp-magic-cursor #magic-cursor {
 }
 @media only screen and (min-width: 992px) and (max-width: 1199px), only screen and (min-width: 768px) and (max-width: 991px), only screen and (min-width: 576px) and (max-width: 767px), (max-width: 574.98px) {
   .inner-service-2-wrap .about-me-resume-title {
-    font-size: 56px;
+    font-size: 70px;
   }
 }
 .inner-service-2-wrap .about-me-resume-title a:hover {

@@ -541,8 +541,33 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                   DEFAULT_IMAGE;
 
                 return (
-                  <div key={category.slug} className="category-service-group mb-60">
-                    {/* Category Stacking Sticky Banner */}
+                  <div key={category.slug} id={`category-${category.slug}`} className="category-service-group mb-60">
+                    {/* Category Header & Border Divider */}
+                    <div className="tp-about-border mt-20 pt-40 mb-30">
+                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div className="d-flex align-items-center gap-3">
+                          <span
+                            className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
+                            style={{
+                              fontSize: '12px',
+                              letterSpacing: '2px',
+                              color: '#ffffff',
+                              backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
+                            }}
+                          >
+                            Category
+                          </span>
+                          <h3 className="m-0 tp-ff-sequel-bold-head" style={{ fontSize: 'clamp(24px, 3vw, 36px)' }}>
+                            {category.name}
+                          </h3>
+                        </div>
+                        <span className="text-muted fw-500">
+                          {category.items.length} {category.items.length === 1 ? 'Service' : 'Services'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Category Stacking Sticky Banner (if enabled) */}
                     {showCategoryBanner && (
                       <CategoryBanner
                         categoryName={category.name}
@@ -555,120 +580,158 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                       />
                     )}
 
-                    {/* Category Services List Container */}
+                    {/* Category Services List (Cards for each service-detail) */}
                     {showServicesList && (
-                      <div
-                        className="inner-service-2-wrap about-me-resume-wrap mt-20"
-                        style={{ overflow: 'visible' }}
-                      >
+                      <div className="row g-4 mt-10">
                         {category.items.map((item, index) => {
                           const serviceSlug = normalizeSlug(item.title, item.service_slug);
-                          const displayDateOrCategory =
+                          const displayCategory =
                             item.subheading ||
                             item.category_name ||
                             item.category ||
-                            item.years ||
-                            `0${index + 1}`;
+                            category.name;
 
                           const photoUrl =
                             serviceImages[item.id] ||
                             (item.category_slug && FALLBACK_CATEGORY_IMAGES[item.category_slug]) ||
                             DEFAULT_IMAGE;
 
-                          const currentRotation = ROTATION_ANGLES[index % ROTATION_ANGLES.length];
+                          const numStr = String(index + 1).padStart(2, '0');
 
                           return (
-                            <a
+                            <div
                               key={item.id || serviceSlug || index}
-                              id={`service-${serviceSlug}`}
-                              href={`/service-details/${serviceSlug}`}
-                              data-service-slug={serviceSlug}
-                              data-slug={serviceSlug}
-                              onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
-                              onMouseEnter={(e) => handleMouseEnter(item.id, e)}
-                              onMouseMove={(e) => handleMouseMove(item.id, e)}
-                              onMouseLeave={(e) => handleMouseLeave(item.id, e)}
-                              className="about-me-resume-item tp_fade_anim d-block text-decoration-none position-relative"
+                              className="col-lg-6 col-md-6 col-12 tp_fade_anim"
                               data-delay=".3"
-                              style={{
-                                cursor: 'pointer',
-                                overflow: 'visible',
-                                position: 'relative',
-                                zIndex: 1,
-                                border: 'none',
-                                boxShadow: 'none',
-                                outline: 'none',
-                              }}
                             >
-                              <div
-                                className="row align-items-center position-relative"
-                                style={{ zIndex: 2 }}
-                              >
-                                <div className="col-lg-2">
-                                  <div className="about-me-resume-date mb-30">
-                                    <span>{displayDateOrCategory}</span>
-                                  </div>
-                                </div>
-                                <div className="col-lg-5">
-                                  <div className="about-me-resume-info ml-40 mb-30">
-                                    <h3 className="about-me-resume-title tp-ff-sequel-semi-bold">
-                                      <span>{item.title}</span>
-                                    </h3>
-                                  </div>
-                                </div>
-                                <div className="col-lg-5">
-                                  <div className="about-me-resume-dec ml-50 mb-30">
-                                    <p>{item.description}</p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* GSAP Hover Service Image - Vertical Card */}
-                              <div
-                                ref={(el) => {
-                                  imageRefs.current[item.id] = el;
-                                }}
-                                className="service-card-hover-image d-none d-md-block"
+                              <a
+                                id={`service-${serviceSlug}`}
+                                href={`/service-details/${serviceSlug}`}
+                                data-service-slug={serviceSlug}
+                                data-slug={serviceSlug}
+                                onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
+                                className="service-details-card d-block text-decoration-none position-relative overflow-hidden h-100"
                                 style={{
-                                  position: 'absolute',
-                                  left: '40px',
-                                  top: '50%',
-                                  marginTop: '-160px',
-                                  width: '220px',
-                                  height: '320px',
-                                  borderRadius: '16px',
-                                  overflow: 'hidden',
-                                  opacity: 0,
-                                  pointerEvents: 'none',
-                                  zIndex: 50,
-                                  boxShadow: 'none',
-                                  border: 'none',
-                                  outline: 'none',
-                                  transform: `rotate(${currentRotation})`,
+                                  minHeight: '380px',
+                                  borderRadius: '24px',
+                                  backgroundColor: '#0e0e0e',
+                                  boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2)',
+                                  transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.transform = 'translateY(-6px)';
+                                  e.currentTarget.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'none';
+                                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2)';
                                 }}
                               >
+                                {/* Background Image */}
                                 <img
                                   src={photoUrl}
                                   alt={item.title}
                                   style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
                                     width: '100%',
                                     height: '100%',
                                     objectFit: 'cover',
-                                    display: 'block',
-                                    border: 'none',
-                                    boxShadow: 'none',
+                                    transition: 'transform 0.6s ease',
                                   }}
+                                  className="service-card-bg-img"
                                 />
+
+                                {/* Dark Cinematic Gradient Overlay */}
                                 <div
                                   style={{
                                     position: 'absolute',
                                     inset: 0,
                                     background:
-                                      'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%)',
+                                      'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.8) 100%)',
+                                    pointerEvents: 'none',
                                   }}
                                 />
-                              </div>
-                            </a>
+
+                                {/* Foreground Card Content */}
+                                <div
+                                  className="d-flex flex-column justify-content-between h-100 p-4 p-md-5 position-relative"
+                                  style={{ zIndex: 2 }}
+                                >
+                                  {/* Top Header Badge */}
+                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <span
+                                      className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
+                                      style={{
+                                        fontSize: '12px',
+                                        letterSpacing: '2px',
+                                        color: '#ffffff',
+                                        backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
+                                      }}
+                                    >
+                                      {displayCategory}
+                                    </span>
+                                    <span
+                                      className="badge rounded-pill px-3 py-2"
+                                      style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                        backdropFilter: 'blur(8px)',
+                                        color: '#ffffff',
+                                        fontSize: '13px',
+                                        fontWeight: 600,
+                                        letterSpacing: '1px',
+                                      }}
+                                    >
+                                      {numStr}
+                                    </span>
+                                  </div>
+
+                                  {/* Bottom Content with Heading, Description & Action Button */}
+                                  <div>
+                                    <h3
+                                      className="m-0 text-white tp-ff-sequel-bold-head mb-3"
+                                      style={{ fontSize: 'clamp(24px, 2.5vw, 32px)', lineHeight: 1.2 }}
+                                    >
+                                      {item.title}
+                                    </h3>
+                                    {item.description && (
+                                      <p
+                                        className="text-white mb-4"
+                                        style={{
+                                          fontSize: '15px',
+                                          lineHeight: 1.6,
+                                          opacity: 0.88,
+                                          display: '-webkit-box',
+                                          WebkitLineClamp: 3,
+                                          WebkitBoxOrient: 'vertical',
+                                          overflow: 'hidden',
+                                        }}
+                                      >
+                                        {item.description}
+                                      </p>
+                                    )}
+                                    <div className="d-inline-flex align-items-center gap-2 text-white fw-600 fs-14">
+                                      <span
+                                        style={{
+                                          padding: '10px 22px',
+                                          borderRadius: '50px',
+                                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                                          backdropFilter: 'blur(10px)',
+                                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '8px',
+                                          transition: 'all 0.25s ease',
+                                        }}
+                                      >
+                                        Explore Service <ArrowUpRight size={16} />
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </a>
+                            </div>
                           );
                         })}
                       </div>
