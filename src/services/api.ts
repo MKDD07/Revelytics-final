@@ -544,6 +544,47 @@ export async function fetchPexelsPhotos(queries: string[]): Promise<(string | nu
 }
 
 // ---------------------------------------------------------------------------
+// REV_DB CATEGORIES (for blog sidebar & filters, max 8)
+// ---------------------------------------------------------------------------
+
+export interface RevDbCategory {
+  name: string;
+  count: number;
+}
+
+export const DEFAULT_BLOG_CATEGORIES: RevDbCategory[] = [
+  { name: 'Digital Marketing', count: 14 },
+  { name: 'Direct Bookings', count: 8 },
+  { name: 'Local SEO & GBP', count: 11 },
+  { name: 'Hospitality Tech', count: 6 },
+  { name: 'Brand Strategy', count: 9 },
+  { name: 'Content & Storytelling', count: 7 },
+  { name: 'Mobile & App Conversions', count: 5 },
+  { name: 'AI & Automation', count: 4 },
+];
+
+/**
+ * Fetch top blog categories and counts from D1 database (max 8).
+ * Falls back to default category list if API is unreachable.
+ */
+export async function fetchRevDbCategories(): Promise<RevDbCategory[]> {
+  try {
+    const res = await withTimeout(
+      fetch(`${API_BASE_URL}/api/rev_db/categories`),
+      5000
+    );
+    if (!res.ok) return DEFAULT_BLOG_CATEGORIES;
+    const json = await res.json();
+    const data: RevDbCategory[] = Array.isArray(json.data) ? json.data : [];
+    if (data.length === 0) return DEFAULT_BLOG_CATEGORIES;
+    return data.slice(0, 8);
+  } catch (err) {
+    console.warn('fetchRevDbCategories failed:', err);
+    return DEFAULT_BLOG_CATEGORIES;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // REV_DB ARTICLE LISTING (for blog index page)
 // ---------------------------------------------------------------------------
 
@@ -567,6 +608,8 @@ export async function fetchRevDbArticles(pageName?: string): Promise<RevDbItem[]
     return [];
   }
 }
+
+
 
 
 

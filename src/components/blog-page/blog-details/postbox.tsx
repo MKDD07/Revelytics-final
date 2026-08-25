@@ -3,11 +3,14 @@ import {
   fetchRevDbHeading,
   fetchRevDbBySlug,
   fetchRevDbComments,
+  fetchRevDbCategories,
   fetchPexelsPhotos,
   submitRevDbComment,
   type RevDbItem,
   type RevDbComment,
+  type RevDbCategory,
   type SectionH2Para,
+  DEFAULT_BLOG_CATEGORIES,
 } from '../../../services/api';
 
 // ==================================================
@@ -119,6 +122,7 @@ const DEFAULT_TAGS = [
 const Postbox: React.FC<PostboxProps> = ({ slug }) => {
   const [article, setArticle] = useState<RevDbItem | null>(null);
   const [comments, setComments] = useState<RevDbComment[]>(DEFAULT_COMMENTS);
+  const [categories, setCategories] = useState<RevDbCategory[]>(DEFAULT_BLOG_CATEGORIES);
   const [pexelsImages, setPexelsImages] = useState<[string | null, string | null, string | null]>([
     'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
     'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
@@ -131,6 +135,16 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
 
   useEffect(() => {
     let isMounted = true;
+
+    // Load categories independently (max 8 from D1)
+    fetchRevDbCategories()
+      .then((cats) => {
+        if (isMounted && cats && cats.length > 0) {
+          setCategories(cats);
+        }
+      })
+      .catch(() => { /* keep defaults */ });
+
     async function loadPostData() {
       try {
         let item: RevDbItem | null = null;
@@ -159,8 +173,8 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
           }
 
           // Load Pexels images independently (non-blocking)
-          const q2 = item.pexels_query_2 || 'welcoming boutique hotel facade with outdoor seating';
-          const q3 = item.pexels_query_3 || 'vibrant outdoor cafe patio in bustling european plaza';
+          const q2 = item.pexels_query_2 || 'traveler using smartphone app in smart hotel room';
+          const q3 = item.pexels_query_3 || 'digital tablet showing flight map and travel itinerary';
           const q4 = item.pexels_query_4 || 'luxury resort swimming pool at sunset';
           
           const FALLBACK_2 = 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop';
@@ -281,14 +295,14 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                     <p>{sectionBlocks[1]?.paragraph || DEFAULT_BLOCKS[1].paragraph}</p>
                   </div>
 
-                  {/* 2-Image Row Between Paragraphs — Pexels API */}
+                  {/* 2-Image Row Between Paragraphs — Pexels API (pexels_query_2 + pexels_query_3) */}
                   <div className="postbox-details-thumb-wrap mb-10">
                     <div className="row">
                       <div className="col-lg-6">
                         <div className="postbox-details-thumb mb-20">
                           <img
                             className="w-100 rounded-3"
-                            alt={article?.pexels_query_2 || 'welcoming boutique hotel facade with outdoor seating'}
+                            alt={article?.pexels_query_2 || 'traveler using smartphone app in smart hotel room'}
                             src={pexelsImages[0] || 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
                             style={{ height: '260px', objectFit: 'cover' }}
                           />
@@ -298,7 +312,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                         <div className="postbox-details-thumb mb-20">
                           <img
                             className="w-100 rounded-3"
-                            alt={article?.pexels_query_3 || 'vibrant outdoor cafe patio in bustling european plaza'}
+                            alt={article?.pexels_query_3 || 'digital tablet showing flight map and travel itinerary'}
                             src={pexelsImages[1] || 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
                             style={{ height: '260px', objectFit: 'cover' }}
                           />
@@ -548,21 +562,13 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                   <h3 className="sidebar-widget-title mb-25">Categories</h3>
                   <div className="sidebar-widget-content">
                     <ul>
-                      <li>
-                        <a href="#blog">Digital Marketing <span>(14)</span></a>
-                      </li>
-                      <li>
-                        <a href="#blog">Direct Bookings <span>(08)</span></a>
-                      </li>
-                      <li>
-                        <a href="#blog">Local SEO & GBP <span>(11)</span></a>
-                      </li>
-                      <li>
-                        <a href="#blog">Hospitality Tech <span>(06)</span></a>
-                      </li>
-                      <li>
-                        <a href="#blog">Brand Strategy <span>(09)</span></a>
-                      </li>
+                      {categories.slice(0, 8).map((cat, idx) => (
+                        <li key={idx}>
+                          <a href="#blog">
+                            {cat.name} <span>({cat.count < 10 ? `0${cat.count}` : cat.count})</span>
+                          </a>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>

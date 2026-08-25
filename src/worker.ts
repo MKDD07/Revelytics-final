@@ -903,9 +903,23 @@ export default {
       // Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
       // -----------------------------------------------------------------------
       // -----------------------------------------------------------------------
-      // 7. REV_DB CMS API (Page Headings, Subheadings, Pexels & Comments)
+      // 7. REV_DB CMS API (Page Headings, Subheadings, Pexels, Categories & Comments)
       // Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
       // -----------------------------------------------------------------------
+      if (path === '/api/rev_db/categories' || path === '/api/categories') {
+        if (method === 'GET') {
+          const { results } = await env.DB.prepare(`
+            SELECT category AS name, COUNT(*) AS count
+            FROM rev_db
+            WHERE category IS NOT NULL AND category != ''
+            GROUP BY category
+            ORDER BY count DESC
+            LIMIT 8
+          `).all();
+          return jsonResponse({ success: true, count: results.length, data: results });
+        }
+      }
+
       if (path === '/api/rev_db' || path.startsWith('/api/rev_db/')) {
         const pathParam = path.startsWith('/api/rev_db/')
           ? decodeURIComponent(path.split('/api/rev_db/')[1])
