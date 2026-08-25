@@ -173,7 +173,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
           }
 
           // Load Pexels images independently (non-blocking)
-          const q2 = item.pexels_query_2 || 'traveler using smartphone app in smart hotel room';
+          const q2 = item.pexels_query_2 || 'kayaker navigating rapids in dramatic river canyon';
           const q3 = item.pexels_query_3 || 'digital tablet showing flight map and travel itinerary';
           const q4 = item.pexels_query_4 || 'luxury resort swimming pool at sunset';
           
@@ -271,7 +271,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
   return (
     <>
       {/* Postbox Article Area */}
-      <div className="postbox-area tp-blog-details-ptb pt-110 pb-120">
+      <div className="postbox-area tp-blog-details-ptb pt-10 pb-120">
         <div className="container">
           <div className="row">
             {/* Left Column: Full Article Content */}
@@ -302,9 +302,10 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                         <div className="postbox-details-thumb mb-20">
                           <img
                             className="w-100 rounded-3"
-                            alt={article?.pexels_query_2 || 'traveler using smartphone app in smart hotel room'}
+                            data-query={article?.pexels_query_2 || 'kayaker navigating rapids in dramatic river canyon'}
+                            alt={article?.pexels_query_2 || 'kayaker navigating rapids in dramatic river canyon'}
                             src={pexelsImages[0] || 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
-                            style={{ height: '260px', objectFit: 'cover' }}
+                            style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
                           />
                         </div>
                       </div>
@@ -312,9 +313,10 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                         <div className="postbox-details-thumb mb-20">
                           <img
                             className="w-100 rounded-3"
+                            data-query={article?.pexels_query_3 || 'digital tablet showing flight map and travel itinerary'}
                             alt={article?.pexels_query_3 || 'digital tablet showing flight map and travel itinerary'}
                             src={pexelsImages[1] || 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
-                            style={{ height: '260px', objectFit: 'cover' }}
+                            style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
                           />
                         </div>
                       </div>
@@ -351,9 +353,10 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                     <div className="postbox-details-thumb mb-20">
                       <img
                         className="w-100 rounded-3"
+                        data-query={article?.pexels_query_4 || 'luxury resort swimming pool at sunset'}
                         alt={article?.pexels_query_4 || 'Luxury Resort Experience'}
                         src={pexelsImages[2] || 'assets/img/blog/details/thumb-3.jpg'}
-                        style={{ maxHeight: '420px', objectFit: 'cover' }}
+                        style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', display: 'block' }}
                       />
                     </div>
                   </div>
