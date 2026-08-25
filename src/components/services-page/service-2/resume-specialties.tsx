@@ -402,16 +402,14 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   }, [categorySections, services]);
 
   // 4. GSAP Stacking / Sticky Card Animation
-  // Cards pin at top, and as the next card arrives at viewport center, the current card scales down to 80% and moves up
+  // Cards pin at top and stack one after the other. As the next card arrives, the current card stays opaque (opacity 1) and scales down slightly with a subtle white tint/brightness increase.
   useEffect(() => {
-    if (!showCategoryBanner || showServicesList) return;
-
     const timer = setTimeout(() => {
       const gsap = (window as any).gsap;
       const ScrollTrigger = (window as any).ScrollTrigger;
       if (!gsap || !ScrollTrigger) return;
 
-      const cards = document.querySelectorAll('.category-stacking-card');
+      const cards = document.querySelectorAll('.service-stacking-card');
       if (cards.length === 0) return;
 
       const triggers: any[] = [];
@@ -428,9 +426,9 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
             pinSpacing: false,
             scrub: true,
             animation: gsap.to(card, {
-              scale: 0.8,
-              opacity: 0.6,
-              yPercent: -8,
+              scale: 0.92,
+              yPercent: -6,
+              filter: 'brightness(1.25) contrast(0.95)',
               ease: 'none',
             }),
           });
@@ -444,65 +442,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [categorySections, showCategoryBanner, showServicesList]);
-
-  // 5. GSAP Hover Handlers
-  const handleMouseEnter = (id: number, e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.zIndex = '30';
-    const el = imageRefs.current[id];
-    if (!el) return;
-    const gsap = (window as any).gsap;
-    if (gsap) {
-      gsap.killTweensOf(el);
-      gsap.fromTo(
-        el,
-        { opacity: 0, scale: 0.85 },
-        { opacity: 1, scale: 1, duration: 0.35, ease: 'power2.out' }
-      );
-    } else {
-      el.style.opacity = '1';
-      el.style.transform = 'scale(1)';
-    }
-  };
-
-  const handleMouseMove = (id: number, e: React.MouseEvent<HTMLAnchorElement>) => {
-    const el = imageRefs.current[id];
-    const card = e.currentTarget;
-    if (!el || !card) return;
-    const gsap = (window as any).gsap;
-    if (!gsap) return;
-
-    const rect = card.getBoundingClientRect();
-    const relY = e.clientY - rect.top;
-    const offset = (relY - rect.height / 2) * 0.4;
-
-    gsap.to(el, {
-      y: offset,
-      duration: 0.25,
-      ease: 'power1.out',
-      overwrite: 'auto',
-    });
-  };
-
-  const handleMouseLeave = (id: number, e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.zIndex = '1';
-    const el = imageRefs.current[id];
-    if (!el) return;
-    const gsap = (window as any).gsap;
-    if (gsap) {
-      gsap.killTweensOf(el);
-      gsap.to(el, {
-        opacity: 0,
-        scale: 0.85,
-        y: 0,
-        duration: 0.25,
-        ease: 'power2.in',
-      });
-    } else {
-      el.style.opacity = '0';
-      el.style.transform = 'scale(0.85)';
-    }
-  };
+  }, [categorySections, services, showCategoryBanner, showServicesList]);
 
   const handleNavigate = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -534,56 +474,37 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                 </div>
               </div>
             ) : (
-              categorySections.map((category) => {
-                const bannerPhoto =
-                  categoryBanners[category.slug] ||
-                  FALLBACK_CATEGORY_IMAGES[category.slug] ||
-                  DEFAULT_IMAGE;
+              <div className="services-stacked-container mt-30">
+                {categorySections.map((category) => {
+                  const bannerPhoto =
+                    categoryBanners[category.slug] ||
+                    FALLBACK_CATEGORY_IMAGES[category.slug] ||
+                    DEFAULT_IMAGE;
 
-                return (
-                  <div key={category.slug} id={`category-${category.slug}`} className="category-service-group mb-60">
-                    {/* Category Header & Border Divider */}
-                    <div className="tp-about-border mt-20 pt-40 mb-30">
-                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div className="d-flex align-items-center gap-3">
-                          <span
-                            className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
-                            style={{
-                              fontSize: '12px',
-                              letterSpacing: '2px',
-                              color: '#ffffff',
-                              backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
-                            }}
-                          >
-                            Category
-                          </span>
-                          <h3 className="m-0 tp-ff-sequel-bold-head" style={{ fontSize: 'clamp(24px, 3vw, 36px)' }}>
-                            {category.name}
-                          </h3>
+                  return (
+                    <div
+                      key={category.slug}
+                      id={`category-${category.slug}`}
+                      className="category-services-wrapper w-100"
+                    >
+                      {/* Optional Category Banner (if enabled on Home) */}
+                      {showCategoryBanner && (
+                        <div className="service-stacking-card mb-40 w-100">
+                          <CategoryBanner
+                            categoryName={category.name}
+                            categorySlug={category.slug}
+                            primaryServiceSlug={category.primaryServiceSlug}
+                            serviceCount={category.items.length}
+                            bannerImage={bannerPhoto}
+                            height={cardHeightStr}
+                            onNavigate={handleNavigate}
+                          />
                         </div>
-                        <span className="text-muted fw-500">
-                          {category.items.length} {category.items.length === 1 ? 'Service' : 'Services'}
-                        </span>
-                      </div>
-                    </div>
+                      )}
 
-                    {/* Category Stacking Sticky Banner (if enabled) */}
-                    {showCategoryBanner && (
-                      <CategoryBanner
-                        categoryName={category.name}
-                        categorySlug={category.slug}
-                        primaryServiceSlug={category.primaryServiceSlug}
-                        serviceCount={category.items.length}
-                        bannerImage={bannerPhoto}
-                        height={cardHeightStr}
-                        onNavigate={handleNavigate}
-                      />
-                    )}
-
-                    {/* Category Services List (Cards for each service-detail) */}
-                    {showServicesList && (
-                      <div className="row g-4 mt-10">
-                        {category.items.map((item, index) => {
+                      {/* Full-width Stacked Service Cards (One after the other) */}
+                      {showServicesList &&
+                        category.items.map((item, index) => {
                           const serviceSlug = normalizeSlug(item.title, item.service_slug);
                           const displayCategory =
                             item.subheading ||
@@ -601,144 +522,160 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                           return (
                             <div
                               key={item.id || serviceSlug || index}
-                              className="col-lg-6 col-md-6 col-12 tp_fade_anim"
-                              data-delay=".3"
+                              className="service-stacking-card mb-40 w-100 position-relative fix"
+                              id={`service-${serviceSlug}`}
+                              data-service-slug={serviceSlug}
+                              data-slug={serviceSlug}
+                              style={{
+                                height: cardHeightStr,
+                                minHeight: '520px',
+                                borderRadius: '24px',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)',
+                                willChange: 'transform, filter',
+                                transformOrigin: 'top center',
+                                backgroundColor: '#0c0c0c',
+                              }}
                             >
-                              <a
-                                id={`service-${serviceSlug}`}
-                                href={`/service-details/${serviceSlug}`}
-                                data-service-slug={serviceSlug}
-                                data-slug={serviceSlug}
-                                onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
-                                className="service-details-card d-block text-decoration-none position-relative overflow-hidden h-100"
+                              {/* Background Image */}
+                              <img
+                                src={photoUrl}
+                                alt={item.title}
                                 style={{
-                                  minHeight: '380px',
-                                  borderRadius: '24px',
-                                  backgroundColor: '#0e0e0e',
-                                  boxShadow: '0 15px 35px rgba(0, 0, 0, 0.2)',
-                                  transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
                                 }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.transform = 'translateY(-6px)';
-                                  e.currentTarget.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.4)';
+                              />
+
+                              {/* Dark Cinematic Gradient Overlay */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  inset: 0,
+                                  background:
+                                    'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.8) 100%)',
+                                  pointerEvents: 'none',
                                 }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.transform = 'none';
-                                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2)';
+                              />
+
+                              {/* Decorative Duplicate Watermark Text */}
+                              <div
+                                className="category-watermark-text position-absolute user-select-none pointer-events-none d-none d-md-block"
+                                style={{
+                                  right: '-20px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  fontSize: 'clamp(80px, 12vw, 180px)',
+                                  fontWeight: 900,
+                                  lineHeight: 0.8,
+                                  textTransform: 'uppercase',
+                                  whiteSpace: 'nowrap',
+                                  color: 'rgba(255, 255, 255, 0.07)',
+                                  zIndex: 1,
+                                  letterSpacing: '-3px',
+                                  fontFamily: 'var(--tp-ff-sequel-bold, sans-serif)',
+                                  pointerEvents: 'none',
                                 }}
                               >
-                                {/* Background Image */}
-                                <img
-                                  src={photoUrl}
-                                  alt={item.title}
-                                  style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    transition: 'transform 0.6s ease',
-                                  }}
-                                  className="service-card-bg-img"
-                                />
+                                {item.title}
+                              </div>
 
-                                {/* Dark Cinematic Gradient Overlay */}
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    background:
-                                      'linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.8) 100%)',
-                                    pointerEvents: 'none',
-                                  }}
-                                />
-
-                                {/* Foreground Card Content */}
-                                <div
-                                  className="d-flex flex-column justify-content-between h-100 p-4 p-md-5 position-relative"
-                                  style={{ zIndex: 2 }}
-                                >
-                                  {/* Top Header Badge */}
-                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                    <span
-                                      className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
-                                      style={{
-                                        fontSize: '12px',
-                                        letterSpacing: '2px',
-                                        color: '#ffffff',
-                                        backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
-                                      }}
-                                    >
-                                      {displayCategory}
-                                    </span>
-                                    <span
-                                      className="badge rounded-pill px-3 py-2"
-                                      style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                                        backdropFilter: 'blur(8px)',
-                                        color: '#ffffff',
-                                        fontSize: '13px',
-                                        fontWeight: 600,
-                                        letterSpacing: '1px',
-                                      }}
-                                    >
-                                      {numStr}
-                                    </span>
-                                  </div>
-
-                                  {/* Bottom Content with Heading, Description & Action Button */}
-                                  <div>
-                                    <h3
-                                      className="m-0 text-white tp-ff-sequel-bold-head mb-3"
-                                      style={{ fontSize: 'clamp(24px, 2.5vw, 32px)', lineHeight: 1.2 }}
-                                    >
-                                      {item.title}
-                                    </h3>
-                                    {item.description && (
-                                      <p
-                                        className="text-white mb-4"
-                                        style={{
-                                          fontSize: '15px',
-                                          lineHeight: 1.6,
-                                          opacity: 0.88,
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 3,
-                                          WebkitBoxOrient: 'vertical',
-                                          overflow: 'hidden',
-                                        }}
-                                      >
-                                        {item.description}
-                                      </p>
-                                    )}
-                                    <div className="d-inline-flex align-items-center gap-2 text-white fw-600 fs-14">
-                                      <span
-                                        style={{
-                                          padding: '10px 22px',
-                                          borderRadius: '50px',
-                                          backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                                          backdropFilter: 'blur(10px)',
-                                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                                          display: 'inline-flex',
-                                          alignItems: 'center',
-                                          gap: '8px',
-                                          transition: 'all 0.25s ease',
-                                        }}
-                                      >
-                                        Explore Service <ArrowUpRight size={16} />
-                                      </span>
-                                    </div>
-                                  </div>
+                              {/* Foreground Card Content */}
+                              <div
+                                className="d-flex flex-column justify-content-between h-100 p-4 p-md-5 position-relative"
+                                style={{ zIndex: 2 }}
+                              >
+                                {/* Top Header Badge */}
+                                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                  <span
+                                    className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
+                                    style={{
+                                      fontSize: '12px',
+                                      letterSpacing: '2px',
+                                      color: '#ffffff',
+                                      backgroundColor: 'var(--tp-theme-primary, #ff3c00)',
+                                    }}
+                                  >
+                                    {displayCategory}
+                                  </span>
+                                  <span
+                                    className="badge rounded-pill px-3 py-2"
+                                    style={{
+                                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                      backdropFilter: 'blur(8px)',
+                                      color: '#ffffff',
+                                      fontSize: '14px',
+                                      fontWeight: 600,
+                                      letterSpacing: '1px',
+                                    }}
+                                  >
+                                    Service {numStr}
+                                  </span>
                                 </div>
-                              </a>
+
+                                {/* Bottom Content with Title, Description & Action Button */}
+                                <div style={{ maxWidth: '720px' }}>
+                                  <h3
+                                    className="m-0 text-white tp-ff-sequel-bold-head mb-3"
+                                    style={{ fontSize: 'clamp(30px, 4vw, 52px)', lineHeight: 1.15 }}
+                                  >
+                                    {item.title}
+                                  </h3>
+                                  {item.description && (
+                                    <p
+                                      className="text-white mb-4"
+                                      style={{
+                                        fontSize: 'clamp(15px, 1.2vw, 18px)',
+                                        lineHeight: 1.6,
+                                        opacity: 0.9,
+                                        maxWidth: '620px',
+                                      }}
+                                    >
+                                      {item.description}
+                                    </p>
+                                  )}
+                                  <a
+                                    href={`/service-details/${serviceSlug}`}
+                                    onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
+                                    className="d-inline-flex align-items-center gap-2 text-decoration-none"
+                                    style={{
+                                      padding: '14px 30px',
+                                      borderRadius: '50px',
+                                      fontWeight: 600,
+                                      fontSize: '15px',
+                                      backgroundColor: '#ffffff',
+                                      color: '#000000',
+                                      boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
+                                      transition: 'transform 0.25s ease, background-color 0.25s ease',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'var(--tp-theme-primary, #ff3c00)';
+                                      e.currentTarget.style.color = '#ffffff';
+                                      e.currentTarget.style.transform = 'translateY(-2px)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#ffffff';
+                                      e.currentTarget.style.color = '#000000';
+                                      e.currentTarget.style.transform = 'none';
+                                    }}
+                                  >
+                                    <span>Explore {item.title}</span>
+                                    <ArrowUpRight size={18} />
+                                  </a>
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
