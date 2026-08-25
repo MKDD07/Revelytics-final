@@ -123,10 +123,11 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
   const [article, setArticle] = useState<RevDbItem | null>(null);
   const [comments, setComments] = useState<RevDbComment[]>(DEFAULT_COMMENTS);
   const [categories, setCategories] = useState<RevDbCategory[]>(DEFAULT_BLOG_CATEGORIES);
-  const [pexelsImages, setPexelsImages] = useState<[string | null, string | null, string | null]>([
+  const [pexelsImages, setPexelsImages] = useState<[string | null, string | null, string | null, string | null]>([
     'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
     'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
     'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop',
+    'https://images.pexels.com/photos/2474690/pexels-photo-2474690.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop',
   ]);
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
@@ -172,18 +173,25 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
               .catch(() => { /* keep defaults */ });
           }
 
-          // Load Pexels images independently (non-blocking)
+          // Load Pexels images independently (non-blocking, fallbacks for _2, _3, _4, _5)
           const q2 = item.pexels_query_2 || 'kayaker navigating rapids in dramatic river canyon';
           const q3 = item.pexels_query_3 || 'digital tablet showing flight map and travel itinerary';
-          const q4 = item.pexels_query_4 || 'luxury resort swimming pool at sunset';
+          const q4 = item.pexels_query_4 || 'local artisan demonstrating sustainable craft to tourists';
+          const q5 = item.pexels_query_5 || 'scenic coastal hiking trail overlooking turquoise ocean';
           
           const FALLBACK_2 = 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop';
           const FALLBACK_3 = 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop';
           const FALLBACK_4 = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop';
+          const FALLBACK_5 = 'https://images.pexels.com/photos/2474690/pexels-photo-2474690.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop';
 
-          fetchPexelsPhotos([q2, q3, q4]).then(([img2, img3, img4]) => {
+          fetchPexelsPhotos([q2, q3, q4, q5]).then(([img2, img3, img4, img5]) => {
             if (isMounted) {
-              setPexelsImages([img2 || FALLBACK_2, img3 || FALLBACK_3, img4 || FALLBACK_4]);
+              setPexelsImages([
+                img2 || FALLBACK_2,
+                img3 || FALLBACK_3,
+                img4 || FALLBACK_4,
+                img5 || FALLBACK_5,
+              ]);
             }
           }).catch(() => { /* keep fallbacks */ });
         }
@@ -353,9 +361,9 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                     <div className="postbox-details-thumb mb-20">
                       <img
                         className="w-100 rounded-3"
-                        data-query={article?.pexels_query_4 || 'luxury resort swimming pool at sunset'}
-                        alt={article?.pexels_query_4 || 'Luxury Resort Experience'}
-                        src={pexelsImages[2] || 'assets/img/blog/details/thumb-3.jpg'}
+                        data-query={article?.pexels_query_4 || 'local artisan demonstrating sustainable craft to tourists'}
+                        alt={article?.pexels_query_4 || 'local artisan demonstrating sustainable craft to tourists'}
+                        src={pexelsImages[2] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop'}
                         style={{ width: '100%', maxHeight: '420px', objectFit: 'cover', display: 'block' }}
                       />
                     </div>
