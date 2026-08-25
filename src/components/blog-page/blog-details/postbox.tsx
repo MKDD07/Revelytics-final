@@ -442,7 +442,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                     <h3 className="postbox-details-comment-title mb-35">
                       Comments ({comments.length})
                     </h3>
-                    <ul>
+                    <ul className="list-unstyled">
                       {comments.map((c) => (
                         <li key={c.id}>
                           <div className="postbox-details-comment-box d-flex">

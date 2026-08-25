@@ -84,3 +84,28 @@ img {
   z-index: 5 !important;
   pointer-events: auto;
 }
+
+/* Postbox Comments Styling */
+.postbox-details-comment ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.postbox-details-comment ul li {
+  list-style: none !important;
+  margin-bottom: 20px;
+}
+
+.postbox-details-comment-box {
+  background: #f6f6f6;
+  color: var(--tp-common-black, #141414);
+  border: 1px solid transparent;
+  padding: 25px 30px;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.postbox-details-comment-box:hover {
+  border-color: rgba(0, 0, 0, 0.08);
+}
