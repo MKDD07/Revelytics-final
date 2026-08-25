@@ -14,7 +14,7 @@ export interface ResumeSpecialtiesProps {
   initialServices?: ServiceItem[];
   specialtiesData?: ServiceItem[];
   limit?: number;
-  bannerHeight?: string | number; // Configurable Card Size (default: 600px)
+  bannerHeight?: string | number; // Configurable Card Size (default: 500px)
   showCategoryBanner?: boolean; // Enable or disable category banners
   showServicesList?: boolean; // Enable or disable services list container
 }
@@ -51,8 +51,6 @@ const CATEGORY_DESCRIPTIONS: Record<string, string> = {
 
 const DEFAULT_IMAGE =
   'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop';
-
-const ROTATION_ANGLES = ['2deg', '-2deg', '3deg', '-3deg'];
 
 // Fallback slug mapping helper
 const normalizeSlug = (title: string, existingSlug?: string): string => {
@@ -102,11 +100,12 @@ const CategoryBanner: React.FC<{
       id={`category-${categorySlug}`}
       style={{
         height,
+        minHeight: '450px',
         borderRadius: '24px',
         overflow: 'hidden',
         position: 'relative',
         boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
-        willChange: 'transform, opacity',
+        willChange: 'transform',
         transformOrigin: 'top center',
         backgroundColor: '#0c0c0c',
       }}
@@ -256,7 +255,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   initialServices,
   specialtiesData,
   limit = 0,
-  bannerHeight = '600px',
+  bannerHeight = '500px',
   showCategoryBanner = true,
   showServicesList = true,
 }) => {
@@ -270,11 +269,9 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
     !(specialtiesData && specialtiesData.length > 0)
   );
 
-  const imageRefs = useRef<Record<number, HTMLDivElement | null>>({});
-
   const cardHeightStr = useMemo(() => {
     if (typeof bannerHeight === 'number') return `${bannerHeight}px`;
-    return bannerHeight || '600px';
+    return bannerHeight || '500px';
   }, [bannerHeight]);
 
   // 1. Fetch Services from D1
@@ -402,7 +399,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   }, [categorySections, services]);
 
   // 4. GSAP Stacking / Sticky Card Animation
-  // Cards pin at top and stack one after the other. As the next card arrives, the current card stays opaque (opacity 1) and scales down slightly with a subtle white tint/brightness increase.
+  // Cards pin at top and stack one after the other. As the next card arrives, the current card stays opaque without white brightness overlay.
   useEffect(() => {
     const timer = setTimeout(() => {
       const gsap = (window as any).gsap;
@@ -426,9 +423,8 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
             pinSpacing: false,
             scrub: true,
             animation: gsap.to(card, {
-              scale: 0.92,
-              yPercent: -6,
-              filter: 'brightness(1.25) contrast(0.95)',
+              scale: 0.94,
+              yPercent: -4,
               ease: 'none',
             }),
           });
@@ -502,7 +498,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                         </div>
                       )}
 
-                      {/* Full-width Stacked Service Cards (One after the other) */}
+                      {/* Full-width Stacked Service Cards with Right-aligned Paragraphs */}
                       {showServicesList &&
                         category.items.map((item, index) => {
                           const serviceSlug = normalizeSlug(item.title, item.service_slug);
@@ -519,6 +515,10 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
 
                           const numStr = String(index + 1).padStart(2, '0');
 
+                          const detailedPara =
+                            item.description ||
+                            `Comprehensive ${item.title} engineered with purpose-driven technology, seamless digital architectures, and conversion-focused customer experiences.`;
+
                           return (
                             <div
                               key={item.id || serviceSlug || index}
@@ -528,12 +528,12 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                               data-slug={serviceSlug}
                               style={{
                                 height: cardHeightStr,
-                                minHeight: '520px',
+                                minHeight: '480px',
                                 borderRadius: '24px',
                                 overflow: 'hidden',
                                 position: 'relative',
                                 boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)',
-                                willChange: 'transform, filter',
+                                willChange: 'transform',
                                 transformOrigin: 'top center',
                                 backgroundColor: '#0c0c0c',
                               }}
@@ -558,7 +558,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                                   position: 'absolute',
                                   inset: 0,
                                   background:
-                                    'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.8) 100%)',
+                                    'linear-gradient(135deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.85) 100%)',
                                   pointerEvents: 'none',
                                 }}
                               />
@@ -570,12 +570,12 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                                   right: '-20px',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
-                                  fontSize: 'clamp(80px, 12vw, 180px)',
+                                  fontSize: 'clamp(80px, 12vw, 170px)',
                                   fontWeight: 900,
                                   lineHeight: 0.8,
                                   textTransform: 'uppercase',
                                   whiteSpace: 'nowrap',
-                                  color: 'rgba(255, 255, 255, 0.07)',
+                                  color: 'rgba(255, 255, 255, 0.05)',
                                   zIndex: 1,
                                   letterSpacing: '-3px',
                                   fontFamily: 'var(--tp-ff-sequel-bold, sans-serif)',
@@ -585,12 +585,12 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                                 {item.title}
                               </div>
 
-                              {/* Foreground Card Content */}
+                              {/* Foreground Card Content with Right-side Paragraph Layout */}
                               <div
                                 className="d-flex flex-column justify-content-between h-100 p-4 p-md-5 position-relative"
                                 style={{ zIndex: 2 }}
                               >
-                                {/* Top Header Badge */}
+                                {/* Top Header Row: Category Badge & Service Index */}
                                 <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                                   <span
                                     className="text-uppercase fw-600 d-inline-block px-3 py-1 rounded-pill"
@@ -618,55 +618,68 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
                                   </span>
                                 </div>
 
-                                {/* Bottom Content with Title, Description & Action Button */}
-                                <div style={{ maxWidth: '720px' }}>
-                                  <h3
-                                    className="m-0 text-white tp-ff-sequel-bold-head mb-3"
-                                    style={{ fontSize: 'clamp(30px, 4vw, 52px)', lineHeight: 1.15 }}
-                                  >
-                                    {item.title}
-                                  </h3>
-                                  {item.description && (
-                                    <p
-                                      className="text-white mb-4"
+                                {/* Bottom Row: Left (Heading & CTA Button) | Right (Detailed Content Paragraph) */}
+                                <div className="row align-items-end g-4 mt-auto">
+                                  {/* Left Column: Title & CTA Button */}
+                                  <div className="col-lg-6 col-md-6 col-12">
+                                    <h3
+                                      className="m-0 text-white tp-ff-sequel-bold-head mb-4"
+                                      style={{ fontSize: 'clamp(28px, 3.2vw, 46px)', lineHeight: 1.15 }}
+                                    >
+                                      {item.title}
+                                    </h3>
+                                    <a
+                                      href={`/service-details/${serviceSlug}`}
+                                      onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
+                                      className="d-inline-flex align-items-center gap-2 text-decoration-none"
                                       style={{
-                                        fontSize: 'clamp(15px, 1.2vw, 18px)',
-                                        lineHeight: 1.6,
-                                        opacity: 0.9,
-                                        maxWidth: '620px',
+                                        padding: '13px 28px',
+                                        borderRadius: '50px',
+                                        fontWeight: 600,
+                                        fontSize: '15px',
+                                        backgroundColor: '#ffffff',
+                                        color: '#000000',
+                                        boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
+                                        transition: 'transform 0.25s ease, background-color 0.25s ease',
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'var(--tp-theme-primary, #ff3c00)';
+                                        e.currentTarget.style.color = '#ffffff';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                        e.currentTarget.style.color = '#000000';
+                                        e.currentTarget.style.transform = 'none';
                                       }}
                                     >
-                                      {item.description}
-                                    </p>
-                                  )}
-                                  <a
-                                    href={`/service-details/${serviceSlug}`}
-                                    onClick={(e) => handleNavigate(`/service-details/${serviceSlug}`, e)}
-                                    className="d-inline-flex align-items-center gap-2 text-decoration-none"
-                                    style={{
-                                      padding: '14px 30px',
-                                      borderRadius: '50px',
-                                      fontWeight: 600,
-                                      fontSize: '15px',
-                                      backgroundColor: '#ffffff',
-                                      color: '#000000',
-                                      boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
-                                      transition: 'transform 0.25s ease, background-color 0.25s ease',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'var(--tp-theme-primary, #ff3c00)';
-                                      e.currentTarget.style.color = '#ffffff';
-                                      e.currentTarget.style.transform = 'translateY(-2px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#ffffff';
-                                      e.currentTarget.style.color = '#000000';
-                                      e.currentTarget.style.transform = 'none';
-                                    }}
-                                  >
-                                    <span>Explore {item.title}</span>
-                                    <ArrowUpRight size={18} />
-                                  </a>
+                                      <span>Explore {item.title}</span>
+                                      <ArrowUpRight size={18} />
+                                    </a>
+                                  </div>
+
+                                  {/* Right Column: Paragraph Content */}
+                                  <div className="col-lg-6 col-md-6 col-12">
+                                    <div
+                                      className="p-3 p-md-4 rounded-4"
+                                      style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                                        backdropFilter: 'blur(12px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                                      }}
+                                    >
+                                      <p
+                                        className="text-white m-0"
+                                        style={{
+                                          fontSize: 'clamp(14px, 1.1vw, 16px)',
+                                          lineHeight: 1.65,
+                                          opacity: 0.92,
+                                        }}
+                                      >
+                                        {detailedPara}
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
