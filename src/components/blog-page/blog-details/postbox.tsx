@@ -561,7 +561,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                 <div className="sidebar-widget mb-40">
                   <h3 className="sidebar-widget-title mb-25">Categories</h3>
                   <div className="sidebar-widget-content">
-                    <ul>
+                    <ul className="list-unstyled">
                       {categories.slice(0, 8).map((cat, idx) => (
                         <li key={idx}>
                           <a href="#blog">

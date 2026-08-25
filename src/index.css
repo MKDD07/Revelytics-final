@@ -133,3 +133,20 @@ blockquote p.quote-text {
   color: var(--tp-theme-primary, #ff3c00);
 }
 
+/* Sidebar Widget Clean Reset & List Marker Removal */
+.sidebar-widget-content ul,
+.sidebar-widget-category ul,
+.sidebar-widget ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.sidebar-widget-content ul li,
+.sidebar-widget-category ul li,
+.sidebar-widget ul li {
+  list-style: none !important;
+  list-style-type: none !important;
+}
+
+
