@@ -128,24 +128,49 @@ const ServiceList: React.FC = () => {
     };
   }, [distinctCategories]);
 
-  // Scroll down smoothly to the selected category container
+  // Scroll down smoothly to the first item of the clicked category
   const handleCategoryClick = (catSlug: string, e: React.MouseEvent) => {
     e.preventDefault();
-    const targetElement = document.getElementById(`category-${catSlug}`);
-    if (targetElement) {
+
+    // 1. Find the first service card belonging to this category
+    const targetCard =
+      document.querySelector(`[data-category-slug="${catSlug}"]`) ||
+      document.getElementById(`category-${catSlug}`) ||
+      document.querySelector(`[data-slug="${catSlug}"]`);
+
+    if (targetCard) {
       const headerOffset = 100;
-      const elementPosition = targetElement.getBoundingClientRect().top;
+      const elementPosition = targetCard.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth',
       });
-    } else {
-      const aboutEl = document.getElementById('about');
-      if (aboutEl) {
-        aboutEl.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // 2. Fallback: match by finding the category's primary service slug
+    const cat = distinctCategories.find((c) => c.slug === catSlug);
+    if (cat && cat.serviceSlug) {
+      const serviceCard = document.getElementById(`service-${cat.serviceSlug}`) || document.getElementById(`service-wrapper-${cat.serviceSlug}`);
+      if (serviceCard) {
+        const headerOffset = 100;
+        const elementPosition = serviceCard.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+        return;
       }
+    }
+
+    // 3. Fallback to about section
+    const aboutEl = document.getElementById('about');
+    if (aboutEl) {
+      aboutEl.scrollIntoView({ behavior: 'smooth' });
     }
   };
 

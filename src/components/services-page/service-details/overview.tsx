@@ -33,7 +33,7 @@ const Overview: React.FC<ServiceDetailsOverviewProps> = ({ slug: propSlug }) => 
   }, [propSlug]);
 
   const [detail, setDetail] = useState<ServiceDetailItem | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string>(DEFAULT_IMAGE);
+  const [photoUrl, setPhotoUrl] = useState<string>('');
   const [loadingImg, setLoadingImg] = useState<boolean>(true);
 
   // 1. Fetch service details
@@ -59,7 +59,7 @@ const Overview: React.FC<ServiceDetailsOverviewProps> = ({ slug: propSlug }) => 
     };
   }, [currentSlug]);
 
-  // 2. Fetch Pexels Image based on pexels_query or service metadata
+  // 2. Fetch Pexels Image based on pexels_query or service metadata (Landscape orientation)
   useEffect(() => {
     let isMounted = true;
 
@@ -67,25 +67,25 @@ const Overview: React.FC<ServiceDetailsOverviewProps> = ({ slug: propSlug }) => 
       // Use direct image_url if provided in database
       if (detail?.image_url) {
         setPhotoUrl(detail.image_url);
-        setLoadingImg(false);
         return;
       }
 
       const query =
         detail?.pexels_query ||
-        `${detail?.category || ''} ${detail?.service_name || currentSlug} technology design workspace`.trim();
+        `${detail?.category || ''} ${detail?.service_name || currentSlug} technology architecture minimal landscape`.trim();
 
       try {
         setLoadingImg(true);
-        const photos = await searchPexelsPhotos(query, 1, 'landscape');
+        const photos = await searchPexelsPhotos(query, 5, 'landscape');
         if (isMounted && photos && photos.length > 0) {
           setPhotoUrl(photos[0]);
+        } else if (isMounted) {
+          setPhotoUrl(DEFAULT_IMAGE);
         }
       } catch (err) {
         console.warn('Pexels image search failed for service overview:', err);
-      } finally {
         if (isMounted) {
-          setLoadingImg(false);
+          setPhotoUrl(DEFAULT_IMAGE);
         }
       }
     }
@@ -200,21 +200,74 @@ const Overview: React.FC<ServiceDetailsOverviewProps> = ({ slug: propSlug }) => 
               </div>
             </div>
             <div className="col-lg-7">
-              <div className="tp-service-thumb mb-30" style={{ minHeight: '380px', borderRadius: '16px', overflow: 'hidden' }}>
-                <img
-                  className="w-100"
-                  src={photoUrl}
-                  alt={serviceName}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    maxHeight: '520px',
-                    objectFit: 'cover',
-                    borderRadius: '16px',
-                    transition: 'opacity 0.4s ease-in-out',
-                    opacity: loadingImg ? 0.7 : 1,
-                  }}
-                />
+              <div
+                className="tp-service-thumb mb-30 position-relative"
+                style={{
+                  minHeight: '380px',
+                  height: '100%',
+                  maxHeight: '520px',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  backgroundColor: '#f0f2f5',
+                }}
+              >
+                {/* Light Grey Shimmer Skeleton Loader */}
+                {loadingImg && (
+                  <div
+                    className="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+                    style={{
+                      top: 0,
+                      left: 0,
+                      backgroundColor: '#e9ecef',
+                      borderRadius: '16px',
+                      zIndex: 1,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        background:
+                          'linear-gradient(90deg, rgba(233,236,239,0) 0%, rgba(248,249,250,0.85) 50%, rgba(233,236,239,0) 100%)',
+                        animation: 'shimmerSweep 1.5s infinite',
+                      }}
+                    />
+                    <style>{`
+                      @keyframes shimmerSweep {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
+                      }
+                    `}</style>
+                  </div>
+                )}
+
+                {photoUrl && (
+                  <img
+                    className="w-100"
+                    src={photoUrl}
+                    alt={serviceName}
+                    onLoad={() => setLoadingImg(false)}
+                    onError={() => {
+                      if (photoUrl !== DEFAULT_IMAGE) {
+                        setPhotoUrl(DEFAULT_IMAGE);
+                      }
+                      setLoadingImg(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      maxHeight: '520px',
+                      objectFit: 'cover',
+                      borderRadius: '16px',
+                      transition: 'opacity 0.4s ease-in-out',
+                      opacity: loadingImg ? 0 : 1,
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>

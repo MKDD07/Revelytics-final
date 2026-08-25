@@ -54,6 +54,8 @@ export { default as ServiceDetailsProcess } from './services-page/service-detail
 export { default as ServiceDetailsWhyChooseUs } from './services-page/service-details/why-choose-us';
 export { default as ServiceDetailsFaq } from './services-page/service-details/faq';
 export { default as ServiceDetailsBanner1 } from './services-page/service-details/banner-1';
+export { default as ServiceDetailsSlider } from './services-page/service-details/service-slider';
+export { default as ServiceDetailsHorizontalScroll } from './services-page/service-details/horizontal-scroll-text';
 
 // Blog Page Components
 export { default as BlogHero } from './blog-page/blog/hero';

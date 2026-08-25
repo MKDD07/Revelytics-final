@@ -275,11 +275,113 @@ export default {
             (2, 'crafting-immersive-destination-web-experiences', 'Crafting Immersive Destination Web Experiences.', 'UI/UX Design', 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop', 'Why dynamic media, kinetic typography, and fast loading speeds drive 40% higher room reservations.'),
             (3, 'building-modern-identities-for-boutique-resorts', 'Building Modern Identities for Boutique Resorts.', 'Brand Strategy', 'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop', 'The architectural elements of modern hospitality branding and experiential storytelling.');
           `),
+          // Revlytics Page CMS Table (rev_db)
+          // Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
+          env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS rev_db (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              page_name TEXT NOT NULL,
+              section_name TEXT NOT NULL DEFAULT 'hero',
+              slug TEXT UNIQUE NOT NULL,
+              heading TEXT NOT NULL,
+              subheading TEXT,
+              meta_heading TEXT,
+              meta_data TEXT,
+              category TEXT,
+              author TEXT,
+              date TEXT,
+              image_url TEXT,
+              description TEXT,
+              paragraph TEXT,
+              useful_quote TEXT,
+              pexels_featured_query TEXT,
+              pexels_query_2 TEXT,
+              pexels_query_3 TEXT,
+              pexels_query_4 TEXT,
+              pexels_query_5 TEXT,
+              sections_h2_para TEXT CHECK(json_valid(sections_h2_para)),
+              tags TEXT CHECK(json_valid(tags)),
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+          `),
+          // Revlytics Comments Table
+          env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS rev_db_comments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              rev_id INTEGER NOT NULL,
+              author_name TEXT NOT NULL,
+              author_email TEXT,
+              comment_text TEXT NOT NULL,
+              status TEXT DEFAULT 'pending',
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (rev_id) REFERENCES rev_db(id) ON DELETE CASCADE
+            );
+          `),
+          // Seed rev_db
+          env.DB.prepare(`
+            INSERT OR IGNORE INTO rev_db (
+              id,
+              page_name,
+              section_name,
+              slug,
+              heading,
+              subheading,
+              meta_heading,
+              meta_data,
+              category,
+              author,
+              date,
+              image_url,
+              description,
+              paragraph,
+              useful_quote,
+              pexels_featured_query,
+              pexels_query_2,
+              pexels_query_3,
+              pexels_query_4,
+              pexels_query_5,
+              sections_h2_para,
+              tags
+            ) VALUES (
+              1,
+              'travel-marketing-insights',
+              'hero',
+              'mastering-travel-digital-marketing-growth-guide',
+              'Mastering Travel Digital Marketing: Strategies to Drive Bookings in 2026',
+              'From immersive storytelling to hyper-local SEO, discover how modern travel brands turn wandering dreamers into paying travelers.',
+              'Travel Digital Marketing Guide 2026 | Proven Strategies for Growth',
+              'Explore comprehensive travel digital marketing strategies covering SEO, short-form video, user-generated content, automated funnels, and retention tactics.',
+              'Digital Marketing',
+              'Elena Rostova',
+              '2026-08-25',
+              'https://images.pexels.com/photos/2108845/pexels-photo-2108845.jpeg',
+              'The travel landscape is evolving rapidly. Successful brands no longer just sell destinations—they sell anticipation, friction-free planning, and personalized digital journeys.',
+              'Modern travelers make decisions across dozens of digital touchpoints before confirming a booking. Capturing their attention requires moving beyond static banners to build experiential campaigns, authoritative search visibility, and frictionless booking paths across web and mobile.',
+              'Travel is the only thing you buy that makes you richer, but in marketing, clarity is what actually sells the ticket.',
+              'aerial beach tropical resort travel',
+              'person using smartphone booking flight airport',
+              'travel vlogger filming with camera mountains',
+              'luxury boutique hotel room ocean view',
+              'backpacker checking digital map sunset',
+              '[{"h2":"1. Dominate Intent with Destination-First SEO","paragraph":"Target high-intent, long-tail queries like \\"best boutique stays in Amalfi for remote workers\\" rather than generic keywords. Build comprehensive destination hubs, curated itineraries, and FAQ schemas that capture travelers at the planning stage."},{"h2":"2. Leverage Short-Form Visual Storytelling","paragraph":"Platforms like TikTok, Instagram Reels, and YouTube Shorts drive spontaneous travel inspiration. Focus on authentic, raw micro-moments—such as hidden cafe entrances or drone vistas—over polished corporate promotional reels."},{"h2":"3. Turn User-Generated Content into Social Proof","paragraph":"Travelers trust peers more than brands. Incentivize guests to share real photos using branded hashtags, and embed authentic UGC galleries directly into booking and checkout landing pages to reduce hesitation."},{"h2":"4. Automate Trigger-Based Email Sequences","paragraph":"Implement behavioral automation triggered by destination page views or cart abandonment. Send hyper-relevant guides, weather highlights, and time-sensitive incentives to keep your brand top-of-mind."},{"h2":"5. Optimize for Frictionless Mobile Conversions","paragraph":"Over 60% of travel bookings begin on mobile devices. Streamline the checkout process with Apple Pay, Google Pay, transparent pricing breakdowns, and page load times under 1.5 seconds."}]',
+              '["TravelMarketing", "SEOStrategy", "DigitalMarketing", "ContentMarketing", "HospitalityGrowth", "SocialMediaTrends"]'
+            );
+          `),
+          // Seed sample comments (Linked to rev_id = 1)
+          env.DB.prepare(`
+            INSERT OR IGNORE INTO rev_db_comments (id, rev_id, author_name, author_email, comment_text, status, created_at) VALUES 
+            (1, 1, 'Marcus Vance', 'marcus.vance@triphub.com', 'Spot on about short-form video. Our micro-itinerary Reels saw a 40% increase in direct inquiries this summer.', 'approved', datetime('now', '-5 minutes')),
+            (2, 1, 'Amina Patel', 'amina@wanderlustmedia.io', 'Destination-first SEO has been our biggest growth driver. Niche itinerary guides convert far better than broad city keywords.', 'approved', datetime('now', '-3 minutes')),
+            (3, 1, 'Julian Rossi', 'j.rossi@boutiquevillas.it', 'The point about mobile checkout friction is critical. Adding one-click digital wallets reduced our drop-off rate by 22%.', 'approved', datetime('now', '-30 seconds')),
+            (4, 1, 'Chloe Bennett', 'chloe@bennetttravel.com', 'Great breakdown! How often do you recommend updating seasonal destination hubs for SEO freshness?', 'approved', datetime('now')),
+            (5, 1, 'David Lin', 'david.lin@ecotrails.co', 'UGC embedded directly at checkout made an immediate impact on our tour bookings. High-value guide.', 'approved', datetime('now'));
+          `),
         ]);
 
         return jsonResponse({
           success: true,
-          message: 'Core Cloudflare D1 tables initialized and seeded successfully. (index_faqs, service_faqs, faq_page were left untouched — they already exist.)',
+          message: 'Core Cloudflare D1 tables (including rev_db & rev_db_comments) initialized and seeded successfully.',
           databaseId: '939a2da3-3705-413d-a89f-dd10e1e08335',
         });
       }
@@ -793,6 +895,278 @@ export default {
           );
           const data = await res.json();
           return jsonResponse(data, res.status);
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 7. REV_DB CMS API (Page Headings, Subheadings & Meta)
+      // Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
+      // -----------------------------------------------------------------------
+      // -----------------------------------------------------------------------
+      // 7. REV_DB CMS API (Page Headings, Subheadings, Pexels & Comments)
+      // Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335
+      // -----------------------------------------------------------------------
+      if (path === '/api/rev_db' || path.startsWith('/api/rev_db/')) {
+        const pathParam = path.startsWith('/api/rev_db/')
+          ? decodeURIComponent(path.split('/api/rev_db/')[1])
+          : null;
+        const pageParam = url.searchParams.get('page');
+        const sectionParam = url.searchParams.get('section');
+        const slugParam = url.searchParams.get('slug') || pathParam;
+
+        if (method === 'GET') {
+          // If query by slug or ID
+          if (slugParam && !pageParam && !sectionParam) {
+            const isNum = !isNaN(Number(slugParam));
+            const query = isNum
+              ? 'SELECT * FROM rev_db WHERE id = ?'
+              : 'SELECT * FROM rev_db WHERE slug = ?';
+            const item = await env.DB.prepare(query).bind(slugParam).first();
+            if (!item) return jsonResponse({ error: 'Record not found in rev_db' }, 404);
+            return jsonResponse({ success: true, data: item });
+          }
+
+          if (pageParam && sectionParam) {
+            const item = await env.DB.prepare(
+              'SELECT * FROM rev_db WHERE page_name = ? AND section_name = ?'
+            )
+              .bind(pageParam, sectionParam)
+              .first();
+            return jsonResponse({ success: true, data: item });
+          } else if (pageParam) {
+            const { results } = await env.DB.prepare(
+              'SELECT * FROM rev_db WHERE page_name = ? ORDER BY id ASC'
+            )
+              .bind(pageParam)
+              .all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          } else {
+            const { results } = await env.DB.prepare(
+              'SELECT * FROM rev_db ORDER BY id ASC'
+            ).all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          }
+        }
+
+        if (method === 'POST') {
+          const auth = await verifyApiKey(request, env);
+          if (!auth.valid) return jsonResponse({ error: 'Unauthorized. Valid API key required.' }, 401);
+
+          const body = (await request.json()) as any;
+          if (!body.page_name || !body.heading) {
+            return jsonResponse({ error: 'page_name and heading are required.' }, 400);
+          }
+
+          const slug = body.slug || body.heading.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const sectionsJson = typeof body.sections_h2_para === 'object'
+            ? JSON.stringify(body.sections_h2_para)
+            : (body.sections_h2_para || '[]');
+          const tagsJson = typeof body.tags === 'object'
+            ? JSON.stringify(body.tags)
+            : (body.tags || '[]');
+
+          const result = await env.DB.prepare(`
+            INSERT INTO rev_db (
+              page_name, section_name, slug, heading, subheading, meta_heading, meta_data, category, author, date, image_url, description, paragraph, useful_quote, pexels_featured_query, pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5, sections_h2_para, tags
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+            .bind(
+              body.page_name,
+              body.section_name || 'hero',
+              slug,
+              body.heading,
+              body.subheading || '',
+              body.meta_heading || '',
+              body.meta_data || '',
+              body.category || '',
+              body.author || '',
+              body.date || '',
+              body.image_url || '',
+              body.description || '',
+              body.paragraph || '',
+              body.useful_quote || '',
+              body.pexels_featured_query || '',
+              body.pexels_query_2 || '',
+              body.pexels_query_3 || '',
+              body.pexels_query_4 || '',
+              body.pexels_query_5 || '',
+              sectionsJson,
+              tagsJson
+            )
+            .run();
+
+          return jsonResponse(
+            { success: true, message: 'rev_db record created successfully', id: result.meta.last_row_id },
+            201
+          );
+        }
+
+        if (method === 'PUT') {
+          const auth = await verifyApiKey(request, env);
+          if (!auth.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          const id = pathParam && !isNaN(Number(pathParam)) ? Number(pathParam) : body.id;
+
+          const sectionsJson = body.sections_h2_para !== undefined
+            ? (typeof body.sections_h2_para === 'object' ? JSON.stringify(body.sections_h2_para) : body.sections_h2_para)
+            : null;
+          const tagsJson = body.tags !== undefined
+            ? (typeof body.tags === 'object' ? JSON.stringify(body.tags) : body.tags)
+            : null;
+
+          if (id) {
+            await env.DB.prepare(`
+              UPDATE rev_db SET
+                heading = COALESCE(?, heading),
+                subheading = COALESCE(?, subheading),
+                meta_heading = COALESCE(?, meta_heading),
+                meta_data = COALESCE(?, meta_data),
+                category = COALESCE(?, category),
+                author = COALESCE(?, author),
+                date = COALESCE(?, date),
+                image_url = COALESCE(?, image_url),
+                description = COALESCE(?, description),
+                paragraph = COALESCE(?, paragraph),
+                useful_quote = COALESCE(?, useful_quote),
+                pexels_featured_query = COALESCE(?, pexels_featured_query),
+                pexels_query_2 = COALESCE(?, pexels_query_2),
+                pexels_query_3 = COALESCE(?, pexels_query_3),
+                pexels_query_4 = COALESCE(?, pexels_query_4),
+                pexels_query_5 = COALESCE(?, pexels_query_5),
+                sections_h2_para = COALESCE(?, sections_h2_para),
+                tags = COALESCE(?, tags),
+                updated_at = CURRENT_TIMESTAMP
+              WHERE id = ?
+            `)
+              .bind(
+                body.heading,
+                body.subheading,
+                body.meta_heading,
+                body.meta_data,
+                body.category,
+                body.author,
+                body.date,
+                body.image_url,
+                body.description,
+                body.paragraph,
+                body.useful_quote,
+                body.pexels_featured_query,
+                body.pexels_query_2,
+                body.pexels_query_3,
+                body.pexels_query_4,
+                body.pexels_query_5,
+                sectionsJson,
+                tagsJson,
+                id
+              )
+              .run();
+
+            return jsonResponse({ success: true, message: 'rev_db record updated successfully' });
+          } else if (body.slug) {
+            await env.DB.prepare(`
+              UPDATE rev_db SET
+                heading = COALESCE(?, heading),
+                subheading = COALESCE(?, subheading),
+                meta_heading = COALESCE(?, meta_heading),
+                meta_data = COALESCE(?, meta_data),
+                category = COALESCE(?, category),
+                author = COALESCE(?, author),
+                date = COALESCE(?, date),
+                image_url = COALESCE(?, image_url),
+                description = COALESCE(?, description),
+                paragraph = COALESCE(?, paragraph),
+                useful_quote = COALESCE(?, useful_quote),
+                pexels_featured_query = COALESCE(?, pexels_featured_query),
+                pexels_query_2 = COALESCE(?, pexels_query_2),
+                pexels_query_3 = COALESCE(?, pexels_query_3),
+                pexels_query_4 = COALESCE(?, pexels_query_4),
+                pexels_query_5 = COALESCE(?, pexels_query_5),
+                sections_h2_para = COALESCE(?, sections_h2_para),
+                tags = COALESCE(?, tags),
+                updated_at = CURRENT_TIMESTAMP
+              WHERE slug = ?
+            `)
+              .bind(
+                body.heading,
+                body.subheading,
+                body.meta_heading,
+                body.meta_data,
+                body.category,
+                body.author,
+                body.date,
+                body.image_url,
+                body.description,
+                body.paragraph,
+                body.useful_quote,
+                body.pexels_featured_query,
+                body.pexels_query_2,
+                body.pexels_query_3,
+                body.pexels_query_4,
+                body.pexels_query_5,
+                sectionsJson,
+                tagsJson,
+                body.slug
+              )
+              .run();
+
+            return jsonResponse({ success: true, message: 'rev_db record updated successfully' });
+          }
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 8. REV_DB COMMENTS API
+      // -----------------------------------------------------------------------
+      if (path === '/api/rev_db_comments' || path === '/api/rev_db/comments') {
+        if (method === 'GET') {
+          const revId = url.searchParams.get('rev_id');
+          if (revId) {
+            const { results } = await env.DB.prepare(
+              "SELECT * FROM rev_db_comments WHERE rev_id = ? AND status != 'spam' ORDER BY id DESC"
+            )
+              .bind(revId)
+              .all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          } else {
+            const { results } = await env.DB.prepare(
+              'SELECT * FROM rev_db_comments ORDER BY id DESC LIMIT 100'
+            ).all();
+            return jsonResponse({ success: true, count: results.length, data: results });
+          }
+        }
+
+        if (method === 'POST') {
+          const body = (await request.json()) as any;
+          if (!body.rev_id || !body.author_name || !body.comment_text) {
+            return jsonResponse(
+              { error: 'rev_id, author_name, and comment_text are required fields.' },
+              400
+            );
+          }
+
+          const result = await env.DB.prepare(`
+            INSERT INTO rev_db_comments (rev_id, author_name, author_email, comment_text, status)
+            VALUES (?, ?, ?, ?, ?)
+          `)
+            .bind(
+              body.rev_id,
+              body.author_name,
+              body.author_email || '',
+              body.comment_text,
+              body.status || 'approved'
+            )
+            .run();
+
+          return jsonResponse(
+            {
+              success: true,
+              message: 'Comment submitted successfully.',
+              id: result.meta.last_row_id,
+            },
+            201
+          );
         }
       }
 

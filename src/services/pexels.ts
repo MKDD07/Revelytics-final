@@ -160,7 +160,9 @@ export async function searchPexelsPhotos(
 
     const data = await res.json();
     const photos: PexelsPhotoItem[] = data.photos || [];
-    const photoUrls: string[] = photos.map((p) => p.src.large2x || p.src.large || p.src.original).filter(Boolean);
+    const photoUrls: string[] = photos
+      .map((p) => p.src.original || p.src.large2x || p.src.large)
+      .filter(Boolean);
 
     if (photoUrls.length > 0) {
       memoryPhotoCache.set(cacheKey, photoUrls);

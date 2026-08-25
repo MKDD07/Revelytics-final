@@ -7,6 +7,9 @@ import {
   ServiceDetailsWhyChooseUs,
   ServiceDetailsBanner1,
   ServiceDetailsFaq,
+  ServiceDetailsSlider,
+  ServiceDetailsHorizontalScroll,
+  Contact1,
 } from '../components';
 
 export interface ServiceDetailsProps {
@@ -139,6 +142,15 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({ slug: propSlug }) => {
 
       {/* Service Specific FAQs from D1 */}
       <ServiceDetailsFaq slug={currentSlug} />
+
+      {/* Luxury Swiper All Services Carousel (No Inline CSS, No Pagination) */}
+      <ServiceDetailsSlider currentSlug={currentSlug} />
+      <Contact1 showMap={false} />
+
+      {/* GSAP ScrollTrigger Horizontal Pinned Headline (White Background) */}
+      <ServiceDetailsHorizontalScroll />
+
+      {/* Travel Digital Inquiry & Contact Section */}
     </>
   );
 };

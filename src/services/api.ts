@@ -347,3 +347,227 @@ export async function verifyApiKey(apiKey: string): Promise<boolean> {
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// REV_DB CMS HELPERS (Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335)
+// ---------------------------------------------------------------------------
+
+export interface SectionH2Para {
+  h2: string;
+  paragraph: string;
+}
+
+export interface RevDbItem {
+  id: number;
+  page_name: string;
+  section_name?: string;
+  slug: string;
+  heading: string;
+  subheading?: string;
+  meta_heading?: string;
+  meta_data?: string;
+  category?: string;
+  author?: string;
+  date?: string;
+  image_url?: string;
+  description?: string;
+  paragraph?: string;
+  useful_quote?: string;
+  pexels_featured_query?: string;
+  pexels_query_2?: string;
+  pexels_query_3?: string;
+  pexels_query_4?: string;
+  pexels_query_5?: string;
+  sections_h2_para?: string | SectionH2Para[];
+  tags?: string | string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RevDbComment {
+  id: number;
+  rev_id: number;
+  author_name: string;
+  author_email?: string;
+  comment_text: string;
+  status?: string;
+  created_at?: string;
+}
+
+/**
+ * Fetch all rev_db CMS entries or by page_name from Cloudflare D1
+ */
+export async function fetchRevDb(pageName?: string): Promise<RevDbItem[]> {
+  try {
+    const query = pageName ? `?page=${encodeURIComponent(pageName)}` : '';
+    const res = await fetch(`${API_BASE_URL}/api/rev_db${query}`);
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data)) {
+      return json.data;
+    }
+    return [];
+  } catch (err) {
+    console.warn('Failed to fetch from rev_db:', err);
+    return [];
+  }
+}
+
+/**
+ * Fetch specific entry by slug (e.g. 'innovative-strategies-market-research')
+ */
+export async function fetchRevDbBySlug(slug: string): Promise<RevDbItem | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rev_db?slug=${encodeURIComponent(slug)}`);
+    const json = await res.json();
+    if (json.data && !Array.isArray(json.data)) {
+      return json.data;
+    }
+    if (Array.isArray(json.data) && json.data.length > 0) {
+      return json.data[0];
+    }
+    return null;
+  } catch (err) {
+    console.warn(`Failed to fetch rev_db entry for slug ${slug}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Fetch specific heading entry by page and section (e.g. page_name='blog-details', section_name='hero')
+ */
+export async function fetchRevDbHeading(
+  pageName: string,
+  sectionName = 'hero'
+): Promise<RevDbItem | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/api/rev_db?page=${encodeURIComponent(pageName)}&section=${encodeURIComponent(sectionName)}`
+    );
+    const json = await res.json();
+    if (json.data && !Array.isArray(json.data)) {
+      return json.data;
+    }
+    if (Array.isArray(json.data) && json.data.length > 0) {
+      return json.data[0];
+    }
+    return null;
+  } catch (err) {
+    console.warn(`Failed to fetch rev_db heading for ${pageName}/${sectionName}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Fetch comments for a rev_db item
+ */
+export async function fetchRevDbComments(revId: number): Promise<RevDbComment[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rev_db_comments?rev_id=${revId}`);
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data)) {
+      return json.data;
+    }
+    return [];
+  } catch (err) {
+    console.warn(`Failed to fetch comments for rev_id ${revId}:`, err);
+    return [];
+  }
+}
+
+/**
+ * Submit a new comment for a rev_db entry
+ */
+export async function submitRevDbComment(comment: {
+  rev_id: number;
+  author_name: string;
+  author_email?: string;
+  comment_text: string;
+}): Promise<ApiResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rev_db_comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(comment),
+    });
+    return await res.json();
+  } catch (err: any) {
+    console.error('Failed to submit comment:', err);
+    return { success: false, error: err.message || 'Submission failed' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PEXELS API HELPERS (with 4s timeout so it never hangs)
+// ---------------------------------------------------------------------------
+
+const PEXELS_TIMEOUT_MS = 4000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
+/**
+ * Fetch the first landscape photo URL from Pexels for a given query (4s timeout).
+ * Routes through the Cloudflare Worker proxy at /api/pexels.
+ * Returns null immediately if the API key isn't configured or the request times out.
+ */
+export async function fetchPexelsPhoto(query: string): Promise<string | null> {
+  if (!query) return null;
+  try {
+    const res = await withTimeout(
+      fetch(`${API_BASE_URL}/api/pexels?query=${encodeURIComponent(query)}&per_page=1`),
+      PEXELS_TIMEOUT_MS
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const photos: any[] = json?.photos ?? [];
+    return photos[0]?.src?.large ?? photos[0]?.src?.medium ?? null;
+  } catch (err) {
+    console.warn(`fetchPexelsPhoto failed/timed-out for query "${query}":`, err);
+    return null;
+  }
+}
+
+/**
+ * Fetch multiple Pexels photos in parallel, each with an independent timeout.
+ */
+export async function fetchPexelsPhotos(queries: string[]): Promise<(string | null)[]> {
+  return Promise.all(queries.map((q) => fetchPexelsPhoto(q)));
+}
+
+// ---------------------------------------------------------------------------
+// REV_DB ARTICLE LISTING (for blog index page)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all blog articles from rev_db (all rows with a slug and image_url).
+ * Optionally filter by page_name.
+ */
+export async function fetchRevDbArticles(pageName?: string): Promise<RevDbItem[]> {
+  try {
+    const query = pageName ? `?page=${encodeURIComponent(pageName)}` : '';
+    const res = await withTimeout(
+      fetch(`${API_BASE_URL}/api/rev_db${query}`),
+      6000
+    );
+    const json = await res.json();
+    const data: RevDbItem[] = Array.isArray(json.data) ? json.data : [];
+    // Only return rows that have both a slug and a heading
+    return data.filter((item) => item.slug && item.heading);
+  } catch (err) {
+    console.warn('fetchRevDbArticles failed:', err);
+    return [];
+  }
+}
+
+
+
+

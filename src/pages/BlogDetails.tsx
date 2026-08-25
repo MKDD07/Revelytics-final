@@ -6,14 +6,18 @@ import {
   Cta1,
 } from '../components';
 
-const BlogDetails: React.FC = () => {
+interface BlogDetailsProps {
+  slug?: string;
+}
+
+const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
   return (
     <>
       {/* Blog Details Header */}
-      <BlogDetailsHero />
+      <BlogDetailsHero slug={slug} />
 
       {/* Full Article Content, Comments & Author Bio */}
-      <BlogDetailsPostbox />
+      <BlogDetailsPostbox slug={slug} />
 
       {/* Featured Destination Banner */}
       <BlogDetailsBanner />

@@ -211,7 +211,7 @@ function App() {
       case 'blog':
         return <Blog />;
       case 'blog-details':
-        return <BlogDetails />;
+        return <BlogDetails slug={routeState.slug} />;
       case 'faq':
         return <Faq />;
       case 'contact':

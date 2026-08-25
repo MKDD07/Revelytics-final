@@ -5288,7 +5288,6 @@ body.tp-magic-cursor #magic-cursor {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 260px;
   z-index: 99;
   opacity: 0;
   padding: 12px 0;
@@ -8471,7 +8470,7 @@ body.tp-magic-cursor #magic-cursor {
   }
 }
 .tp-service-details-hero-title h2 {
-  font-size: 92px;
+  font-size: 72px;
   line-height: 98%;
   letter-spacing: -0.03em;
 }
@@ -9105,6 +9104,10 @@ body.tp-magic-cursor #magic-cursor {
   filter: saturate(1);
   transform: perspective(400px) rotateX(0.09deg) rotateY(0) scaleX(1.1) scaleY(1.1);
 }
+.revlytics .cs-portfolio-item-2
+{
+    margin-right: 0;
+}
 .cs-portfolio-item-2 {
   margin-right: -40px;
 }
@@ -9133,16 +9136,121 @@ body.tp-magic-cursor #magic-cursor {
   transform: perspective(0) rotateX(0) rotateY(0) scaleX(1) scaleY(1);
 }
 .cs-portfolio-title {
-  font-size: 32px;
+  font-size: 21px;
   letter-spacing: -0.03em;
 }
-@media only screen and (min-width: 576px) and (max-width: 767px), (max-width: 574.98px) {
-  .cs-portfolio-title {
-    margin-bottom: 20px;
-  }
+.cs-portfolio-area.revlytics {
+  font-size: 19px;
+  font-weight: 400;
 }
-.cs-portfolio-content {
-  padding: 45px 10px 0px 10px;
+.cs-portfolio-area.revlytics .cs-portfolio-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-thumb img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 20px;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-content {
+  padding: 22px 6px 0px 6px;
+  flex-grow: 1;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-title {
+  font-size: 21px;
+  line-height: 1.35;
+  min-height: 2.7em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-title a {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-btn-icon {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6;
+  background: rgba(9, 9, 11, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.35s ease;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-btn-icon:hover {
+  background: var(--tp-theme-primary, #ff3c00);
+  border-color: var(--tp-theme-primary, #ff3c00);
+  transform: scale(1.08);
+}
+.cs-portfolio-area.revlytics .cs-portfolio-btn-icon i {
+  margin: 0;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-badge-wrap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 6;
+  pointer-events: none;
+}
+.cs-portfolio-area.revlytics .cs-portfolio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(9, 9, 11, 0.72);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.cs-service-slider-prev,
+.cs-service-slider-next {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+}
+.cs-service-slider-prev:hover,
+.cs-service-slider-next:hover {
+  background: var(--tp-theme-primary, #ff3c00) !important;
+  border-color: var(--tp-theme-primary, #ff3c00) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 60, 0, 0.35);
 }
 .cs-portfolio-tag ul li {
   list-style: none;
@@ -17116,7 +17224,225 @@ body.tp-magic-cursor #magic-cursor {
 }
 
 .tp-color-primary {
-  color: var(--tp-theme-primary)
+  color: var(--tp-theme-primary);
+}
+.ca-hero-service ul {
+  display: flex;
+  flex-direction: column;
 }
 
+/* ==================================================
+   Horizontal Scroll Text Section (White Background + Theme Accents)
+   ================================================== */
+.tp-horizontal-scroll-section {
+  background-color: #ffffff;
+  color: #09090b;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.tp-horizontal-scroll-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  white-space: nowrap;
+  gap: 3vw;
+  padding-left: 100vw;
+  will-change: transform;
+}
+
+.tp-horizontal-scroll-text {
+  font-size: clamp(1.8rem, 9.5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: #09090b;
+  text-transform: uppercase;
+  font-family: var(--tp-ff-sequel-bold, sans-serif);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2vw;
+}
+
+.tp-horizontal-scroll-text .highlight-primary {
+  color: var(--tp-theme-primary, #ff3c00);
+}
+
+.tp-horizontal-scroll-text .highlight-outline {
+  color: transparent;
+  -webkit-text-stroke: 2px #09090b;
+}
+
+.tp-horizontal-scroll-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.tp-horizontal-scroll-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 60px;
+  background: rgba(255, 60, 0, 0.08);
+  border: 1px solid rgba(255, 60, 0, 0.25);
+  font-size: clamp(14px, 1.2vw, 20px);
+  color: var(--tp-theme-primary, #ff3c00);
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* 4:5 3D Flip Image Cards in Horizontal Scroll */
+.tp-horizontal-card-wrap {
+  perspective: 1200px;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 1.5vw;
+  vertical-align: middle;
+}
+
+.tp-horizontal-image-card {
+  width: clamp(230px, 18vw, 320px);
+  aspect-ratio: 4 / 5;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  background: #111113;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.tp-horizontal-image-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 28px 55px rgba(0, 0, 0, 0.28);
+}
+
+.tp-horizontal-image-card img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tp-horizontal-image-card:hover img {
+  transform: scale(1.06);
+}
+
+.tp-horizontal-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 30%, rgba(0, 0, 0, 0.85) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  pointer-events: none;
+}
+
+.tp-horizontal-card-tag {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: var(--tp-theme-primary, #ff3c00);
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+
+.tp-horizontal-card-meta h4 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  font-family: var(--tp-ff-inter, sans-serif);
+}
+
+.tp-horizontal-card-meta p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  font-weight: 400;
+  text-transform: none;
+  font-family: var(--tp-ff-inter, sans-serif);
+}
+
+/* ==================================================
+   Header Dropdown Menu (Frosted Glass & Dropdown Animation)
+   ================================================== */
+.has-dropdown {
+  position: relative;
+}
+
+.tp-submenu.submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 240px;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 30px -8px rgba(19, 19, 22, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 10px 8px;
+  opacity: 0;
+  visibility: hidden;
+  filter: blur(3px);
+  transform: translateY(14px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), filter 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s;
+  z-index: 1000;
+  list-style: none;
+  margin: 0;
+  text-align: left;
+}
+
+.has-dropdown:hover > .tp-submenu.submenu {
+  opacity: 1;
+  visibility: visible;
+  filter: blur(0px);
+  transform: translateY(4px) scale(1);
+  pointer-events: auto;
+}
+
+.tp-submenu.submenu li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tp-submenu.submenu li a {
+  display: block;
+  padding: 9px 14px;
+  border-radius: 10px;
+  color: #1a1a1f !important;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.tp-submenu.submenu li a:hover {
+  background: rgba(255, 60, 0, 0.08);
+  border-color: rgba(255, 60, 0, 0.2);
+  color: var(--tp-theme-primary, #ff3c00) !important;
+  transform: translateX(4px);
+}
 /*# sourceMappingURL=main.css.map */
