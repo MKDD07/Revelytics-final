@@ -21,38 +21,38 @@ interface PostboxProps {
 
 const DEFAULT_BLOCKS: SectionH2Para[] = [
   {
-    h2: '1. Dominate Intent with Destination-First SEO',
+    h2: '1. Master Google Business Profile (GBP) Completeness',
     paragraph:
-      'Target high-intent, long-tail queries like "best boutique stays in Amalfi for remote workers" rather than generic keywords. Build comprehensive destination hubs, curated itineraries, and FAQ schemas that capture travelers at the planning stage.',
+      'Populate every secondary category, list accurate seasonal opening hours, update direct ticketing links, and post high-resolution weekly photo updates.',
   },
   {
-    h2: '2. Leverage Short-Form Visual Storytelling',
+    h2: '2. Implement High-Frequency Review Capture Systems',
     paragraph:
-      'Platforms like TikTok, Instagram Reels, and YouTube Shorts drive spontaneous travel inspiration. Focus on authentic, raw micro-moments—such as hidden cafe entrances or drone vistas—over polished corporate promotional reels.',
+      'Set up automated SMS or on-site QR cards encouraging happy guests to leave keyword-rich reviews mentioning specific guides, dishes, or amenities.',
   },
   {
-    h2: '3. Turn User-Generated Content into Social Proof',
+    h2: '3. Add Structured LocalBusiness and TouristAttraction Schema',
     paragraph:
-      'Travelers trust peers more than brands. Incentivize guests to share real photos using branded hashtags, and embed authentic UGC galleries directly into booking and checkout landing pages to reduce hesitation.',
+      'Deploy rich snippet schema markup across your site with explicit geo-coordinates, price ranges, verified reviews, and accepted payment types.',
   },
   {
-    h2: '4. Automate Trigger-Based Email Sequences',
+    h2: '4. Build Hyper-Local Landmark Vicinity Pages',
     paragraph:
-      'Implement behavioral automation triggered by destination page views or cart abandonment. Send hyper-relevant guides, weather highlights, and time-sensitive incentives to keep your brand top-of-mind.',
+      'Create localized landing pages optimized for location landmarks, such as "boutique hotel near Colosseum" or "kayak rental by marina pier."',
   },
   {
-    h2: '5. Optimize for Frictionless Mobile Conversions',
+    h2: '5. Optimize for Voice Search and Spontaneous Conversions',
     paragraph:
-      'Over 60% of travel bookings begin on mobile devices. Streamline the checkout process with Apple Pay, Google Pay, transparent pricing breakdowns, and page load times under 1.5 seconds.',
+      'Answer conversational, intent-based FAQ queries like "where can I rent bikes without a reservation" to capture direct voice search traffic on mobile devices.',
   },
 ];
 
 const DEFAULT_PARAGRAPH =
-  'Modern travelers make decisions across dozens of digital touchpoints before confirming a booking. Capturing their attention requires moving beyond static banners to build experiential campaigns, authoritative search visibility, and frictionless booking paths across web and mobile.';
+  'In-destination travelers use mobile search for immediate solutions: "best walking tour right now" or "seafood restaurant with view near me." Optimizing your Google Business Profile, localized schema, and geotargeted review velocity secures high-intent spontaneous revenue.';
 
 const DEFAULT_QUOTE =
-  'Travel is the only thing you buy that makes you richer, but in marketing, clarity is what actually sells the ticket.';
-const DEFAULT_QUOTE_AUTHOR = 'Elena Rostova';
+  'If you are invisible on Google Maps when a tourist steps outside their hotel, you do not exist to them.';
+const DEFAULT_QUOTE_AUTHOR = 'Marco Moretti';
 
 const DEFAULT_COMMENTS: RevDbComment[] = [
   {
@@ -108,18 +108,22 @@ const DEFAULT_COMMENTS: RevDbComment[] = [
 ];
 
 const DEFAULT_TAGS = [
-  'TravelMarketing',
-  'SEOStrategy',
-  'DigitalMarketing',
-  'ContentMarketing',
-  'HospitalityGrowth',
-  'SocialMediaTrends',
+  'LocalSEO',
+  'GoogleBusinessProfile',
+  'SearchOptimization',
+  'InDestinationTravel',
+  'HospitalityMarketing',
+  'GoogleMaps',
 ];
 
 const Postbox: React.FC<PostboxProps> = ({ slug }) => {
   const [article, setArticle] = useState<RevDbItem | null>(null);
   const [comments, setComments] = useState<RevDbComment[]>(DEFAULT_COMMENTS);
-  const [pexelsPair, setPexelsPair] = useState<[string | null, string | null]>([null, null]);
+  const [pexelsImages, setPexelsImages] = useState<[string | null, string | null, string | null]>([
+    'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+    'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+    'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop',
+  ]);
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
   const [commentText, setCommentText] = useState('');
@@ -154,21 +158,20 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
               .catch(() => { /* keep defaults */ });
           }
 
-          // Load Pexels images independently (non-blocking, falls back to fallback images on timeout/failure)
-          const q2 = item.pexels_query_2 || 'person using smartphone booking flight airport';
-          const q3 = item.pexels_query_3 || 'travel vlogger filming with camera mountains';
+          // Load Pexels images independently (non-blocking)
+          const q2 = item.pexels_query_2 || 'welcoming boutique hotel facade with outdoor seating';
+          const q3 = item.pexels_query_3 || 'vibrant outdoor cafe patio in bustling european plaza';
+          const q4 = item.pexels_query_4 || 'luxury resort swimming pool at sunset';
+          
           const FALLBACK_2 = 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop';
           const FALLBACK_3 = 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop';
+          const FALLBACK_4 = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&fit=crop';
 
-          // Set fallbacks immediately so images show without waiting
-          if (isMounted) setPexelsPair([FALLBACK_2, FALLBACK_3]);
-
-          // Try to upgrade to real Pexels results (already has 4s timeout in fetchPexelsPhoto)
-          fetchPexelsPhotos([q2, q3]).then(([img2, img3]) => {
+          fetchPexelsPhotos([q2, q3, q4]).then(([img2, img3, img4]) => {
             if (isMounted) {
-              setPexelsPair([img2 || FALLBACK_2, img3 || FALLBACK_3]);
+              setPexelsImages([img2 || FALLBACK_2, img3 || FALLBACK_3, img4 || FALLBACK_4]);
             }
-          }).catch(() => { /* keep fallback images */ });
+          }).catch(() => { /* keep fallbacks */ });
         }
       } catch (err) {
         console.warn('Failed to load article from rev_db:', err);
@@ -264,75 +267,41 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                   {/* Block 1: Section 1 */}
                   <div className="postbox-details-text mb-45">
                     <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
-                      {sectionBlocks[0]?.h2 || '1. Dominate Intent with Destination-First SEO'}
+                      {sectionBlocks[0]?.h2 || DEFAULT_BLOCKS[0].h2}
                     </h4>
-                    <p className="mb-20">{sectionBlocks[0]?.paragraph}</p>
+                    <p className="mb-20">{sectionBlocks[0]?.paragraph || DEFAULT_BLOCKS[0].paragraph}</p>
                     <p>{introParagraph}</p>
                   </div>
 
                   {/* Block 2: Section 2 */}
                   <div className="postbox-details-text mb-40">
                     <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
-                      {sectionBlocks[1]?.h2 || '2. Leverage Short-Form Visual Storytelling'}
+                      {sectionBlocks[1]?.h2 || DEFAULT_BLOCKS[1].h2}
                     </h4>
-                    <p>{sectionBlocks[1]?.paragraph}</p>
+                    <p>{sectionBlocks[1]?.paragraph || DEFAULT_BLOCKS[1].paragraph}</p>
                   </div>
 
-                  {/* 2-Image Row Between Paragraphs — Pexels API (pexels_query_2 + pexels_query_3) */}
+                  {/* 2-Image Row Between Paragraphs — Pexels API */}
                   <div className="postbox-details-thumb-wrap mb-10">
                     <div className="row">
                       <div className="col-lg-6">
                         <div className="postbox-details-thumb mb-20">
-                          {pexelsPair[0] ? (
-                            <img
-                              className="w-100 rounded-3"
-                              alt={article?.pexels_query_2 || 'Travel Booking on Mobile'}
-                              src={pexelsPair[0]}
-                              style={{ height: '260px', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div
-                              className="w-100 rounded-3"
-                              style={{
-                                height: '260px',
-                                background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#999',
-                                fontSize: '13px',
-                              }}
-                            >
-                              Loading image…
-                            </div>
-                          )}
+                          <img
+                            className="w-100 rounded-3"
+                            alt={article?.pexels_query_2 || 'welcoming boutique hotel facade with outdoor seating'}
+                            src={pexelsImages[0] || 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
+                            style={{ height: '260px', objectFit: 'cover' }}
+                          />
                         </div>
                       </div>
                       <div className="col-lg-6">
                         <div className="postbox-details-thumb mb-20">
-                          {pexelsPair[1] ? (
-                            <img
-                              className="w-100 rounded-3"
-                              alt={article?.pexels_query_3 || 'Travel Content Creator'}
-                              src={pexelsPair[1]}
-                              style={{ height: '260px', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <div
-                              className="w-100 rounded-3"
-                              style={{
-                                height: '260px',
-                                background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#999',
-                                fontSize: '13px',
-                              }}
-                            >
-                              Loading image…
-                            </div>
-                          )}
+                          <img
+                            className="w-100 rounded-3"
+                            alt={article?.pexels_query_3 || 'vibrant outdoor cafe patio in bustling european plaza'}
+                            src={pexelsImages[1] || 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop'}
+                            style={{ height: '260px', objectFit: 'cover' }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -341,12 +310,12 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                   {/* Block 3: Section 3 */}
                   <div className="postbox-details-text mb-45">
                     <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
-                      {sectionBlocks[2]?.h2 || '3. Turn User-Generated Content into Social Proof'}
+                      {sectionBlocks[2]?.h2 || DEFAULT_BLOCKS[2].h2}
                     </h4>
-                    <p>{sectionBlocks[2]?.paragraph}</p>
+                    <p>{sectionBlocks[2]?.paragraph || DEFAULT_BLOCKS[2].paragraph}</p>
                   </div>
 
-                  {/* Blockquote Box */}
+                  {/* Blockquote Box with Garamond font */}
                   <div className="postbox-details-quote-box mb-40">
                     <blockquote>
                       <div className="postbox-details-quote-box-inner d-flex align-items-start">
@@ -356,7 +325,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                           </svg>
                         </i>
                         <div className="postbox-details-quote">
-                          <p className="mb-10">“{quoteText}”</p>
+                          <p className="mb-10 quote-text">“{quoteText}”</p>
                           <span>{quoteAuthor}</span>
                         </div>
                       </div>
@@ -368,8 +337,8 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                     <div className="postbox-details-thumb mb-20">
                       <img
                         className="w-100 rounded-3"
-                        alt="Luxury Resort Experience"
-                        src="assets/img/blog/details/thumb-3.jpg"
+                        alt={article?.pexels_query_4 || 'Luxury Resort Experience'}
+                        src={pexelsImages[2] || 'assets/img/blog/details/thumb-3.jpg'}
                         style={{ maxHeight: '420px', objectFit: 'cover' }}
                       />
                     </div>
@@ -378,20 +347,18 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                   {/* Block 4: Section 4 */}
                   <div className="postbox-details-text mb-35">
                     <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
-                      {sectionBlocks[3]?.h2 || '4. Automate Trigger-Based Email Sequences'}
+                      {sectionBlocks[3]?.h2 || DEFAULT_BLOCKS[3].h2}
                     </h4>
-                    <p>{sectionBlocks[3]?.paragraph}</p>
+                    <p>{sectionBlocks[3]?.paragraph || DEFAULT_BLOCKS[3].paragraph}</p>
                   </div>
 
                   {/* Block 5: Section 5 */}
-                  {sectionBlocks[4] && (
-                    <div className="postbox-details-text mb-45">
-                      <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
-                        {sectionBlocks[4].h2}
-                      </h4>
-                      <p>{sectionBlocks[4].paragraph}</p>
-                    </div>
-                  )}
+                  <div className="postbox-details-text mb-45">
+                    <h4 className="postbox-title tp-ff-sequel-bold-head fs-32 mb-15">
+                      {sectionBlocks[4]?.h2 || DEFAULT_BLOCKS[4].h2}
+                    </h4>
+                    <p>{sectionBlocks[4]?.paragraph || DEFAULT_BLOCKS[4].paragraph}</p>
+                  </div>
 
                   {/* Tags and Share */}
                   <div className="postbox-details-tag-share d-flex align-items-center justify-content-between flex-wrap mb-40">
@@ -399,7 +366,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                       <span>Tags:</span>
                       {articleTags.map((tag, idx) => (
                         <a key={idx} href="#blog">
-                          #{tag}
+                          #{tag.replace(/^#/, '')}
                         </a>
                       ))}
                     </div>
@@ -525,7 +492,6 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                           </div>
                         </div>
                       </div>
-                      {submitStatus && <p className="text-primary mb-2">{submitStatus}</p>}
                       <div className="postbox-details-input-box">
                         <button type="submit" className="tp-btn d-inline-flex align-items-center">
                           <span>
@@ -533,6 +499,17 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                             <span className="text-2">Post Comment</span>
                           </span>
                         </button>
+                        {submitStatus && (
+                          <span
+                            className="ms-3"
+                            style={{
+                              fontSize: '14px',
+                              color: submitStatus.includes('success') ? '#10b981' : '#f59e0b',
+                            }}
+                          >
+                            {submitStatus}
+                          </span>
+                        )}
                       </div>
                     </form>
                   </div>
@@ -541,135 +518,112 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
             </div>
 
             {/* Right Column: Sidebar */}
-            <div className="col-xl-4">
-              <div className="sidebar-blog-grid-wrap mb-40 ml-115">
-                <div className="sidebar-wrapper">
-                  {/* Search */}
-                  <div className="sidebar-widget mb-10">
-                    <div className="sidebar-search">
-                      <form action="#blog">
-                        <div className="sidebar-search-input">
-                          <input type="text" placeholder="Search insights..." />
-                          <button type="submit">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M18.9999 19L14.6499 14.65M17 9C17 13.4183 13.4183 17 9 17C4.58172 17 1 13.4183 1 9C1 4.58172 4.58172 1 9 1C13.4183 1 17 4.58172 17 9Z"
-                                stroke="currentColor"
-                                strokeOpacity="0.8"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </form>
+            <div className="col-xl-4 col-lg-8">
+              <div className="postbox-sidebar-wrap mb-40">
+                {/* Author Widget */}
+                <div className="sidebar-widget mb-40">
+                  <div className="sidebar-author text-center">
+                    <div className="sidebar-author-thumb mb-25">
+                      <img
+                        className="rounded-circle"
+                        src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop"
+                        alt={article?.author || 'Elena Rostova'}
+                        style={{ width: '110px', height: '110px', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div className="sidebar-author-content">
+                      <h4 className="sidebar-author-title mb-5">{article?.author || 'Elena Rostova'}</h4>
+                      <span className="sidebar-author-designation mb-15 d-block">
+                        Head of Travel Strategy & SEO
+                      </span>
+                      <p>
+                        Specializing in direct booking acceleration, revenue optimization, and localized search architectures for luxury hospitality brands worldwide.
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Author Box */}
-                  <div className="sidebar-widget mb-45">
-                    <div className="sidebar-widget-author">
-                      <div className="sidebar-widget-author-img d-flex align-items-center">
-                        <img src="assets/img/blog/blog-standard/av-1.png" alt="" />
-                        <div className="sidebar-widget-author-content">
-                          <h4 className="sidebar-widget-author-name mb-0">{article?.author || 'Elena Rostova'}</h4>
-                          <span>Head of Growth &amp; Digital Strategy</span>
-                        </div>
-                      </div>
-                      <div className="sidebar-widget-author-content">
-                        <p>Accelerating direct booking growth for luxury travel &amp; hospitality brands worldwide.</p>
-                      </div>
-                    </div>
+                {/* Categories Widget */}
+                <div className="sidebar-widget mb-40">
+                  <h3 className="sidebar-widget-title mb-25">Categories</h3>
+                  <div className="sidebar-widget-content">
+                    <ul>
+                      <li>
+                        <a href="#blog">Digital Marketing <span>(14)</span></a>
+                      </li>
+                      <li>
+                        <a href="#blog">Direct Bookings <span>(08)</span></a>
+                      </li>
+                      <li>
+                        <a href="#blog">Local SEO & GBP <span>(11)</span></a>
+                      </li>
+                      <li>
+                        <a href="#blog">Hospitality Tech <span>(06)</span></a>
+                      </li>
+                      <li>
+                        <a href="#blog">Brand Strategy <span>(09)</span></a>
+                      </li>
+                    </ul>
                   </div>
+                </div>
 
-                  {/* Categories */}
-                  <div className="sidebar-widget mb-45">
-                    <h3 className="sidebar-widget-title">Categories</h3>
-                    <div className="sidebar-widget-category">
-                      <ul>
-                        <li>
-                          <a className="d-flex align-items-center justify-content-between" href="#blog">
-                            Digital Marketing <span>08</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a className="d-flex align-items-center justify-content-between" href="#blog">
-                            Destination SEO <span>04</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a className="d-flex align-items-center justify-content-between" href="#blog">
-                            Mobile Conversions <span>12</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a className="d-flex align-items-center justify-content-between" href="#blog">
-                            Social Storytelling <span>16</span>
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Latest Posts */}
-                  <div className="sidebar-widget mb-45">
-                    <h3 className="sidebar-widget-title">Latest Insights</h3>
-                    <div className="rc-post-wrap">
-                      <div className="rc-post d-flex align-items-center">
-                        <div className="rc-post-thumb">
+                {/* Recent Posts Widget */}
+                <div className="sidebar-widget mb-40">
+                  <h3 className="sidebar-widget-title mb-25">Recent Articles</h3>
+                  <div className="sidebar-widget-content">
+                    <div className="sidebar-post rc-post">
+                      <div className="rc-post-item d-flex align-items-center mb-20">
+                        <div className="rc-post-thumb mr-15">
                           <a href="#blog-details">
-                            <img src="assets/img/blog/blog-standard/blog-rp-1.jpg" alt="" />
+                            <img
+                              src="https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
+                              alt=""
+                              style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px' }}
+                            />
                           </a>
                         </div>
                         <div className="rc-post-content">
-                          <div className="rc-post-category">
-                            <a href="#blog">Marketing</a>
+                          <div className="rc-meta mb-5">
+                            <span>Aug 24, 2026</span>
                           </div>
-                          <h3 className="rc-post-title">
-                            <a href="#blog-details" className="common-underline">
-                              Fueling ambition &amp; Achieving booking targets
-                            </a>
-                          </h3>
-                          <div className="rc-post-meta">
-                            <span>2026</span>
-                          </div>
+                          <h6 className="rc-post-title">
+                            <a href="#blog-details">Transforming Direct Hotel Bookings in 2026</a>
+                          </h6>
                         </div>
                       </div>
-                      <div className="rc-post d-flex align-items-center">
-                        <div className="rc-post-thumb">
+                      <div className="rc-post-item d-flex align-items-center mb-20">
+                        <div className="rc-post-thumb mr-15">
                           <a href="#blog-details">
-                            <img src="assets/img/blog/blog-standard/blog-rp-2.jpg" alt="" />
+                            <img
+                              src="https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop"
+                              alt=""
+                              style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px' }}
+                            />
                           </a>
                         </div>
                         <div className="rc-post-content">
-                          <div className="rc-post-category">
-                            <a href="#blog">SEO</a>
+                          <div className="rc-meta mb-5">
+                            <span>Aug 21, 2026</span>
                           </div>
-                          <h3 className="rc-post-title">
-                            <a href="#blog-details" className="common-underline">
-                              Behind the scenes of boutique resort transformations
-                            </a>
-                          </h3>
-                          <div className="rc-post-meta">
-                            <span>2026</span>
-                          </div>
+                          <h6 className="rc-post-title">
+                            <a href="#blog-details">Crafting Immersive Destination Web Experiences</a>
+                          </h6>
                         </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Tags */}
-                  <div className="sidebar-widget">
-                    <h3 className="sidebar-widget-title">Tags</h3>
-                    <div className="sidebar-widget-content">
-                      <div className="tagcloud">
-                        {articleTags.map((tag, idx) => (
-                          <a key={idx} href="#blog">
-                            #{tag}
-                          </a>
-                        ))}
-                      </div>
+                {/* Tags Widget */}
+                <div className="sidebar-widget mb-40">
+                  <h3 className="sidebar-widget-title mb-25">Popular Tags</h3>
+                  <div className="sidebar-widget-content">
+                    <div className="tagcloud">
+                      {articleTags.map((tag, idx) => (
+                        <a key={idx} href="#blog">
+                          #{tag.replace(/^#/, '')}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 </div>
