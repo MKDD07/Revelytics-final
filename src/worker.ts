@@ -1184,6 +1184,173 @@ export default {
         }
       }
 
+      // -----------------------------------------------------------------------
+      // 9. SITEMAP XML HANDLERS (Pages, Services, Blogs & Master Index)
+      // -----------------------------------------------------------------------
+      const origin = url.origin || 'https://revelytics-final.mkmkataria07.workers.dev';
+      const today = new Date().toISOString().split('T')[0];
+
+      const toDateStr = (val: any) => {
+        if (!val) return today;
+        try {
+          const d = new Date(val);
+          if (isNaN(d.getTime())) return today;
+          return d.toISOString().split('T')[0];
+        } catch {
+          return today;
+        }
+      };
+
+      if (path === '/sitemap.xml' || path === '/api/sitemap.xml') {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap>
+  <loc>${origin}/sitemap-pages.xml</loc>
+  <lastmod>${today}</lastmod>
+</sitemap>
+<sitemap>
+  <loc>${origin}/sitemap-services.xml</loc>
+  <lastmod>${today}</lastmod>
+</sitemap>
+<sitemap>
+  <loc>${origin}/sitemap-blogs.xml</loc>
+  <lastmod>${today}</lastmod>
+</sitemap>
+</sitemapindex>`;
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      if (path === '/sitemap-pages.xml' || path === '/api/sitemap-pages.xml') {
+        const staticUrls = [
+          { loc: `${origin}/`, priority: '1.0', changefreq: 'daily' },
+          { loc: `${origin}/services`, priority: '0.95', changefreq: 'daily' },
+          { loc: `${origin}/blog`, priority: '0.90', changefreq: 'daily' },
+          { loc: `${origin}/faq`, priority: '0.80', changefreq: 'monthly' },
+          { loc: `${origin}/contact`, priority: '0.80', changefreq: 'monthly' },
+        ];
+
+        const urls = staticUrls
+          .map(
+            (page) => `
+<url>
+  <loc>${page.loc}</loc>
+  <lastmod>${today}</lastmod>
+  <changefreq>${page.changefreq}</changefreq>
+  <priority>${page.priority}</priority>
+</url>`
+          )
+          .join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+</urlset>`;
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      if (path === '/sitemap-services.xml' || path === '/api/sitemap-services.xml') {
+        let results: any[] = [];
+        try {
+          const queryRes = await env.DB.prepare(
+            `SELECT service_slug, updated_at, created_at FROM services
+             WHERE is_active = 1 OR is_active IS NULL
+             ORDER BY sort_order ASC, id ASC`
+          ).all();
+          results = queryRes?.results || [];
+        } catch (e) {
+          console.warn('sitemap-services query error:', e);
+        }
+
+        const urls = results
+          .filter((svc) => svc && (svc.service_slug || svc.slug))
+          .map((svc) => {
+            const slug = svc.service_slug || svc.slug;
+            const lastmod = toDateStr(svc.updated_at || svc.created_at);
+            return `
+<url>
+  <loc>${origin}/services/${slug}</loc>
+  <lastmod>${lastmod}</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.85</priority>
+</url>`;
+          })
+          .join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+</urlset>`;
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            ...corsHeaders,
+          },
+        });
+      }
+
+      if (path === '/sitemap-blogs.xml' || path === '/api/sitemap-blogs.xml') {
+        let results: any[] = [];
+        try {
+          const queryRes = await env.DB.prepare(
+            `SELECT slug, updated_at, created_at, date FROM rev_db
+             WHERE slug IS NOT NULL AND slug != ''
+             ORDER BY id DESC`
+          ).all();
+          results = queryRes?.results || [];
+
+          if (results.length === 0) {
+            const blogsRes = await env.DB.prepare(
+              `SELECT slug, updated_at, created_at FROM blogs
+               WHERE is_published = 1 OR is_published IS NULL
+               ORDER BY id DESC`
+            ).all();
+            results = blogsRes?.results || [];
+          }
+        } catch (e) {
+          console.warn('sitemap-blogs query error:', e);
+        }
+
+        const urls = results
+          .filter((post) => post && post.slug)
+          .map((post) => {
+            const lastmod = toDateStr(post.updated_at || post.created_at || post.date);
+            return `
+<url>
+  <loc>${origin}/blog/${post.slug}</loc>
+  <lastmod>${lastmod}</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.80</priority>
+</url>`;
+          })
+          .join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+</urlset>`;
+
+        return new Response(xml, {
+          headers: {
+            'Content-Type': 'application/xml; charset=utf-8',
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            ...corsHeaders,
+          },
+        });
+      }
+
       // Route Not Found
       return jsonResponse({ error: 'Route not found', path }, 404);
     } catch (err: any) {
