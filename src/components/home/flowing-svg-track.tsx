@@ -5,11 +5,20 @@ export interface FlowingSvgTrackProps {
   topOffset?: string;
 }
 
+// CTA Images (shape-4 to shape-7) that float in sequence next to the ending scroll track
+const CTA_IMAGES = [
+  { id: 'cta-4', src: '/assets/img/cta/shape-4.jpg', x: 860, y: 2540, width: 230, height: 160, rotate: -4 },
+  { id: 'cta-5', src: '/assets/img/cta/shape-5.jpg', x: 1080, y: 2840, width: 240, height: 165, rotate: 5 },
+  { id: 'cta-6', src: '/assets/img/cta/shape-6.jpg', x: 120, y: 3100, width: 230, height: 160, rotate: -3 },
+  { id: 'cta-7', src: '/assets/img/cta/shape-7.jpg', x: 740, y: 3360, width: 250, height: 175, rotate: 4 },
+];
+
 export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
   triggerRef,
   topOffset = '42vh',
 }) => {
   const pathRef = useRef<SVGPathElement | null>(null);
+  const imageRefs = useRef<(SVGGElement | null)[]>([]);
 
   useEffect(() => {
     const gsap = (window as any).gsap;
@@ -29,9 +38,7 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
       strokeDashoffset: totalLength,
     });
 
-    const tween = gsap.to(path, {
-      strokeDashoffset: 0,
-      ease: 'none',
+    const tl = gsap.timeline({
       scrollTrigger: {
         trigger: triggerRef.current,
         start: 'top top',
@@ -41,11 +48,44 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
       },
     });
 
+    // 1. Line draw animation along scroll
+    tl.to(
+      path,
+      {
+        strokeDashoffset: 0,
+        ease: 'none',
+        duration: 1,
+      },
+      0
+    );
+
+    // 2. Sequential float-in for CTA images 4 through 7 near the end of scroll
+    imageRefs.current.forEach((el, idx) => {
+      if (!el) return;
+      const startAt = 0.58 + idx * 0.09;
+      tl.fromTo(
+        el,
+        {
+          opacity: 0,
+          scale: 0.5,
+          y: 60,
+        },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          ease: 'power2.out',
+          duration: 0.14,
+        },
+        startAt
+      );
+    });
+
     return () => {
-      if (tween.scrollTrigger) {
-        tween.scrollTrigger.kill();
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
       }
-      tween.kill();
+      tl.kill();
     };
   }, [triggerRef]);
 
@@ -95,6 +135,17 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
           <stop offset="0.7" stopColor="#FD5B0A" />
           <stop offset="1" stopColor="#CD4631" />
         </linearGradient>
+
+        {/* Clip paths for rounded CTA images */}
+        <clipPath id="cta-clip-4"><rect x="860" y="2540" width="230" height="160" rx="18" ry="18" /></clipPath>
+        <clipPath id="cta-clip-5"><rect x="1080" y="2840" width="240" height="165" rx="18" ry="18" /></clipPath>
+        <clipPath id="cta-clip-6"><rect x="120" y="3100" width="230" height="160" rx="18" ry="18" /></clipPath>
+        <clipPath id="cta-clip-7"><rect x="740" y="3360" width="250" height="175" rx="18" ry="18" /></clipPath>
+
+        {/* Drop shadow for floating CTA cards */}
+        <filter id="cta-card-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="16" stdDeviation="18" floodColor="#000000" floodOpacity="0.32" />
+        </filter>
       </defs>
 
       {/* Main Flowing Scroll Line and Vector Typography Along Route */}
@@ -107,15 +158,7 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
         ref={pathRef}
         style={{ willChange: 'stroke-dashoffset' }}
       />
-<path
-        d="M1364.71 1.16406L1359.49 113.687C1349.94 319.235 1229.3 503.306 1044.65 594.097L774.543 726.898C533.34 845.49 494.962 1173.51 702.276 1344.58L756.929 1390.13C820.333 1442.96 854.342 1523.15 848.258 1605.46C843.752 1666.41 861.228 1726.97 897.521 1776.16L1077.44 2019.99C1170.27 2145.81 1050.33 2317.61 900.223 2273.82C779.757 2238.68 666.29 2346.83 695.627 2468.85L808.924 2940.04C837.001 3056.81 990.712 3084.11 1057.29 2984.15C1140.45 2859.28 992.176 2710.36 866.944 2792.99L325.714 3150.08C276.897 3182.29 242.402 3232.1 229.422 3289.13C197.099 3431.14 305.033 3566.4 450.679 3566.4H882.598"
-        stroke="url(#paint0_linear_697_4963)"
-        strokeWidth="50"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        ref={pathRef}
-        style={{ willChange: 'stroke-dashoffset' }}
-      />
+
 <path d="M567.66 3427.03C568.572 3427.18 569.4 3427.55 570.144 3428.15C570.912 3428.75 571.512 3429.49 571.944 3430.38C572.4 3431.27 572.628 3432.22 572.628 3433.23C572.628 3434.5 572.304 3435.65 571.656 3436.68C571.008 3437.69 570.06 3438.49 568.812 3439.09C567.588 3439.67 566.136 3439.96 564.456 3439.96H555.096V3414.87H564.096C565.8 3414.87 567.252 3415.15 568.452 3415.73C569.652 3416.28 570.552 3417.04 571.152 3418C571.752 3418.96 572.052 3420.04 572.052 3421.24C572.052 3422.73 571.644 3423.96 570.828 3424.95C570.036 3425.91 568.98 3426.6 567.66 3427.03ZM558.372 3425.7H563.88C565.416 3425.7 566.604 3425.34 567.444 3424.62C568.284 3423.9 568.704 3422.91 568.704 3421.63C568.704 3420.36 568.284 3419.37 567.444 3418.65C566.604 3417.93 565.392 3417.57 563.808 3417.57H558.372V3425.7ZM564.168 3437.26C565.8 3437.26 567.072 3436.87 567.984 3436.11C568.896 3435.34 569.352 3434.27 569.352 3432.9C569.352 3431.51 568.872 3430.42 567.912 3429.63C566.952 3428.81 565.668 3428.4 564.06 3428.4H558.372V3437.26H564.168Z" fill="#FD5B0A" />
 <path d="M595.173 3429.34C595.173 3429.96 595.137 3430.62 595.065 3431.32H579.297C579.417 3433.26 580.077 3434.79 581.277 3435.89C582.501 3436.97 583.977 3437.51 585.705 3437.51C587.121 3437.51 588.297 3437.19 589.233 3436.54C590.193 3435.87 590.865 3434.98 591.249 3433.87H594.777C594.249 3435.77 593.193 3437.32 591.609 3438.52C590.025 3439.69 588.057 3440.28 585.705 3440.28C583.833 3440.28 582.153 3439.86 580.665 3439.02C579.201 3438.18 578.049 3436.99 577.209 3435.46C576.369 3433.9 575.949 3432.1 575.949 3430.06C575.949 3428.02 576.357 3426.23 577.173 3424.69C577.989 3423.16 579.129 3421.98 580.593 3421.17C582.081 3420.33 583.785 3419.91 585.705 3419.91C587.577 3419.91 589.233 3420.31 590.673 3421.13C592.113 3421.95 593.217 3423.07 593.985 3424.51C594.777 3425.93 595.173 3427.54 595.173 3429.34ZM591.789 3428.65C591.789 3427.41 591.513 3426.34 590.961 3425.45C590.409 3424.54 589.653 3423.85 588.693 3423.4C587.757 3422.92 586.713 3422.68 585.561 3422.68C583.905 3422.68 582.489 3423.21 581.313 3424.26C580.161 3425.32 579.501 3426.78 579.333 3428.65H591.789Z" fill="#FD5B0A" />
 <path d="M598.273 3430.06C598.273 3428.02 598.681 3426.24 599.497 3424.73C600.313 3423.19 601.441 3422.01 602.881 3421.17C604.345 3420.33 606.013 3419.91 607.885 3419.91C610.309 3419.91 612.301 3420.49 613.861 3421.67C615.445 3422.85 616.489 3424.48 616.993 3426.57H613.465C613.129 3425.37 612.469 3424.42 611.485 3423.72C610.525 3423.03 609.325 3422.68 607.885 3422.68C606.013 3422.68 604.501 3423.33 603.349 3424.62C602.197 3425.89 601.621 3427.71 601.621 3430.06C601.621 3432.43 602.197 3434.27 603.349 3435.57C604.501 3436.86 606.013 3437.51 607.885 3437.51C609.325 3437.51 610.525 3437.17 611.485 3436.5C612.445 3435.83 613.105 3434.87 613.465 3433.62H616.993C616.465 3435.64 615.409 3437.26 613.825 3438.48C612.241 3439.68 610.261 3440.28 607.885 3440.28C606.013 3440.28 604.345 3439.86 602.881 3439.02C601.441 3438.18 600.313 3436.99 599.497 3435.46C598.681 3433.92 598.273 3432.12 598.273 3430.06Z" fill="#FD5B0A" />
@@ -471,6 +514,43 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
 <path d="M1500.23 3004.95C1499.88 3004.95 1499.58 3004.83 1499.34 3004.59C1499.12 3004.35 1499 3004.05 1499 3003.7C1499 3003.35 1499.12 3003.06 1499.34 3002.84C1499.58 3002.6 1499.88 3002.48 1500.23 3002.48C1500.56 3002.48 1500.84 3002.6 1501.07 3002.84C1501.31 3003.06 1501.43 3003.35 1501.43 3003.7C1501.43 3004.05 1501.31 3004.35 1501.07 3004.59C1500.84 3004.83 1500.56 3004.95 1500.23 3004.95Z" fill="black" />
 <path d="M1095.2 3566.43C1095.2 3552.62 1106.39 3541.43 1120.2 3541.43C1134 3541.43 1145.2 3552.62 1145.2 3566.43C1145.2 3580.24 1134 3591.43 1120.2 3591.43C1106.39 3591.43 1095.2 3580.24 1095.2 3566.43Z" fill="#FD5B0A" />
 <path d="M1145.2 3566.43C1145.2 3552.62 1156.39 3541.43 1170.2 3541.43C1184 3541.43 1195.2 3552.62 1195.2 3566.43C1195.2 3580.24 1184 3591.43 1170.2 3591.43C1156.39 3591.43 1145.2 3580.24 1145.2 3566.43Z" fill="#FD5B0A" />
+
+      {/* Floating CTA Images (shape-4 to shape-7) that float in sequence near scroll line end */}
+      {CTA_IMAGES.map((item, idx) => (
+        <g
+          key={item.id}
+          ref={(el) => {
+            imageRefs.current[idx] = el;
+          }}
+          transform={`rotate(${item.rotate} ${item.x + item.width / 2} ${item.y + item.height / 2})`}
+          style={{
+            transformOrigin: `${item.x + item.width / 2}px ${item.y + item.height / 2}px`,
+            opacity: 0,
+          }}
+        >
+          {/* Card shadow base */}
+          <rect
+            x={item.x}
+            y={item.y}
+            width={item.width}
+            height={item.height}
+            rx="18"
+            ry="18"
+            fill="#ffffff"
+            filter="url(#cta-card-shadow)"
+          />
+          {/* Real CTA image */}
+          <image
+            href={item.src}
+            x={item.x}
+            y={item.y}
+            width={item.width}
+            height={item.height}
+            clipPath={`url(#cta-clip-${idx + 4})`}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </g>
+      ))}
 </svg>
   );
 };

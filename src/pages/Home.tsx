@@ -33,7 +33,7 @@ const Home: React.FC = () => {
         leftText="We"
         rightText="are"
         centerRevealText="Revelytics"
-        pexelsQuery="red modern fashion luxury"
+        pexelsQuery="couple walking desert travel adventure"
         pexelsIndex={0}
       />
 
