@@ -2,9 +2,8 @@ import React from 'react';
 import {
   Hero3,
   Brand1,
-  About1,
+  ServiceList,
   ResumeSpecialties,
-  Service1,
   TextSlider,
   ServiceDetailsProcess,
   ServiceGallery,
@@ -14,12 +13,10 @@ import {
   Hero4,
   Portfolio3,
   Testimonial1,
-  Faq1,
-  Blog1,
-  Cta1,
   FaqAccordion,
   Awards1,
-  Portfolio1,
+  Blog1,
+  SplitImageScroll,
 } from '../components';
 
 const Home: React.FC = () => {
@@ -31,8 +28,17 @@ const Home: React.FC = () => {
       {/* 2. Partner Brands & Luxury Resorts */}
       <Brand1 />
 
-      {/* 3. About Us: Travel Digital Transformation */}
-      <About1 />
+      {/* 2.5 Split Image & SVG Interactive Scroll Trigger Section */}
+      <SplitImageScroll
+        leftText="We"
+        rightText="are"
+        centerRevealText="Revelytics"
+        pexelsQuery="red modern fashion luxury"
+        pexelsIndex={0}
+      />
+
+      {/* 3. Interactive Category & Service Showcase (from Service Page) */}
+      <ServiceList id="about" />
 
       {/* 4. Travel Specialties & Strategic Capabilities */}
       <ResumeSpecialties
@@ -41,10 +47,7 @@ const Home: React.FC = () => {
         showServicesList={false}
       />
 
-      {/* 5. Core Travel Services (Booking UX, Branding, SEO) */}
-      <Service1 />
-
-      {/* 6. Dynamic Text Slider */}
+      {/* 5. Dynamic Text Slider */}
       <TextSlider />
 
       {/* 7. Agile Delivery Process & Product Framework */}

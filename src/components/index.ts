@@ -72,3 +72,9 @@ export { default as FaqAccordion } from './faq-page/faq-accordion';
 export { default as Button, Button as TpButton } from './ui/Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './ui/Button';
 
+// Scroll Effects & Home Feature Sections
+export { default as SplitImageScroll } from './home/split-image-scroll';
+export type { SplitImageScrollProps } from './home/split-image-scroll';
+export { default as FlowingSvgTrack } from './home/flowing-svg-track';
+export type { FlowingSvgTrackProps } from './home/flowing-svg-track';
+

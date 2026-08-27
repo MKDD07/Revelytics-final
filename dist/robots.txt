@@ -1,0 +1,44 @@
+# Revlytics - robots.txt
+User-agent: *
+Allow: /
+Allow: /services
+Allow: /services/*
+Allow: /service-details/
+Allow: /service-details/*
+Allow: /blog
+Allow: /blog/*
+Allow: /faq
+Allow: /contact
+
+# Search Engines & AI Crawlers
+User-agent: Googlebot
+Allow: /
+Allow: /services/*
+Allow: /blog/*
+
+User-agent: Bingbot
+Allow: /
+Allow: /services/*
+Allow: /blog/*
+
+User-agent: Applebot
+Allow: /
+Allow: /services/*
+
+User-agent: GPTBot
+Allow: /
+Allow: /services/*
+Allow: /blog/*
+
+User-agent: Claude-Web
+Allow: /
+Allow: /services/*
+Allow: /blog/*
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /services/*
+Allow: /blog/*
+
+# Sitemaps
+Sitemap: https://revelytics-final.mkmkataria07.workers.dev/sitemap.xml

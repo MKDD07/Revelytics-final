@@ -25,7 +25,11 @@ const FALLBACK_CATEGORY_IMAGES: Record<string, string> = {
 const DEFAULT_SERVICE_IMAGE =
   'https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop';
 
-const ServiceList: React.FC = () => {
+export interface ServiceListProps {
+  id?: string;
+}
+
+const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -183,7 +187,7 @@ const ServiceList: React.FC = () => {
   return (
     <>
       {/* Service List with Pinned Image Showcase */}
-      <div id="service" className="tp-service-area tp-panel-pin-area tp-bg-grey pt-145 pb-90">
+      <div id={id} className="tp-service-area tp-panel-pin-area tp-bg-grey pt-145 pb-90">
         <div className="container">
           <div className="row align-items-end">
             <div className="col-xxl-11 col-xl-12">
