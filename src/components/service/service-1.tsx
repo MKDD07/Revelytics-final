@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import { getPexelsImage } from '../../utils';
 import Button from '../ui/Button';
 
@@ -168,10 +169,32 @@ const Service1 = ({
                   onMouseEnter={() => setActiveIndex(index)}
                   onTouchStart={() => setActiveIndex(index)}
                 >
-                  <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block">
-                    <a href={item.link} onClick={(e) => e.preventDefault()}>
-                      {item.title}
-                      <span className="tp-service-icon d-inline-block">
+                  <h2 className="tp-service-title tp-ff-sequel-roman d-inline-block m-0 w-100">
+                    <a
+                      href={item.link}
+                      onClick={(e) => e.preventDefault()}
+                      className="text-decoration-none d-flex align-items-center justify-content-between"
+                      style={{
+                        color: index === activeIndex ? 'var(--tp-theme-primary, #ff3c00)' : 'inherit',
+                        transition: 'color 0.25s ease',
+                        gap: '20px',
+                      }}
+                    >
+                      <span>{item.title}</span>
+                      <span
+                        className="tp-service-icon d-inline-flex align-items-center justify-content-center"
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '50%',
+                          backgroundColor: index === activeIndex ? 'var(--tp-theme-primary, #ff3c00)' : 'rgba(0, 0, 0, 0.04)',
+                          color: index === activeIndex ? '#ffffff' : 'inherit',
+                          transform: index === activeIndex ? 'rotate(45deg)' : 'none',
+                          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <ArrowUpRight size={20} strokeWidth={2} />
                       </span>
                     </a>
                   </h2>

@@ -77,4 +77,6 @@ export { default as SplitImageScroll } from './home/split-image-scroll';
 export type { SplitImageScrollProps } from './home/split-image-scroll';
 export { default as FlowingSvgTrack } from './home/flowing-svg-track';
 export type { FlowingSvgTrackProps } from './home/flowing-svg-track';
+export { default as DotMatrixLoader } from './ui/dot-matrix-loader';
+export type { DotMatrixLoaderProps } from './ui/dot-matrix-loader';
 

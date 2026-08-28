@@ -42,9 +42,9 @@ const Home: React.FC = () => {
 
       {/* 4. Travel Specialties & Strategic Capabilities */}
       <ResumeSpecialties
-        bannerHeight="600px"
-        showCategoryBanner={true}
-        showServicesList={false}
+        limit={0}
+        showCategoryBanner={false}
+        showServicesList={true}
       />
 
       {/* 5. Dynamic Text Slider */}

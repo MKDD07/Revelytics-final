@@ -3,6 +3,7 @@ import {
   Offcanvas1,
   Header1,
   Footer1,
+  DotMatrixLoader,
 } from './components';
 import {
   Home,
@@ -91,6 +92,7 @@ const getRouteFromLocation = (): RouteState => {
 
 function App() {
   const [routeState, setRouteState] = useState<RouteState>(getRouteFromLocation());
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const isTransitioningRef = useRef<boolean>(false);
 
   // Barba.js Curtain Transition Effect
@@ -224,6 +226,16 @@ function App() {
 
   return (
     <>
+      {/* Editorial Dot Matrix Studio Loading Screen */}
+      {isLoading && (
+        <DotMatrixLoader
+          minDuration={2200}
+          onComplete={() => {
+            setIsLoading(false);
+          }}
+        />
+      )}
+
       {/* Offcanvas, Search & Mobile Menu */}
       <Offcanvas1 />
 
@@ -284,6 +296,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Bottom 200px Progressive Blur Filter (Frosted depth as user scrolls) */}
+      <div className="bottom-scroll-blur-overlay" aria-hidden="true" />
     </>
   );
 }

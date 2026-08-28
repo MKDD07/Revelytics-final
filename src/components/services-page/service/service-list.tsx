@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import { fetchServices, type ServiceItem } from '../../../services/api';
 import { searchPexelsPhotos } from '../../../services/pexels';
 
@@ -305,25 +306,29 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
                             onClick={(e) => handleCategoryClick(cat.slug, e)}
                             className="text-decoration-none d-flex align-items-center justify-content-between"
                             style={{
-                              color: isActive ? 'var(--tp-theme-primary, #ff3c00)' : 'inherit',
+                              color: isActive ? 'var(--tp-theme-primary, #ff3c00)' : '#111111',
                               transition: 'color 0.25s ease',
                               gap: '20px',
+                              fontSize: 'clamp(1.5rem, 2.8vw, 2.5rem)',
+                              fontWeight: 500,
+                              letterSpacing: '-0.02em',
                             }}
                           >
                             <span>{cat.name}</span>
                             <span
-                              className="tp-service-icon d-inline-block"
+                              className="tp-service-icon d-inline-flex align-items-center justify-content-center"
                               style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                backgroundColor: isActive ? 'var(--tp-theme-primary, #ff3c00)' : 'rgba(0, 0, 0, 0.04)',
+                                color: isActive ? '#ffffff' : '#111111',
                                 transform: isActive ? 'rotate(45deg)' : 'none',
-                                transition: 'transform 0.3s ease, color 0.3s ease',
+                                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                                flexShrink: 0,
                               }}
                             >
-                              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                  d="M1.17157 41.1716C-0.390524 42.7337 -0.390524 45.2663 1.17157 46.8284C2.73367 48.3905 5.26633 48.3905 6.82843 46.8284L4 44L1.17157 41.1716ZM48 4C48 1.79086 46.2091 -2.03428e-06 44 -3.48405e-07L8 1.57357e-07C5.79087 -1.19134e-06 4.00001 1.79086 4.00001 4C4.00001 6.20914 5.79087 8 8.00001 8L40 8L40 40C40 42.2091 41.7909 44 44 44C46.2091 44 48 42.2091 48 40L48 4ZM4 44L6.82843 46.8284L46.8284 6.82843L44 4L41.1716 1.17157L1.17157 41.1716L4 44Z"
-                                  fill="currentColor"
-                                />
-                              </svg>
+                              <ArrowUpRight size={22} strokeWidth={2} />
                             </span>
                           </a>
                         </h2>

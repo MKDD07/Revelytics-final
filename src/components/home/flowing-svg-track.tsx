@@ -5,22 +5,18 @@ export interface FlowingSvgTrackProps {
   topOffset?: string;
 }
 
-// CTA Images (shape-4 to shape-7) that float in sequence next to the ending scroll track
-const CTA_IMAGES = [
-  { id: 'cta-4', src: '/assets/img/cta/shape-4.jpg', x: 860, y: 2540, width: 230, height: 160, rotate: -4 },
-  { id: 'cta-5', src: '/assets/img/cta/shape-5.jpg', x: 1080, y: 2840, width: 240, height: 165, rotate: 5 },
-  { id: 'cta-6', src: '/assets/img/cta/shape-6.jpg', x: 120, y: 3100, width: 230, height: 160, rotate: -3 },
-  { id: 'cta-7', src: '/assets/img/cta/shape-7.jpg', x: 740, y: 3360, width: 250, height: 175, rotate: 4 },
-];
-
 export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
   triggerRef,
   topOffset = '42vh',
 }) => {
   const pathRef = useRef<SVGPathElement | null>(null);
-  const imageRefs = useRef<(SVGGElement | null)[]>([]);
 
   useEffect(() => {
+    // Disable animation completely on mobile (<768px)
+    if (window.innerWidth < 768) {
+      return;
+    }
+
     const gsap = (window as any).gsap;
     const ScrollTrigger = (window as any).ScrollTrigger;
 
@@ -59,28 +55,6 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
       0
     );
 
-    // 2. Sequential float-in for CTA images 4 through 7 near the end of scroll
-    imageRefs.current.forEach((el, idx) => {
-      if (!el) return;
-      const startAt = 0.58 + idx * 0.09;
-      tl.fromTo(
-        el,
-        {
-          opacity: 0,
-          scale: 0.5,
-          y: 60,
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          ease: 'power2.out',
-          duration: 0.14,
-        },
-        startAt
-      );
-    });
-
     return () => {
       if (tl.scrollTrigger) {
         tl.scrollTrigger.kill();
@@ -91,6 +65,7 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
 
   return (
     <svg
+      className="flowing-svg-track"
       width="1765"
       height="3592"
       viewBox="0 0 1765 3592"
@@ -136,11 +111,11 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
           <stop offset="1" stopColor="#CD4631" />
         </linearGradient>
 
-        {/* Clip paths for rounded CTA images */}
-        <clipPath id="cta-clip-4"><rect x="860" y="2540" width="230" height="160" rx="18" ry="18" /></clipPath>
-        <clipPath id="cta-clip-5"><rect x="1080" y="2840" width="240" height="165" rx="18" ry="18" /></clipPath>
-        <clipPath id="cta-clip-6"><rect x="120" y="3100" width="230" height="160" rx="18" ry="18" /></clipPath>
-        <clipPath id="cta-clip-7"><rect x="740" y="3360" width="250" height="175" rx="18" ry="18" /></clipPath>
+        {/* Clip paths for rounded square (1:1) CTA images */}
+        <clipPath id="cta-clip-4"><rect x="860" y="2540" width="210" height="210" rx="20" ry="20" /></clipPath>
+        <clipPath id="cta-clip-5"><rect x="1080" y="2840" width="230" height="230" rx="20" ry="20" /></clipPath>
+        <clipPath id="cta-clip-6"><rect x="120" y="3100" width="200" height="200" rx="20" ry="20" /></clipPath>
+        <clipPath id="cta-clip-7"><rect x="740" y="3360" width="220" height="220" rx="20" ry="20" /></clipPath>
 
         {/* Drop shadow for floating CTA cards */}
         <filter id="cta-card-shadow" x="-30%" y="-30%" width="160%" height="160%">
@@ -515,42 +490,6 @@ export const FlowingSvgTrack: React.FC<FlowingSvgTrackProps> = ({
 <path d="M1095.2 3566.43C1095.2 3552.62 1106.39 3541.43 1120.2 3541.43C1134 3541.43 1145.2 3552.62 1145.2 3566.43C1145.2 3580.24 1134 3591.43 1120.2 3591.43C1106.39 3591.43 1095.2 3580.24 1095.2 3566.43Z" fill="#FD5B0A" />
 <path d="M1145.2 3566.43C1145.2 3552.62 1156.39 3541.43 1170.2 3541.43C1184 3541.43 1195.2 3552.62 1195.2 3566.43C1195.2 3580.24 1184 3591.43 1170.2 3591.43C1156.39 3591.43 1145.2 3580.24 1145.2 3566.43Z" fill="#FD5B0A" />
 
-      {/* Floating CTA Images (shape-4 to shape-7) that float in sequence near scroll line end */}
-      {CTA_IMAGES.map((item, idx) => (
-        <g
-          key={item.id}
-          ref={(el) => {
-            imageRefs.current[idx] = el;
-          }}
-          transform={`rotate(${item.rotate} ${item.x + item.width / 2} ${item.y + item.height / 2})`}
-          style={{
-            transformOrigin: `${item.x + item.width / 2}px ${item.y + item.height / 2}px`,
-            opacity: 0,
-          }}
-        >
-          {/* Card shadow base */}
-          <rect
-            x={item.x}
-            y={item.y}
-            width={item.width}
-            height={item.height}
-            rx="18"
-            ry="18"
-            fill="#ffffff"
-            filter="url(#cta-card-shadow)"
-          />
-          {/* Real CTA image */}
-          <image
-            href={item.src}
-            x={item.x}
-            y={item.y}
-            width={item.width}
-            height={item.height}
-            clipPath={`url(#cta-clip-${idx + 4})`}
-            preserveAspectRatio="xMidYMid slice"
-          />
-        </g>
-      ))}
 </svg>
   );
 };

@@ -21,7 +21,7 @@ const DEFAULT_IMAGE =
 export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
   leftText = 'We',
   rightText = 'are',
-  centerRevealText = 'Revelytics',
+  centerRevealText = 'Revlytics',
   pexelsQuery = 'red modern creative fashion',
   pexelsIndex = 0,
   fallbackImage = DEFAULT_IMAGE,
@@ -37,8 +37,9 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
   const leftTextRef = useRef<HTMLHeadingElement | null>(null);
   const rightTextRef = useRef<HTMLHeadingElement | null>(null);
 
-  // Center Brand Reveal Text ("Revelytics")
+  // Center Brand Reveal Text ("Revelytics") & Letter Refs
   const centerTextRef = useRef<HTMLHeadingElement | null>(null);
+  const centerLettersRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   // Main Image Container (expands & splits)
   const imageContainerRef = useRef<HTMLDivElement | null>(null);
@@ -61,7 +62,6 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
     // Initial Visual States
     gsap.set(leftTextRef.current, { opacity: 1, x: 0 });
     gsap.set(rightTextRef.current, { opacity: 1, x: 0 });
-    gsap.set(centerTextRef.current, { opacity: 0, scale: 0.85 });
     gsap.set(imageContainerRef.current, {
       width: 200,
       height: 90,
@@ -70,11 +70,43 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
     gsap.set(leftHalfRef.current, { xPercent: 0, opacity: 1 });
     gsap.set(rightHalfRef.current, { xPercent: 0, opacity: 1 });
 
+    // Distinct starting displacement offsets & rotations for each letter so they arrive from different directions
+    const letterOffsets = [
+      { x: -140, y: -100, z: -150, rotate: -35, rotateY: 45 },
+      { x: -90, y: 120, z: 80, rotate: 25, rotateY: -30 },
+      { x: -40, y: -130, z: -100, rotate: -20, rotateY: 50 },
+      { x: 20, y: 110, z: 120, rotate: 30, rotateY: -40 },
+      { x: 70, y: -90, z: -80, rotate: -25, rotateY: 35 },
+      { x: 110, y: 130, z: 100, rotate: 40, rotateY: -50 },
+      { x: 150, y: -110, z: -120, rotate: -30, rotateY: 40 },
+      { x: -60, y: 80, z: 60, rotate: 15, rotateY: -20 },
+      { x: 100, y: -70, z: 90, rotate: -15, rotateY: 25 },
+    ];
+
+    const letters = centerLettersRef.current.filter(Boolean);
+
+    letters.forEach((letterEl, idx) => {
+      const offset = letterOffsets[idx % letterOffsets.length];
+      gsap.set(letterEl, {
+        opacity: 0,
+        x: offset.x,
+        y: offset.y,
+        z: offset.z,
+        rotation: offset.rotate,
+        rotationY: offset.rotateY,
+        rotationX: offset.rotate * 0.7,
+        scale: 0.6,
+        transformPerspective: 800,
+      });
+    });
+
+    const isMobile = window.innerWidth < 768;
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionRef.current,
         start: 'top top',
-        end: '+=180%',
+        end: () => (window.innerWidth < 768 ? '+=100%' : '+=180%'),
         pin: stickyRef.current,
         scrub: 1,
         anticipatePin: 1,
@@ -121,7 +153,7 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
 
     // -------------------------------------------------------------
     // PHASE 2: Image breaks into 2 pieces (slides left & right)
-    // Revealing "Revelytics" boldly at the screen center!
+    // Revealing "Revlytics" with each letter converging from different directions
     // -------------------------------------------------------------
     tl.to(
       leftHalfRef.current,
@@ -145,17 +177,25 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
       0.7
     );
 
-    // Center text ("Revelytics") appears cleanly at center
-    tl.to(
-      centerTextRef.current,
-      {
-        opacity: 1,
-        scale: 1,
-        ease: 'back.out(1.4)',
-        duration: 0.6,
-      },
-      0.9
-    );
+    // Letters converge to original position (x: 0, y: 0, z: 0, rotation: 0, opacity: 1, scale: 1)
+    letters.forEach((letterEl, idx) => {
+      tl.to(
+        letterEl,
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          z: 0,
+          rotation: 0,
+          rotationY: 0,
+          rotationX: 0,
+          scale: 1,
+          ease: 'power3.out',
+          duration: 0.55,
+        },
+        0.75 + idx * 0.04
+      );
+    });
 
     return () => {
       if (tl.scrollTrigger) {
@@ -163,7 +203,7 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
       }
       tl.kill();
     };
-  }, [imageSrc]);
+  }, [imageSrc, centerRevealText]);
 
   return (
     <section
@@ -172,7 +212,6 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
       style={{
         position: 'relative',
         width: '100%',
-        height: '320vh',
         background: '#ffffff',
         overflow: 'hidden',
       }}
@@ -198,7 +237,7 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
         }}
       >
         {/* ------------------------------------------------------------------ */}
-        {/* CENTER REVEAL TEXT LAYER ("Revelytics" Revealed in Center)         */}
+        {/* CENTER REVEAL TEXT LAYER ("Revlytics" Letters Reveal from Different Locations) */}
         {/* ------------------------------------------------------------------ */}
         <div
           style={{
@@ -213,6 +252,7 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
             textAlign: 'center',
             pointerEvents: 'none',
             width: '100%',
+            perspective: 1000,
           }}
         >
           <h2
@@ -227,9 +267,25 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
               whiteSpace: 'nowrap',
               lineHeight: 1,
               userSelect: 'none',
+              display: 'inline-flex',
+              transformStyle: 'preserve-3d',
             }}
           >
-            {centerRevealText}
+            {centerRevealText.split('').map((char, index) => (
+              <span
+                key={index}
+                ref={(el) => {
+                  centerLettersRef.current[index] = el;
+                }}
+                style={{
+                  display: 'inline-block',
+                  whiteSpace: char === ' ' ? 'pre' : 'normal',
+                  willChange: 'transform, opacity',
+                }}
+              >
+                {char}
+              </span>
+            ))}
           </h2>
         </div>
 
