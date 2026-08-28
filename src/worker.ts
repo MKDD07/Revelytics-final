@@ -1201,21 +1201,38 @@ export default {
         }
       };
 
+      // ---- robots.txt (dynamic Sitemap line) ----
+      if (path === '/robots.txt') {
+        const robotsTxt = `User-agent: *
+Allow: /
+Allow: /services
+Allow: /services/*
+Allow: /blog
+Allow: /blog/*
+Allow: /faq
+Allow: /contact
+
+Sitemap: ${origin}/sitemap.xml`;
+        return new Response(robotsTxt, {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+
       if (path === '/sitemap.xml' || path === '/api/sitemap.xml') {
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<sitemap>
-  <loc>${origin}/sitemap-pages.xml</loc>
-  <lastmod>${today}</lastmod>
-</sitemap>
-<sitemap>
-  <loc>${origin}/sitemap-services.xml</loc>
-  <lastmod>${today}</lastmod>
-</sitemap>
-<sitemap>
-  <loc>${origin}/sitemap-blogs.xml</loc>
-  <lastmod>${today}</lastmod>
-</sitemap>
+  <sitemap>
+    <loc>${origin}/sitemap-pages.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${origin}/sitemap-services.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${origin}/sitemap-blogs.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
 </sitemapindex>`;
 
         return new Response(xml, {
@@ -1238,18 +1255,19 @@ export default {
 
         const urls = staticUrls
           .map(
-            (page) => `
-<url>
-  <loc>${page.loc}</loc>
-  <lastmod>${today}</lastmod>
-  <changefreq>${page.changefreq}</changefreq>
-  <priority>${page.priority}</priority>
-</url>`
+            (page) =>
+`  <url>
+    <loc>${page.loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`
           )
-          .join('');
+          .join('\n');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
 </urlset>`;
 
         return new Response(xml, {
@@ -1262,35 +1280,56 @@ export default {
       }
 
       if (path === '/sitemap-services.xml' || path === '/api/sitemap-services.xml') {
-        let results: any[] = [];
+        // Static service slugs as fallback (always included)
+        const STATIC_SERVICES = [
+          'ui-ux-design',
+          'web-development',
+          'brand-identity',
+          'digital-marketing',
+          'motion-graphics',
+        ];
+
+        let dbResults: any[] = [];
         try {
           const queryRes = await env.DB.prepare(
             `SELECT service_slug, updated_at, created_at FROM services
              WHERE is_active = 1 OR is_active IS NULL
              ORDER BY sort_order ASC, id ASC`
           ).all();
-          results = queryRes?.results || [];
+          dbResults = queryRes?.results || [];
         } catch (e) {
           console.warn('sitemap-services query error:', e);
         }
 
-        const urls = results
-          .filter((svc) => svc && (svc.service_slug || svc.slug))
-          .map((svc) => {
-            const slug = svc.service_slug || svc.slug;
-            const lastmod = toDateStr(svc.updated_at || svc.created_at);
-            return `
-<url>
-  <loc>${origin}/services/${slug}</loc>
-  <lastmod>${lastmod}</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.85</priority>
-</url>`;
-          })
-          .join('');
+        // Merge DB results with static fallbacks (DB wins on duplicates)
+        const dbSlugs = new Set(dbResults.map((s: any) => s.service_slug || s.slug).filter(Boolean));
+        const allEntries: Array<{ slug: string; lastmod: string }> = [
+          ...dbResults
+            .filter((svc: any) => svc && (svc.service_slug || svc.slug))
+            .map((svc: any) => ({
+              slug: svc.service_slug || svc.slug,
+              lastmod: toDateStr(svc.updated_at || svc.created_at),
+            })),
+          ...STATIC_SERVICES
+            .filter((s) => !dbSlugs.has(s))
+            .map((s) => ({ slug: s, lastmod: today })),
+        ];
+
+        const urls = allEntries
+          .map(
+            ({ slug, lastmod }) =>
+`  <url>
+    <loc>${origin}/services/${slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>`
+          )
+          .join('\n');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
 </urlset>`;
 
         return new Response(xml, {
@@ -1305,6 +1344,7 @@ export default {
       if (path === '/sitemap-blogs.xml' || path === '/api/sitemap-blogs.xml') {
         let results: any[] = [];
         try {
+          // Primary: rev_db table
           const queryRes = await env.DB.prepare(
             `SELECT slug, updated_at, created_at, date FROM rev_db
              WHERE slug IS NOT NULL AND slug != ''
@@ -1312,6 +1352,7 @@ export default {
           ).all();
           results = queryRes?.results || [];
 
+          // Fallback 1: blogs table with is_published filter
           if (results.length === 0) {
             const blogsRes = await env.DB.prepare(
               `SELECT slug, updated_at, created_at FROM blogs
@@ -1320,26 +1361,41 @@ export default {
             ).all();
             results = blogsRes?.results || [];
           }
+
+          // Fallback 2: blogs table without filter
+          if (results.length === 0) {
+            const blogsRes2 = await env.DB.prepare(
+              `SELECT slug, updated_at, created_at FROM blogs
+               WHERE slug IS NOT NULL AND slug != ''
+               ORDER BY id DESC`
+            ).all();
+            results = blogsRes2?.results || [];
+          }
         } catch (e) {
           console.warn('sitemap-blogs query error:', e);
         }
 
+        const seenSlugs = new Set<string>();
         const urls = results
-          .filter((post) => post && post.slug)
+          .filter((post) => {
+            if (!post?.slug || seenSlugs.has(post.slug)) return false;
+            seenSlugs.add(post.slug);
+            return true;
+          })
           .map((post) => {
             const lastmod = toDateStr(post.updated_at || post.created_at || post.date);
-            return `
-<url>
-  <loc>${origin}/blog/${post.slug}</loc>
-  <lastmod>${lastmod}</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.80</priority>
-</url>`;
+            return `  <url>
+    <loc>${origin}/blog/${post.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>`;
           })
-          .join('');
+          .join('\n');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
 </urlset>`;
 
         return new Response(xml, {
