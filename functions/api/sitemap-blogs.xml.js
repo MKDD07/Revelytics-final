@@ -1,5 +1,7 @@
 export async function onRequest(context) {
-  const { env } = context;
+  const { env, request } = context;
+  const url = new URL(request.url);
+  const origin = url.origin; // dynamic — works on any domain/preview URL
   const today = new Date().toISOString().split("T")[0];
 
   const toDateString = (val) => {
@@ -16,6 +18,7 @@ export async function onRequest(context) {
   let results = [];
   if (env?.DB) {
     try {
+      // Primary: rev_db table
       const queryRes = await env.DB.prepare(
         `SELECT slug, updated_at, created_at, date FROM rev_db
          WHERE slug IS NOT NULL AND slug != ''
@@ -23,7 +26,7 @@ export async function onRequest(context) {
       ).all();
       results = queryRes?.results || [];
 
-      // If rev_db had no records or fallback needed, also query blogs
+      // Fallback: blogs table if rev_db is empty
       if (results.length === 0) {
         const blogsRes = await env.DB.prepare(
           `SELECT slug, updated_at, created_at FROM blogs
@@ -43,7 +46,7 @@ export async function onRequest(context) {
       const lastmod = toDateString(post.updated_at || post.created_at || post.date);
       return `
 <url>
-  <loc>https://revelytics-final.mkmkataria07.workers.dev/blog/${post.slug}</loc>
+  <loc>${origin}/blog/${post.slug}</loc>
   <lastmod>${lastmod}</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.80</priority>

@@ -1,5 +1,7 @@
 export async function onRequest(context) {
-  const { env } = context;
+  const { env, request } = context;
+  const url = new URL(request.url);
+  const origin = url.origin; // dynamic — works on any domain/preview URL
   const today = new Date().toISOString().split("T")[0];
 
   const toDateString = (val) => {
@@ -34,7 +36,7 @@ export async function onRequest(context) {
       const lastmod = toDateString(svc.updated_at || svc.created_at);
       return `
 <url>
-  <loc>https://revelytics-final.mkmkataria07.workers.dev/services/${slug}</loc>
+  <loc>${origin}/services/${slug}</loc>
   <lastmod>${lastmod}</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.85</priority>

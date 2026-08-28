@@ -1,13 +1,16 @@
-export async function onRequest() {
-  const staticUrls = [
-    { loc: "https://revelytics-final.mkmkataria07.workers.dev/", priority: "1.0", changefreq: "daily" },
-    { loc: "https://revelytics-final.mkmkataria07.workers.dev/services", priority: "0.95", changefreq: "daily" },
-    { loc: "https://revelytics-final.mkmkataria07.workers.dev/blog", priority: "0.90", changefreq: "daily" },
-    { loc: "https://revelytics-final.mkmkataria07.workers.dev/faq", priority: "0.80", changefreq: "monthly" },
-    { loc: "https://revelytics-final.mkmkataria07.workers.dev/contact", priority: "0.80", changefreq: "monthly" },
-  ];
-
+export async function onRequest(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+  const origin = url.origin; // dynamic — works on any domain/preview URL
   const today = new Date().toISOString().split("T")[0];
+
+  const staticUrls = [
+    { loc: `${origin}/`,        priority: "1.0",  changefreq: "daily"   },
+    { loc: `${origin}/services`, priority: "0.95", changefreq: "daily"   },
+    { loc: `${origin}/blog`,    priority: "0.90", changefreq: "daily"   },
+    { loc: `${origin}/faq`,     priority: "0.80", changefreq: "monthly" },
+    { loc: `${origin}/contact`, priority: "0.80", changefreq: "monthly" },
+  ];
 
   const urls = staticUrls
     .map(
