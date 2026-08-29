@@ -153,10 +153,10 @@ const Contact1: React.FC<Contact1Props> = ({ showMap = true }) => {
               <div className="col-md-5">
                 <div className="tp-contact-info mb-30 pt-10">
                   <div className="mb-20">
-                    <a className="tp-contact-tel" href="tel:+919263553116">+91 92635 53116</a>
+                    <a className="tp-contact-tel" href="tel:+919910668605">+91 99106 68605</a>
                   </div>
                   <div className="mb-30">
-                    <a className="tp-contact-mail" href="mailto:contact@revlytics.in">contact@revlytics.in</a>
+                    <a className="tp-contact-mail" href="mailto:info@revlytics.in">info@revlytics.in</a>
                   </div>
                   <div className="tp-contact-address mb-30">
                     <h4>India &amp; Global Hubs</h4>

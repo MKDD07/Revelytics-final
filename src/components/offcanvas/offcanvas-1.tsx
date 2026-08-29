@@ -168,13 +168,13 @@ const Offcanvas1: React.FC = () => {
                 Direct Inquiries
               </p>
               <h5 className="mb-8" style={{ fontSize: '16px', fontWeight: 400 }}>
-                <a href="mailto:contact@revlytics.in" style={{ color: '#111827', textDecoration: 'none', transition: 'color 0.2s' }}>
-                  contact@revlytics.in
+                <a href="mailto:info@revlytics.in" style={{ color: '#111827', textDecoration: 'none', transition: 'color 0.2s' }}>
+                  info@revlytics.in
                 </a>
               </h5>
               <p className="mb-20" style={{ fontSize: '15px', color: '#374151', fontWeight: 500 }}>
-                <a href="tel:+919263553116" style={{ color: 'inherit', textDecoration: 'none' }}>
-                  +91 92635 53116
+                <a href="tel:+919910668605" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  +91 99106 68605
                 </a>
               </p>
               <div className="mb-25">

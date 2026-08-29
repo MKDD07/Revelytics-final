@@ -69,10 +69,10 @@ const Footer1 = () => {
                    <div className="tp-footer-widget cs-footer-widget-2 mb-30 tp_fade_anim" data-delay=".6">
                       <span className="tp-footer-dec text-white">Ready to scale your travel revenue?</span>
                       <h4 className="tp-footer-email tp-ff-sequel-roman text-white mb-10">
-                         <a href="mailto:contact@revlytics.in">contact@revlytics.in</a>
+                         <a href="mailto:info@revlytics.in">info@revlytics.in</a>
                       </h4>
                       <p className="text-white mb-0" style={{ fontSize: '14px', opacity: 0.75 }}>
-                         <a href="tel:+919263553116" style={{ color: 'inherit' }}>+91 92635 53116</a>
+                         <a href="tel:+919910668605" style={{ color: 'inherit' }}>+91 99106 68605</a>
                          <br />
                          Gurugram, Haryana, India
                       </p>
