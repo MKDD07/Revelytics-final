@@ -167,30 +167,30 @@ export const SettingsDashboard: React.FC = () => {
         <h2 className="text-xl font-bold tracking-tight text-white">
           Settings & Integrations
         </h2>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-zinc-500">
           Manage your Groq AI API keys, default model selector, administrator credentials, and Cloudflare D1 database.
         </p>
       </div>
 
       {statusMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-emerald-950/50 p-3 text-xs text-emerald-400 border border-emerald-800">
+        <div className="flex items-center gap-2 rounded-md bg-emerald-50/50 p-3 text-xs text-emerald-600 border border-emerald-200">
           <CheckCircle2 className="size-4 shrink-0" />
           <span>{statusMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
           <AlertCircle className="size-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Groq API Integration Card */}
-      <Card className="border-zinc-800 bg-zinc-900/40">
+      <Card className="border-zinc-200 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-lg bg-indigo-950/60 text-indigo-400 border border-indigo-800 flex items-center justify-center">
+            <div className="size-9 rounded-lg bg-indigo-50/60 text-indigo-600 border border-indigo-200 flex items-center justify-center">
               <Sparkles className="size-4" />
             </div>
             <div>
@@ -209,7 +209,7 @@ export const SettingsDashboard: React.FC = () => {
         <form onSubmit={handleSaveGroqKey}>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Groq API Key (`gsk_...`)
               </label>
               <Input
@@ -220,17 +220,17 @@ export const SettingsDashboard: React.FC = () => {
                 className="font-mono text-xs"
               />
               <p className="text-[11px] text-zinc-500">
-                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-indigo-400 underline">console.groq.com/keys</a>.
+                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-indigo-600 underline">console.groq.com/keys</a>.
               </p>
             </div>
 
             {/* Groq Model Selector Option */}
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <div className="space-y-2 pt-2 border-t border-zinc-200">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
-                  <Cpu className="size-3.5 text-purple-400" /> Default AI Model Selection
+                <label className="text-xs font-medium text-zinc-600 flex items-center gap-1.5">
+                  <Cpu className="size-3.5 text-purple-600" /> Default AI Model Selection
                 </label>
-                <span className="text-[11px] font-mono text-purple-400">
+                <span className="text-[11px] font-mono text-purple-600">
                   Active: {selectedModel}
                 </span>
               </div>
@@ -238,7 +238,7 @@ export const SettingsDashboard: React.FC = () => {
               <select
                 value={isCustomModel ? 'custom' : selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-50 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
+                className="flex h-9 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
               >
                 <optgroup label="Meta Llama">
                   <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k context)</option>
@@ -300,7 +300,7 @@ export const SettingsDashboard: React.FC = () => {
             </div>
 
             {testResult && (
-              <div className="p-3 rounded-md bg-indigo-950/40 border border-indigo-800 text-xs text-indigo-200">
+              <div className="p-3 rounded-md bg-indigo-50/40 border border-indigo-200 text-xs text-indigo-700">
                 ✓ {testResult}
               </div>
             )}
@@ -330,9 +330,9 @@ export const SettingsDashboard: React.FC = () => {
       </Card>
 
       {/* Admin Password Card */}
-      <Card className="border-zinc-800 bg-zinc-900/40">
+      <Card className="border-zinc-200 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center gap-3">
-          <div className="size-9 rounded-lg bg-amber-950/60 text-amber-400 border border-amber-800 flex items-center justify-center">
+          <div className="size-9 rounded-lg bg-amber-50/60 text-amber-600 border border-amber-200 flex items-center justify-center">
             <Shield className="size-4" />
           </div>
           <div>
@@ -345,13 +345,13 @@ export const SettingsDashboard: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">
+                <label className="text-xs font-medium text-zinc-600">
                   Username
                 </label>
                 <Input value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">
+                <label className="text-xs font-medium text-zinc-600">
                   New Password
                 </label>
                 <Input
@@ -378,10 +378,10 @@ export const SettingsDashboard: React.FC = () => {
       </Card>
 
       {/* Cloudflare D1 Status Card */}
-      <Card className="border-zinc-800 bg-zinc-900/40">
+      <Card className="border-zinc-200 bg-white shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-800 flex items-center justify-center">
+            <div className="size-9 rounded-lg bg-emerald-50/60 text-emerald-600 border border-emerald-200 flex items-center justify-center">
               <Database className="size-4" />
             </div>
             <div>
@@ -393,22 +393,22 @@ export const SettingsDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
               <div className="text-[11px] font-medium text-zinc-500 uppercase">Credentials Table</div>
               <div className="text-sm font-semibold text-white mt-1">`credentials`</div>
-              <div className="text-xs text-emerald-400 mt-0.5">Active & Hashed</div>
+              <div className="text-xs text-emerald-600 mt-0.5">Active & Hashed</div>
             </div>
 
-            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
               <div className="text-[11px] font-medium text-zinc-500 uppercase">Service Details</div>
               <div className="text-sm font-semibold text-white mt-1">`service_details`</div>
-              <div className="text-xs text-indigo-400 mt-0.5">21 Schema Columns</div>
+              <div className="text-xs text-indigo-600 mt-0.5">21 Schema Columns</div>
             </div>
 
-            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
               <div className="text-[11px] font-medium text-zinc-500 uppercase">Article CMS</div>
               <div className="text-sm font-semibold text-white mt-1">`rev_db` & `blogs`</div>
-              <div className="text-xs text-purple-400 mt-0.5">Live Structured Data</div>
+              <div className="text-xs text-purple-600 mt-0.5">Live Structured Data</div>
             </div>
           </div>
         </CardContent>

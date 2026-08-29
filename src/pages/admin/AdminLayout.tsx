@@ -60,22 +60,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col antialiased">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col antialiased">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 h-16 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur px-6 flex items-center justify-between">
+      <header className="sticky top-0 z-40 h-16 border-b border-zinc-200 bg-white/95 backdrop-blur px-6 flex items-center justify-between shadow-sm">
         {/* Brand */}
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-md">
             R
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base text-zinc-50 tracking-tight">Revlytics</span>
+            <span className="font-bold text-base text-zinc-900 tracking-tight">Revlytics</span>
             <Badge variant="purple" className="text-[10px] py-0 px-2">Admin D1</Badge>
           </div>
         </div>
 
         {/* Center Tabs */}
-        <TabsList className="bg-zinc-900 border border-zinc-800">
+        <TabsList className="bg-zinc-50 border border-zinc-200">
           <TabsTrigger
             active={activeTab === 'meta'}
             onClick={() => setActiveTab('meta')}
@@ -102,13 +102,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-300 hover:text-zinc-50 bg-zinc-900 border border-zinc-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-50 border border-zinc-200 transition-colors"
           >
             <ExternalLink className="size-3" /> View Website
           </a>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-zinc-300 bg-zinc-900 border border-zinc-800">
-            <div className="size-2 rounded-full bg-emerald-400" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-zinc-600 bg-zinc-50 border border-zinc-200">
+            <div className="size-2 rounded-full bg-emerald-500" />
             <span>{username}</span>
           </div>
 
@@ -116,7 +116,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-red-400 hover:text-red-300 hover:bg-red-950/40 text-xs px-2"
+            className="text-red-600 hover:text-red-700 hover:bg-red-100/40 text-xs px-2"
           >
             <LogOut className="size-3.5 mr-1" /> Logout
           </Button>

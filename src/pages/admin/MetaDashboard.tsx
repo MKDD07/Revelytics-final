@@ -252,22 +252,22 @@ export const MetaDashboard: React.FC = () => {
           <h2 className="text-xl font-bold tracking-tight text-white">
             Page Metadata & Service Details
           </h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Manage live SEO meta tags, Google SERP snippet previews, and Cloudflare D1 `service_details`.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Model Selector */}
-          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-md px-2 py-1">
-            <Cpu className="size-3.5 text-purple-400" />
+          <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-md px-2 py-1">
+            <Cpu className="size-3.5 text-purple-600" />
             <select
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value);
                 setStoredGroqModel(e.target.value);
               }}
-              className="bg-transparent text-xs text-zinc-200 border-none outline-none cursor-pointer pr-1"
+              className="bg-transparent text-xs text-zinc-700 border-none outline-none cursor-pointer pr-1"
             >
               <optgroup label="Meta Llama">
                 <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
@@ -295,9 +295,9 @@ export const MetaDashboard: React.FC = () => {
             variant="outline"
             onClick={handleAIGenerate}
             loading={aiGenerating}
-            className="border-indigo-800 text-indigo-300 hover:bg-indigo-950/40"
+            className="border-indigo-200 text-indigo-600 hover:bg-indigo-100/40"
           >
-            <Sparkles className="size-4 text-indigo-400" /> Generate with Groq AI
+            <Sparkles className="size-4 text-indigo-600" /> Generate with Groq AI
           </Button>
 
           <Button
@@ -319,7 +319,7 @@ export const MetaDashboard: React.FC = () => {
       </div>
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
           <AlertCircle className="size-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -328,14 +328,14 @@ export const MetaDashboard: React.FC = () => {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Page Selector Sidebar */}
-        <Card className="lg:col-span-1 border-zinc-800 bg-zinc-900/40 h-fit">
+        <Card className="lg:col-span-1 border-zinc-200 bg-white shadow-sm h-fit">
           <CardHeader className="p-4">
             <CardTitle className="text-sm">Select Page</CardTitle>
             <CardDescription className="text-xs">Choose route to edit</CardDescription>
           </CardHeader>
           <CardContent className="p-4 pt-0 space-y-3">
             {/* Category Toggle */}
-            <div className="grid grid-cols-2 gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+            <div className="grid grid-cols-2 gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200">
               <button
                 onClick={() => {
                   setSelectedCategory('services');
@@ -343,8 +343,8 @@ export const MetaDashboard: React.FC = () => {
                 }}
                 className={`py-1 text-xs font-medium rounded-md transition-colors ${
                   selectedCategory === 'services'
-                    ? 'bg-zinc-800 text-white'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-zinc-100 text-white'
+                    : 'text-zinc-500 hover:text-zinc-700'
                 }`}
               >
                 Services (10)
@@ -356,8 +356,8 @@ export const MetaDashboard: React.FC = () => {
                 }}
                 className={`py-1 text-xs font-medium rounded-md transition-colors ${
                   selectedCategory === 'core'
-                    ? 'bg-zinc-800 text-white'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-zinc-100 text-white'
+                    : 'text-zinc-500 hover:text-zinc-700'
                 }`}
               >
                 Core Pages (5)
@@ -374,12 +374,12 @@ export const MetaDashboard: React.FC = () => {
                     onClick={() => setSelectedSlug(p.slug)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-md text-xs text-left transition-colors cursor-pointer ${
                       isActive
-                        ? 'bg-indigo-950/40 border border-indigo-800 text-white font-medium'
-                        : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 border border-transparent'
+                        ? 'bg-indigo-50/40 border border-indigo-200 text-white font-medium'
+                        : 'text-zinc-500 hover:bg-zinc-100/40 hover:text-zinc-700 border border-transparent'
                     }`}
                   >
                     <span className="truncate">{p.name}</span>
-                    {isActive && <div className="size-1.5 rounded-full bg-indigo-400 shrink-0" />}
+                    {isActive && <div className="size-1.5 rounded-full bg-indigo-500 shrink-0" />}
                   </button>
                 );
               })}
@@ -390,10 +390,10 @@ export const MetaDashboard: React.FC = () => {
         {/* Editor Area */}
         <div className="lg:col-span-3 space-y-6">
           {/* SERP Google Preview Card */}
-          <Card className="border-zinc-800 bg-zinc-900/40">
+          <Card className="border-zinc-200 bg-white shadow-sm">
             <CardHeader className="p-4 flex flex-row items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Search className="size-4 text-indigo-400" /> Google Search SERP Snippet Preview
+                <Search className="size-4 text-indigo-600" /> Google Search SERP Snippet Preview
               </CardTitle>
               <Badge variant="outline" className="text-[10px]">SERP Preview</Badge>
             </CardHeader>
@@ -413,7 +413,7 @@ export const MetaDashboard: React.FC = () => {
           </Card>
 
           {/* Form Fields: Meta Title, Description, Keywords */}
-          <Card className="border-zinc-800 bg-zinc-900/40">
+          <Card className="border-zinc-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle>Core SEO & OpenGraph Meta Tags</CardTitle>
               <CardDescription>Target character counts ensure ideal search engine display.</CardDescription>
@@ -422,10 +422,10 @@ export const MetaDashboard: React.FC = () => {
               {/* Meta Title */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     {'SEO Meta Title Tag (<title>)'}
                   </label>
-                  <span className={`text-[11px] font-mono ${formData.meta_title.length > 60 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  <span className={`text-[11px] font-mono ${formData.meta_title.length > 60 ? 'text-red-600' : 'text-emerald-600'}`}>
                     {formData.meta_title.length} / 60 chars (Ideal: 50-60)
                   </span>
                 </div>
@@ -439,10 +439,10 @@ export const MetaDashboard: React.FC = () => {
               {/* Meta Description */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     {'Meta Description (<meta name="description">)'}
                   </label>
-                  <span className={`text-[11px] font-mono ${formData.meta_description.length > 165 || formData.meta_description.length < 120 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className={`text-[11px] font-mono ${formData.meta_description.length > 165 || formData.meta_description.length < 120 ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {formData.meta_description.length} / 160 chars (Ideal: 140-160)
                   </span>
                 </div>
@@ -457,7 +457,7 @@ export const MetaDashboard: React.FC = () => {
               {/* Keywords & OG Image */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     Keywords
                   </label>
                   <Input
@@ -468,7 +468,7 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     OpenGraph Image URL (Absolute HTTPS)
                   </label>
                   <Input
@@ -483,7 +483,7 @@ export const MetaDashboard: React.FC = () => {
 
           {/* D1 `service_details` Specific Columns (If category is service) */}
           {selectedCategory === 'services' && (
-            <Card className="border-zinc-800 bg-zinc-900/40">
+            <Card className="border-zinc-200 bg-white shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Cloudflare D1 `service_details` Schema Columns</CardTitle>
@@ -497,7 +497,7 @@ export const MetaDashboard: React.FC = () => {
                 {/* Service Name & Category */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Service Name (`service_name`)
                     </label>
                     <Input
@@ -506,7 +506,7 @@ export const MetaDashboard: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Category (`category`)
                     </label>
                     <Input
@@ -518,7 +518,7 @@ export const MetaDashboard: React.FC = () => {
 
                 {/* Summary */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     Executive Summary (`summary`)
                   </label>
                   <Textarea
@@ -531,7 +531,7 @@ export const MetaDashboard: React.FC = () => {
                 {/* Features & Approach Title */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Features (`features` JSON)
                     </label>
                     <Textarea
@@ -542,7 +542,7 @@ export const MetaDashboard: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Approach Steps (`approach_steps` JSON)
                     </label>
                     <Textarea
@@ -556,7 +556,7 @@ export const MetaDashboard: React.FC = () => {
                 {/* Process Steps & Why Choose */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Process Steps (`process_steps` JSON)
                     </label>
                     <Textarea
@@ -567,7 +567,7 @@ export const MetaDashboard: React.FC = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">
+                    <label className="text-xs font-medium text-zinc-600">
                       Why Choose Items (`why_choose_items` JSON)
                     </label>
                     <Textarea
@@ -580,7 +580,7 @@ export const MetaDashboard: React.FC = () => {
 
                 {/* Service Specific FAQs */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     Service Specific FAQs (`faqs` JSON)
                   </label>
                   <Textarea
@@ -592,7 +592,7 @@ export const MetaDashboard: React.FC = () => {
 
                 {/* Pexels Query 2 */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">
+                  <label className="text-xs font-medium text-zinc-600">
                     Pexels Visual Stream Query (`pexels_query_2`)
                   </label>
                   <Input
@@ -606,10 +606,10 @@ export const MetaDashboard: React.FC = () => {
           )}
 
           {/* Schema.org JSON-LD Editor */}
-          <Card className="border-zinc-800 bg-zinc-900/40">
+          <Card className="border-zinc-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Code2 className="size-4 text-indigo-400" /> Schema.org JSON-LD Structured Data
+                <Code2 className="size-4 text-indigo-600" /> Schema.org JSON-LD Structured Data
               </CardTitle>
               <CardDescription>{'Injected directly into page <head> for rich Google search result badges.'}</CardDescription>
             </CardHeader>

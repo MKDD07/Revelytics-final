@@ -280,7 +280,7 @@ export const BlogDashboard: React.FC = () => {
           <h2 className="text-xl font-bold tracking-tight text-white">
             Blog CMS & Groq AI Studio
           </h2>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Generate, edit, and publish high-converting travel hospitality articles directly to Cloudflare D1 (`rev_db`).
           </p>
         </div>
@@ -303,21 +303,21 @@ export const BlogDashboard: React.FC = () => {
       </div>
 
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-emerald-950/50 p-3 text-xs text-emerald-400 border border-emerald-800">
+        <div className="flex items-center gap-2 rounded-md bg-emerald-50/50 p-3 text-xs text-emerald-600 border border-emerald-200">
           <CheckCircle2 className="size-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
           <AlertCircle className="size-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Articles Table Card */}
-      <Card className="border-zinc-800 bg-zinc-900/40">
+      <Card className="border-zinc-200 bg-white shadow-sm">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle>Published Articles in Cloudflare D1</CardTitle>
@@ -340,14 +340,14 @@ export const BlogDashboard: React.FC = () => {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 text-center text-zinc-400 space-y-2">
+            <div className="p-12 text-center text-zinc-500 space-y-2">
               <div className="size-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent mx-auto" />
               <p className="text-xs">Loading articles from Cloudflare D1...</p>
             </div>
           ) : filteredArticles.length === 0 ? (
             <div className="p-12 text-center text-zinc-500 space-y-3">
-              <BookOpen className="size-8 mx-auto opacity-50 text-zinc-400" />
-              <p className="text-sm font-medium text-zinc-300">No articles found</p>
+              <BookOpen className="size-8 mx-auto opacity-50 text-zinc-500" />
+              <p className="text-sm font-medium text-zinc-600">No articles found</p>
               <p className="text-xs text-zinc-500">Generate your first travel article with Groq AI in seconds.</p>
               <Button variant="gradient" size="sm" onClick={() => setIsAiModalOpen(true)}>
                 <Sparkles className="size-3.5 mr-1" /> Generate with Groq AI
@@ -368,23 +368,23 @@ export const BlogDashboard: React.FC = () => {
                 {filteredArticles.map((art) => (
                   <TableRow key={art.slug || art.id}>
                     <TableCell>
-                      <div className="font-semibold text-zinc-100 text-sm">
+                      <div className="font-semibold text-zinc-900 text-sm">
                         {art.heading}
                       </div>
-                      <div className="text-xs text-indigo-400 font-mono">
+                      <div className="text-xs text-indigo-600 font-mono">
                         /blog/{art.slug}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="purple">{art.category || 'Travel Insights'}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-zinc-300">
+                    <TableCell className="text-xs text-zinc-600">
                       <div className="flex items-center gap-1.5">
                         <User className="size-3.5 text-zinc-500" />
                         {art.author || 'Elena Rostova'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs text-zinc-400">
+                    <TableCell className="text-xs text-zinc-500">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="size-3.5 text-zinc-500" />
                         {art.date || art.created_at?.split('T')[0] || '2026-08-29'}
@@ -396,19 +396,19 @@ export const BlogDashboard: React.FC = () => {
                           href={`/blog/${art.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs transition-colors"
                         >
                           <Eye className="size-3" /> View
                         </a>
                         <button
                           onClick={() => handleEditArticle(art)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs transition-colors cursor-pointer"
                         >
                           <Edit className="size-3" /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(art.slug)}
-                          className="inline-flex items-center p-1.5 rounded bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs transition-colors cursor-pointer"
+                          className="inline-flex items-center p-1.5 rounded bg-red-50/40 hover:bg-red-100/60 text-red-600 text-xs transition-colors cursor-pointer"
                         >
                           <Trash2 className="size-3.5" />
                         </button>
@@ -431,7 +431,7 @@ export const BlogDashboard: React.FC = () => {
       >
         <form onSubmit={handleGenerateBlog} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Article Topic / Focus Subject *
             </label>
             <Input
@@ -444,7 +444,7 @@ export const BlogDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Editorial Tone
               </label>
               <Input
@@ -455,7 +455,7 @@ export const BlogDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Target Audience
               </label>
               <Input
@@ -467,7 +467,7 @@ export const BlogDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               SEO Keywords to Target (Comma separated)
             </label>
             <Input
@@ -479,10 +479,10 @@ export const BlogDashboard: React.FC = () => {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
-                <Cpu className="size-3.5 text-purple-400" /> Groq LLM Model
+              <label className="text-xs font-medium text-zinc-600 flex items-center gap-1.5">
+                <Cpu className="size-3.5 text-purple-600" /> Groq LLM Model
               </label>
-              <span className="text-[11px] font-mono text-purple-400">
+              <span className="text-[11px] font-mono text-purple-600">
                 {selectedModel}
               </span>
             </div>
@@ -492,7 +492,7 @@ export const BlogDashboard: React.FC = () => {
                 setSelectedModel(e.target.value);
                 setStoredGroqModel(e.target.value);
               }}
-              className="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-50 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
+              className="flex h-9 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
             >
               <optgroup label="Meta Llama">
                 <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k)</option>
@@ -546,7 +546,7 @@ export const BlogDashboard: React.FC = () => {
           {/* Title & Slug */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Article Heading (`heading` / H1) *
               </label>
               <Input
@@ -557,7 +557,7 @@ export const BlogDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 URL Slug (`slug`) *
               </label>
               <Input
@@ -572,7 +572,7 @@ export const BlogDashboard: React.FC = () => {
           {/* Meta Title & Meta Description */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 SEO Meta Title (`meta_heading`)
               </label>
               <Input
@@ -582,7 +582,7 @@ export const BlogDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Meta Description (`meta_data`)
               </label>
               <Input
@@ -595,7 +595,7 @@ export const BlogDashboard: React.FC = () => {
           {/* Category, Author, Date */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Category
               </label>
               <Input
@@ -605,7 +605,7 @@ export const BlogDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Author
               </label>
               <Input
@@ -615,7 +615,7 @@ export const BlogDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-300">
+              <label className="text-xs font-medium text-zinc-600">
                 Date (YYYY-MM-DD)
               </label>
               <Input
@@ -627,7 +627,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* Featured Image URL */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Featured Image URL (`image_url`)
             </label>
             <Input
@@ -638,7 +638,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* Executive Summary */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Executive Summary (`description`)
             </label>
             <Textarea
@@ -650,7 +650,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* Narrative Paragraph */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Intro Narrative Paragraph (`paragraph`)
             </label>
             <Textarea
@@ -662,7 +662,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* Quote */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Highlight Quote (`useful_quote`)
             </label>
             <Input
@@ -673,7 +673,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* H2 Sections */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               H2 Sections (`sections_h2_para` JSON Array)
             </label>
             <Textarea
@@ -685,7 +685,7 @@ export const BlogDashboard: React.FC = () => {
 
           {/* Tags */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-600">
               Tags (`tags` JSON Array)
             </label>
             <Input
