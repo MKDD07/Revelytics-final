@@ -103,24 +103,32 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Barba.js Curtain Transition Effect
+  // Barba.js Curtain Transition Effect for all route changes
   const triggerBarbaTransition = (nextState: RouteState) => {
+    if (isTransitioningRef.current) {
+      setRouteState(nextState);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     const gsap = (window as any).gsap;
     const curtain = document.getElementById('barba-curtain');
     const logo = curtain?.querySelector('.barba-curtain-logo');
 
     if (gsap && curtain) {
       isTransitioningRef.current = true;
+      gsap.killTweensOf([curtain, logo]);
+
       gsap
         .timeline({
           onComplete: () => {
             setRouteState(nextState);
             window.scrollTo(0, 0);
 
-            // Animate curtain out
+            // Animate curtain out downwards
             gsap.to(curtain, {
               yPercent: 100,
-              duration: 0.5,
+              duration: 0.45,
               ease: 'power3.inOut',
               delay: 0.05,
               onComplete: () => {
@@ -131,9 +139,9 @@ function App() {
           },
         })
         .set(curtain, { yPercent: -100, pointerEvents: 'all' })
-        .to(curtain, { yPercent: 0, duration: 0.45, ease: 'power3.inOut' })
-        .to(logo, { opacity: 1, duration: 0.2 }, '-=0.15')
-        .to(logo, { opacity: 0, duration: 0.2 }, '+=0.1');
+        .to(curtain, { yPercent: 0, duration: 0.4, ease: 'power3.inOut' })
+        .to(logo, { opacity: 1, scale: 1, duration: 0.2 }, '-=0.15')
+        .to(logo, { opacity: 0, scale: 0.95, duration: 0.15 }, '+=0.05');
     } else {
       setRouteState(nextState);
       window.scrollTo(0, 0);
@@ -144,17 +152,8 @@ function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       const next = getRouteFromLocation();
-      // Apply smooth transition when navigating to/from services or service-details
-      if (
-        (next.route === 'services' ||
-          next.route === 'service-details' ||
-          routeState.route === 'services' ||
-          routeState.route === 'service-details') &&
-        (next.route !== routeState.route || next.slug !== routeState.slug)
-      ) {
+      if (next.route !== routeState.route || next.slug !== routeState.slug) {
         triggerBarbaTransition(next);
-      } else {
-        setRouteState(next);
       }
     };
 
@@ -272,16 +271,10 @@ function App() {
     window.history.pushState({}, '', path);
     const nextState = getRouteFromLocation();
 
-    if (
-      nextState.route === 'services' ||
-      nextState.route === 'service-details' ||
-      routeState.route === 'services' ||
-      routeState.route === 'service-details'
-    ) {
+    if (nextState.route !== routeState.route || nextState.slug !== routeState.slug) {
       triggerBarbaTransition(nextState);
     } else {
-      setRouteState(nextState);
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
