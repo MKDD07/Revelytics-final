@@ -658,19 +658,22 @@ async function injectHtmlMetadata(response: Response, pathname: string, env: Env
     return rewriter.transform(response);
   }
 
-  // Fallback string replacement (e.g. during local tests)
+  // Fallback string replacement (e.g. during local tests or environments without HTMLRewriter)
   let html = await response.text();
   html = html.replace(/<title>.*?<\/title>/i, `<title>${meta.title}</title>`);
   html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${meta.description}" />`);
   html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, `<link rel="canonical" href="${meta.canonical}" />`);
   html = html.replace(/<\/head>/i, `  <script type="application/ld+json">\n${JSON.stringify(meta.schema, null, 2)}\n  </script>\n</head>`);
 
+  const headers = new Headers(response.headers);
+  headers.set('content-type', 'text/html; charset=utf-8');
+  headers.delete('content-length');
+  headers.delete('content-encoding');
+
   return new Response(html, {
     status: response.status,
-    headers: {
-      ...Object.fromEntries(response.headers.entries()),
-      'Content-Type': 'text/html; charset=utf-8',
-    },
+    statusText: response.statusText,
+    headers,
   });
 }
 
