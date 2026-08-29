@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/Button';
 import { Input, Badge } from '../../components/ui/input';
-import { Key, Shield, Database, Sparkles, CheckCircle2, Server, Terminal, RefreshCw } from 'lucide-react';
+import { Key, Shield, Database, Sparkles, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const SettingsDashboard: React.FC = () => {
   const [groqKey, setGroqKey] = useState('');
@@ -18,7 +18,6 @@ export const SettingsDashboard: React.FC = () => {
   const [statusMsg, setStatusMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Check current auth status
   useEffect(() => {
     async function checkStatus() {
       try {
@@ -38,7 +37,6 @@ export const SettingsDashboard: React.FC = () => {
     checkStatus();
   }, []);
 
-  // Save / Update Groq API Key
   const handleSaveGroqKey = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingKey(true);
@@ -72,7 +70,6 @@ export const SettingsDashboard: React.FC = () => {
     }
   };
 
-  // Test Groq Connection
   const handleTestGroq = async () => {
     setTestingKey(true);
     setTestResult(null);
@@ -98,7 +95,7 @@ export const SettingsDashboard: React.FC = () => {
         throw new Error(data.error || 'Groq connection test failed');
       }
 
-      setTestResult(`Success! Connected to Groq Llama 3.3 70B. Response: "${data.data?.meta_title || 'OK'}"`);
+      setTestResult(`Success! Connected to Groq Llama 3.3 70B. Title: "${data.data?.meta_title || 'OK'}"`);
     } catch (err: any) {
       setErrorMsg(`Groq Connection Failed: ${err.message}`);
     } finally {
@@ -106,7 +103,6 @@ export const SettingsDashboard: React.FC = () => {
     }
   };
 
-  // Change Admin Password
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
@@ -141,170 +137,121 @@ export const SettingsDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '850px' }}>
+    <div className="space-y-6 max-w-4xl">
       <div>
-        <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+        <h2 className="text-xl font-bold tracking-tight text-white">
           Settings & Integrations
         </h2>
-        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#a1a1aa' }}>
-          Manage your Groq AI API keys, admin credentials, and Cloudflare D1 database connection.
+        <p className="text-xs text-zinc-400">
+          Manage your Groq AI API keys, administrator credentials, and Cloudflare D1 database connections.
         </p>
       </div>
 
       {statusMsg && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: '#4ade80',
-            fontSize: '13px',
-          }}
-        >
-          {statusMsg}
+        <div className="flex items-center gap-2 rounded-md bg-emerald-950/50 p-3 text-xs text-emerald-400 border border-emerald-800">
+          <CheckCircle2 className="size-4 shrink-0" />
+          <span>{statusMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#f87171',
-            fontSize: '13px',
-          }}
-        >
-          ⚠️ {errorMsg}
+        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Groq API Integration Card */}
-      <Card>
-        <CardHeader>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                  color: '#818cf8',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Sparkles size={18} />
-              </div>
-              <div>
-                <CardTitle>Groq AI API Integration</CardTitle>
-                <CardDescription>Powers real-time blog generation & SEO metadata generation</CardDescription>
-              </div>
+      <Card className="border-zinc-800 bg-zinc-900/40">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-lg bg-indigo-950/60 text-indigo-400 border border-indigo-800 flex items-center justify-center">
+              <Sparkles className="size-4" />
             </div>
-
-            {hasGroqKey ? (
-              <Badge variant="success">● Connected</Badge>
-            ) : (
-              <Badge variant="warning">Setup Needed</Badge>
-            )}
+            <div>
+              <CardTitle>Groq AI API Integration</CardTitle>
+              <CardDescription>Powers real-time blog generation & SEO metadata generation</CardDescription>
+            </div>
           </div>
+
+          {hasGroqKey ? (
+            <Badge variant="success">Connected</Badge>
+          ) : (
+            <Badge variant="warning">Setup Required</Badge>
+          )}
         </CardHeader>
 
         <form onSubmit={handleSaveGroqKey}>
-          <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Groq API Key (`gsk_...`)
               </label>
               <Input
                 type="password"
                 value={groqKey}
                 onChange={(e) => setGroqKey(e.target.value)}
-                placeholder={hasGroqKey ? '•••••••••••••••••••• (API Key Configured)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
-                style={{ fontFamily: 'monospace' }}
+                placeholder={hasGroqKey ? '•••••••••••••••••••• (Configured)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
+                className="font-mono text-xs"
               />
-              <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#71717a' }}>
-                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: '#818cf8' }}>console.groq.com</a>. Model used: <code style={{ color: '#c084fc' }}>llama-3.3-70b-versatile</code>.
+              <p className="text-[11px] text-zinc-500">
+                Model used: <code className="text-purple-400 font-mono">llama-3.3-70b-versatile</code>. Get key at console.groq.com.
               </p>
             </div>
 
             {testResult && (
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  backgroundColor: 'rgba(99, 102, 241, 0.12)',
-                  border: '1px solid rgba(99, 102, 241, 0.25)',
-                  color: '#c7d2fe',
-                  fontSize: '12px',
-                }}
-              >
+              <div className="p-3 rounded-md bg-indigo-950/40 border border-indigo-800 text-xs text-indigo-200">
                 ✓ {testResult}
               </div>
             )}
           </CardContent>
 
-          <CardFooter style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <CardFooter className="flex justify-between items-center">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={handleTestGroq}
               loading={testingKey}
             >
-              <RefreshCw size={14} /> Test AI Connection
+              <RefreshCw className="size-3.5 mr-1" /> Test AI Connection
             </Button>
 
             <Button
               type="submit"
               variant="gradient"
+              size="sm"
               loading={savingKey}
             >
-              <Key size={14} /> Save Groq API Key
+              <Key className="size-3.5 mr-1" /> Save Groq API Key
             </Button>
           </CardFooter>
         </form>
       </Card>
 
       {/* Admin Password Card */}
-      <Card>
-        <CardHeader>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                color: '#facc15',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Shield size={18} />
-            </div>
-            <div>
-              <CardTitle>Admin Credentials</CardTitle>
-              <CardDescription>Update dashboard administrator password in Cloudflare D1 `credentials` table</CardDescription>
-            </div>
+      <Card className="border-zinc-800 bg-zinc-900/40">
+        <CardHeader className="flex flex-row items-center gap-3">
+          <div className="size-9 rounded-lg bg-amber-950/60 text-amber-400 border border-amber-800 flex items-center justify-center">
+            <Shield className="size-4" />
+          </div>
+          <div>
+            <CardTitle>Admin Credentials</CardTitle>
+            <CardDescription>Update administrator password in Cloudflare D1 `credentials` table</CardDescription>
           </div>
         </CardHeader>
 
         <form onSubmit={handleChangePassword}>
-          <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
-                  Admin Username
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-300">
+                  Username
                 </label>
                 <Input value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-zinc-300">
                   New Password
                 </label>
                 <Input
@@ -317,10 +264,11 @@ export const SettingsDashboard: React.FC = () => {
             </div>
           </CardContent>
 
-          <CardFooter style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <CardFooter className="flex justify-end">
             <Button
               type="submit"
               variant="secondary"
+              size="sm"
               loading={savingPassword}
             >
               Update Admin Password
@@ -330,50 +278,37 @@ export const SettingsDashboard: React.FC = () => {
       </Card>
 
       {/* Cloudflare D1 Status Card */}
-      <Card>
-        <CardHeader>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                  color: '#4ade80',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Database size={18} />
-              </div>
-              <div>
-                <CardTitle>Cloudflare D1 Database</CardTitle>
-                <CardDescription>Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</CardDescription>
-              </div>
+      <Card className="border-zinc-800 bg-zinc-900/40">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-800 flex items-center justify-center">
+              <Database className="size-4" />
             </div>
-            <Badge variant="success">● Connected & Synced</Badge>
+            <div>
+              <CardTitle>Cloudflare D1 Database</CardTitle>
+              <CardDescription>Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</CardDescription>
+            </div>
           </div>
+          <Badge variant="success">Connected</Badge>
         </CardHeader>
         <CardContent>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            <div style={{ padding: '14px', backgroundColor: '#18181b', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 600 }}>Credentials Table</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', marginTop: '4px' }}>`credentials`</div>
-              <div style={{ fontSize: '12px', color: '#4ade80', marginTop: '2px' }}>Active & Hashed</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+              <div className="text-[11px] font-medium text-zinc-500 uppercase">Credentials Table</div>
+              <div className="text-sm font-semibold text-white mt-1">`credentials`</div>
+              <div className="text-xs text-emerald-400 mt-0.5">Active & Hashed</div>
             </div>
 
-            <div style={{ padding: '14px', backgroundColor: '#18181b', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 600 }}>Service Details</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', marginTop: '4px' }}>`service_details`</div>
-              <div style={{ fontSize: '12px', color: '#818cf8', marginTop: '2px' }}>21 Schema Columns</div>
+            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+              <div className="text-[11px] font-medium text-zinc-500 uppercase">Service Details</div>
+              <div className="text-sm font-semibold text-white mt-1">`service_details`</div>
+              <div className="text-xs text-indigo-400 mt-0.5">21 Schema Columns</div>
             </div>
 
-            <div style={{ padding: '14px', backgroundColor: '#18181b', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: 600 }}>Article CMS</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', marginTop: '4px' }}>`rev_db` & `blogs`</div>
-              <div style={{ fontSize: '12px', color: '#c084fc', marginTop: '2px' }}>Live Structured Data</div>
+            <div className="p-3 bg-zinc-900 rounded-lg border border-zinc-800">
+              <div className="text-[11px] font-medium text-zinc-500 uppercase">Article CMS</div>
+              <div className="text-sm font-semibold text-white mt-1">`rev_db` & `blogs`</div>
+              <div className="text-xs text-purple-400 mt-0.5">Live Structured Data</div>
             </div>
           </div>
         </CardContent>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/Button';
 import { Input, Textarea, Badge } from '../../components/ui/input';
 import { Dialog } from '../../components/ui/dialog';
-import { Table, TableHeader, TableRow, TableHead, TableCell } from '../../components/ui/tabs';
+import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '../../components/ui/tabs';
 import {
   Sparkles,
   Plus,
@@ -12,12 +12,10 @@ import {
   Trash2,
   Eye,
   CheckCircle2,
-  FileText,
   Calendar,
   User,
-  Tag,
-  ArrowRight,
   BookOpen,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ArticleItem {
@@ -99,7 +97,6 @@ export const BlogDashboard: React.FC = () => {
     loadArticles();
   }, []);
 
-  // Filtered Articles
   const filteredArticles = articles.filter(
     (a) =>
       a.heading?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -107,7 +104,6 @@ export const BlogDashboard: React.FC = () => {
       a.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Open Editor for new blank article
   const handleNewArticle = () => {
     const today = new Date().toISOString().split('T')[0];
     const initial: ArticleItem = {
@@ -134,7 +130,6 @@ export const BlogDashboard: React.FC = () => {
     setIsEditorOpen(true);
   };
 
-  // Open Editor for existing article
   const handleEditArticle = (item: ArticleItem) => {
     setEditingArticle(item);
     let parsedSections = item.sections_h2_para;
@@ -158,7 +153,6 @@ export const BlogDashboard: React.FC = () => {
     setIsEditorOpen(true);
   };
 
-  // Generate Article via Groq API
   const handleGenerateBlog = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
@@ -201,7 +195,6 @@ export const BlogDashboard: React.FC = () => {
     }
   };
 
-  // Save/Publish Article to D1
   const handleSaveArticle = async () => {
     setIsSaving(true);
     setErrorMsg('');
@@ -252,7 +245,6 @@ export const BlogDashboard: React.FC = () => {
     }
   };
 
-  // Delete Article from D1
   const handleDeleteArticle = async (slug: string) => {
     if (!window.confirm(`Are you sure you want to delete article "${slug}" from Cloudflare D1?`)) {
       return;
@@ -277,103 +269,84 @@ export const BlogDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="space-y-6">
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
-            Blog Management & Groq AI Studio
+          <h2 className="text-xl font-bold tracking-tight text-white">
+            Blog CMS & Groq AI Studio
           </h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#a1a1aa' }}>
-            Generate, edit, and publish high-converting travel hospitality articles directly into Cloudflare D1 (`rev_db`).
+          <p className="text-xs text-zinc-400">
+            Generate, edit, and publish high-converting travel hospitality articles directly to Cloudflare D1 (`rev_db`).
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="flex items-center gap-2.5">
           <Button
             variant="gradient"
             onClick={() => setIsAiModalOpen(true)}
-            style={{ fontWeight: 600 }}
           >
-            <Sparkles size={16} /> New AI Blog with Groq
+            <Sparkles className="size-4" /> New AI Blog with Groq
           </Button>
 
           <Button
             variant="secondary"
             onClick={handleNewArticle}
           >
-            <Plus size={16} /> New Blank Article
+            <Plus className="size-4" /> New Blank Article
           </Button>
         </div>
       </div>
 
       {successMsg && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: '#4ade80',
-            fontSize: '13px',
-          }}
-        >
-          {successMsg}
+        <div className="flex items-center gap-2 rounded-md bg-emerald-950/50 p-3 text-xs text-emerald-400 border border-emerald-800">
+          <CheckCircle2 className="size-4 shrink-0" />
+          <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#f87171',
-            fontSize: '13px',
-          }}
-        >
-          ⚠️ {errorMsg}
+        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Articles Table Card */}
-      <Card>
-        <CardHeader>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <CardTitle>Published Articles in Cloudflare D1</CardTitle>
-              <CardDescription>
-                Live CMS articles queryable via `/api/rev_db` and `/blog/:slug`
-              </CardDescription>
-            </div>
+      <Card className="border-zinc-800 bg-zinc-900/40">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <CardTitle>Published Articles in Cloudflare D1</CardTitle>
+            <CardDescription>
+              Live CMS articles queryable via `/api/rev_db` and `/blog/:slug`
+            </CardDescription>
+          </div>
 
-            {/* Search Input */}
-            <div style={{ width: '280px', position: 'relative' }}>
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search articles by title, slug, tag..."
-                style={{ paddingLeft: '36px', height: '36px', fontSize: '13px' }}
-              />
-              <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: '#71717a' }} />
-            </div>
+          {/* Search Input */}
+          <div className="w-full sm:w-64 relative">
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search articles..."
+              className="pl-8 h-8 text-xs"
+            />
+            <Search className="absolute left-2.5 top-2 size-3.5 text-zinc-500" />
           </div>
         </CardHeader>
 
-        <CardContent style={{ padding: 0 }}>
+        <CardContent className="p-0">
           {loading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#a1a1aa' }}>
-              <div className="inline-block animate-spin" style={{ width: 24, height: 24, border: '2px solid #818cf8', borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '12px' }} />
-              <p style={{ margin: 0, fontSize: '13px' }}>Loading articles from Cloudflare D1...</p>
+            <div className="p-12 text-center text-zinc-400 space-y-2">
+              <div className="size-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent mx-auto" />
+              <p className="text-xs">Loading articles from Cloudflare D1...</p>
             </div>
           ) : filteredArticles.length === 0 ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center', color: '#71717a' }}>
-              <BookOpen size={36} style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
-              <p style={{ margin: 0, fontSize: '15px', color: '#a1a1aa', fontWeight: 500 }}>No articles found</p>
-              <p style={{ margin: '4px 0 16px 0', fontSize: '13px' }}>Generate your first travel article with Groq AI in 10 seconds.</p>
-              <Button variant="gradient" onClick={() => setIsAiModalOpen(true)}>
-                <Sparkles size={15} /> Generate with Groq AI
+            <div className="p-12 text-center text-zinc-500 space-y-3">
+              <BookOpen className="size-8 mx-auto opacity-50 text-zinc-400" />
+              <p className="text-sm font-medium text-zinc-300">No articles found</p>
+              <p className="text-xs text-zinc-500">Generate your first travel article with Groq AI in seconds.</p>
+              <Button variant="gradient" size="sm" onClick={() => setIsAiModalOpen(true)}>
+                <Sparkles className="size-3.5 mr-1" /> Generate with Groq AI
               </Button>
             </div>
           ) : (
@@ -384,94 +357,62 @@ export const BlogDashboard: React.FC = () => {
                   <TableHead>Category</TableHead>
                   <TableHead>Author</TableHead>
                   <TableHead>Published Date</TableHead>
-                  <TableHead style={{ textAlign: 'right' }}>Actions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <tbody>
+              <TableBody>
                 {filteredArticles.map((art) => (
                   <TableRow key={art.slug || art.id}>
                     <TableCell>
-                      <div style={{ fontWeight: 600, color: '#ffffff', fontSize: '14px', marginBottom: '2px' }}>
+                      <div className="font-semibold text-zinc-100 text-sm">
                         {art.heading}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#818cf8', fontFamily: 'monospace' }}>
+                      <div className="text-xs text-indigo-400 font-mono">
                         /blog/{art.slug}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="purple">{art.category || 'Travel Insights'}</Badge>
                     </TableCell>
-                    <TableCell style={{ fontSize: '13px', color: '#d4d4d8' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <User size={13} color="#71717a" />
+                    <TableCell className="text-xs text-zinc-300">
+                      <div className="flex items-center gap-1.5">
+                        <User className="size-3.5 text-zinc-500" />
                         {art.author || 'Elena Rostova'}
                       </div>
                     </TableCell>
-                    <TableCell style={{ fontSize: '13px', color: '#a1a1aa' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Calendar size={13} color="#71717a" />
+                    <TableCell className="text-xs text-zinc-400">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="size-3.5 text-zinc-500" />
                         {art.date || art.created_at?.split('T')[0] || '2026-08-29'}
                       </div>
                     </TableCell>
-                    <TableCell style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <a
                           href={`/blog/${art.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                            color: '#d4d4d8',
-                            fontSize: '12px',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs transition-colors"
                         >
-                          <Eye size={13} /> View
+                          <Eye className="size-3" /> View
                         </a>
                         <button
                           onClick={() => handleEditArticle(art)}
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            backgroundColor: '#27272a',
-                            color: '#ffffff',
-                            fontSize: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs transition-colors cursor-pointer"
                         >
-                          <Edit size={13} /> Edit
+                          <Edit className="size-3" /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(art.slug)}
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: '6px',
-                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                            color: '#f87171',
-                            fontSize: '12px',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
+                          className="inline-flex items-center p-1.5 rounded bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs transition-colors cursor-pointer"
                         >
-                          <Trash2 size={13} />
+                          <Trash2 className="size-3.5" />
                         </button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           )}
         </CardContent>
@@ -482,12 +423,11 @@ export const BlogDashboard: React.FC = () => {
         open={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         title="✨ Generate SEO Travel Article with Groq AI"
-        description="Powered by Groq's ultra-fast Llama 3.3 70B Versatile model. Generates full H2 sections, meta tags, quotes, and JSON structures."
-        maxWidth="620px"
+        description="Powered by Groq's ultra-fast Llama 3.3 70B model. Generates full H2 sections, meta tags, and structured data."
       >
-        <form onSubmit={handleGenerateBlog} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+        <form onSubmit={handleGenerateBlog} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Article Topic / Focus Subject *
             </label>
             <Input
@@ -498,9 +438,9 @@ export const BlogDashboard: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Editorial Tone
               </label>
               <Input
@@ -510,8 +450,8 @@ export const BlogDashboard: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Target Audience
               </label>
               <Input
@@ -522,8 +462,8 @@ export const BlogDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               SEO Keywords to Target (Comma separated)
             </label>
             <Input
@@ -533,7 +473,7 @@ export const BlogDashboard: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+          <div className="flex justify-end gap-2.5 pt-2">
             <Button
               type="button"
               variant="outline"
@@ -546,7 +486,7 @@ export const BlogDashboard: React.FC = () => {
               variant="gradient"
               loading={isGenerating}
             >
-              <Sparkles size={16} /> Generate Article Now
+              <Sparkles className="size-4" /> Generate Article Now
             </Button>
           </div>
         </form>
@@ -558,13 +498,12 @@ export const BlogDashboard: React.FC = () => {
         onClose={() => setIsEditorOpen(false)}
         title={editingArticle.heading ? `Edit Article: ${editingArticle.heading}` : 'Create New Article'}
         description="Review, modify, and publish this article to Cloudflare D1."
-        maxWidth="800px"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="space-y-4">
           {/* Title & Slug */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Article Heading (`heading` / H1) *
               </label>
               <Input
@@ -574,8 +513,8 @@ export const BlogDashboard: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 URL Slug (`slug`) *
               </label>
               <Input
@@ -588,9 +527,9 @@ export const BlogDashboard: React.FC = () => {
           </div>
 
           {/* Meta Title & Meta Description */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 SEO Meta Title (`meta_heading`)
               </label>
               <Input
@@ -599,8 +538,8 @@ export const BlogDashboard: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Meta Description (`meta_data`)
               </label>
               <Input
@@ -611,9 +550,9 @@ export const BlogDashboard: React.FC = () => {
           </div>
 
           {/* Category, Author, Date */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Category
               </label>
               <Input
@@ -622,8 +561,8 @@ export const BlogDashboard: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Author
               </label>
               <Input
@@ -632,8 +571,8 @@ export const BlogDashboard: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-zinc-300">
                 Date (YYYY-MM-DD)
               </label>
               <Input
@@ -644,8 +583,8 @@ export const BlogDashboard: React.FC = () => {
           </div>
 
           {/* Featured Image URL */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Featured Image URL (`image_url`)
             </label>
             <Input
@@ -655,32 +594,32 @@ export const BlogDashboard: React.FC = () => {
           </div>
 
           {/* Executive Summary */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Executive Summary (`description`)
             </label>
             <Textarea
               value={editingArticle.description || ''}
               onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
-              style={{ minHeight: '65px' }}
+              className="min-h-[60px]"
             />
           </div>
 
           {/* Narrative Paragraph */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Intro Narrative Paragraph (`paragraph`)
             </label>
             <Textarea
               value={editingArticle.paragraph || ''}
               onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
-              style={{ minHeight: '85px' }}
+              className="min-h-[70px]"
             />
           </div>
 
           {/* Quote */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Highlight Quote (`useful_quote`)
             </label>
             <Input
@@ -689,31 +628,31 @@ export const BlogDashboard: React.FC = () => {
             />
           </div>
 
-          {/* H2 Sections (JSON) */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          {/* H2 Sections */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               H2 Sections (`sections_h2_para` JSON Array)
             </label>
             <Textarea
               value={rawSectionsJson}
               onChange={(e) => setRawSectionsJson(e.target.value)}
-              style={{ fontFamily: 'monospace', fontSize: '12px', minHeight: '140px' }}
+              className="font-mono text-xs min-h-[120px]"
             />
           </div>
 
           {/* Tags */}
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-300">
               Tags (`tags` JSON Array)
             </label>
             <Input
               value={rawTagsJson}
               onChange={(e) => setRawTagsJson(e.target.value)}
-              style={{ fontFamily: 'monospace', fontSize: '12px' }}
+              className="font-mono text-xs"
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+          <div className="flex justify-end gap-2.5 pt-3">
             <Button
               type="button"
               variant="outline"
@@ -727,7 +666,7 @@ export const BlogDashboard: React.FC = () => {
               onClick={handleSaveArticle}
               loading={isSaving}
             >
-              <CheckCircle2 size={16} /> Publish to Cloudflare D1
+              <CheckCircle2 className="size-4" /> Publish to Cloudflare D1
             </Button>
           </div>
         </div>

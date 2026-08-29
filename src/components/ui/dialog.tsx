@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import * as React from 'react';
 import { X } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 export interface DialogProps {
   open: boolean;
@@ -16,9 +17,8 @@ export const Dialog: React.FC<DialogProps> = ({
   title,
   description,
   children,
-  maxWidth = '650px',
 }) => {
-  useEffect(() => {
+  React.useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -33,72 +33,32 @@ export const Dialog: React.FC<DialogProps> = ({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)',
-        animation: 'fadeIn 0.2s ease-out',
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in-0"
       onClick={onClose}
     >
       <div
-        style={{
-          width: '100%',
-          maxWidth,
-          backgroundColor: '#121216',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '16px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          maxHeight: '90vh',
-        }}
+        className={cn(
+          'relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-50 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200'
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#ffffff' }}>{title}</h3>
+        <div className="flex items-center justify-between border-b border-zinc-800 p-6">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold leading-none tracking-tight text-zinc-50">{title}</h3>
             {description && (
-              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#a1a1aa' }}>{description}</p>
+              <p className="text-sm text-zinc-400">{description}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#a1a1aa',
-              cursor: 'pointer',
-              padding: '6px',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="rounded-sm opacity-70 ring-offset-zinc-950 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 cursor-pointer p-1 text-zinc-400 hover:text-zinc-50"
           >
-            <X size={18} />
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
           </button>
         </div>
 
-        <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

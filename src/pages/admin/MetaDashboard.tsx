@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/Button';
 import { Input, Textarea, Badge } from '../../components/ui/input';
-import { Sparkles, Save, CheckCircle2, Search, Code2 } from 'lucide-react';
+import { Sparkles, Save, CheckCircle2, Search, Code2, AlertCircle, RefreshCw } from 'lucide-react';
 import { getMetadataForPath } from '../../utils/seoData';
 
 export const MetaDashboard: React.FC = () => {
@@ -89,7 +89,6 @@ export const MetaDashboard: React.FC = () => {
 
       try {
         if (selectedCategory === 'services') {
-          // Fetch from service-details endpoint
           const res = await fetch(`/api/service-details/${selectedSlug}`);
           if (res.ok) {
             const json = (await res.json()) as any;
@@ -124,7 +123,6 @@ export const MetaDashboard: React.FC = () => {
           }
         }
 
-        // Fallback to static dictionary
         const meta = getMetadataForPath(selectedCategory === 'services' ? `/services/${selectedSlug}` : selectedSlug === 'home' ? '/' : `/${selectedSlug}`);
         if (isMounted) {
           setFormData((prev) => ({
@@ -244,26 +242,26 @@ export const MetaDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="space-y-6">
       {/* Top Action Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
-            Page Metadata & Service Details Dashboard
+          <h2 className="text-xl font-bold tracking-tight text-white">
+            Page Metadata & Service Details
           </h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#a1a1aa' }}>
-            Manage live SEO meta tags, OpenGraph previews, Schema.org JSON-LD, and D1 `service_details` schema.
+          <p className="text-xs text-zinc-400">
+            Manage live SEO meta tags, Google SERP snippet previews, and Cloudflare D1 `service_details`.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             onClick={handleAIGenerate}
             loading={aiGenerating}
-            style={{ borderColor: '#6366f1', color: '#a5b4fc' }}
+            className="border-indigo-800 text-indigo-300 hover:bg-indigo-950/40"
           >
-            <Sparkles size={16} /> Generate with Groq AI
+            <Sparkles className="size-4 text-indigo-400" /> Generate with Groq AI
           </Button>
 
           <Button
@@ -273,11 +271,11 @@ export const MetaDashboard: React.FC = () => {
           >
             {saveStatus === 'saved' ? (
               <>
-                <CheckCircle2 size={16} /> Saved to D1
+                <CheckCircle2 className="size-4" /> Saved to D1
               </>
             ) : (
               <>
-                <Save size={16} /> Save Changes
+                <Save className="size-4" /> Save Changes
               </>
             )}
           </Button>
@@ -285,47 +283,33 @@ export const MetaDashboard: React.FC = () => {
       </div>
 
       {errorMsg && (
-        <div
-          style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#f87171',
-            fontSize: '13px',
-          }}
-        >
-          ⚠️ {errorMsg}
+        <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-xs text-red-400 border border-red-800">
+          <AlertCircle className="size-4 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
-      {/* Main Grid: Page Selector on Left, Editor on Right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px' }}>
-        {/* Page Selector Sidebar Card */}
-        <Card style={{ height: 'fit-content' }}>
-          <CardHeader style={{ padding: '16px 20px' }}>
-            <CardTitle style={{ fontSize: '15px' }}>Select Page</CardTitle>
-            <CardDescription style={{ fontSize: '12px' }}>Choose route to inspect and edit</CardDescription>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Page Selector Sidebar */}
+        <Card className="lg:col-span-1 border-zinc-800 bg-zinc-900/40 h-fit">
+          <CardHeader className="p-4">
+            <CardTitle className="text-sm">Select Page</CardTitle>
+            <CardDescription className="text-xs">Choose route to edit</CardDescription>
           </CardHeader>
-          <CardContent style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <CardContent className="p-4 pt-0 space-y-3">
             {/* Category Toggle */}
-            <div style={{ display: 'flex', gap: '4px', backgroundColor: '#18181b', padding: '3px', borderRadius: '8px' }}>
+            <div className="grid grid-cols-2 gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
               <button
                 onClick={() => {
                   setSelectedCategory('services');
                   setSelectedSlug(serviceSlugs[0].slug);
                 }}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  backgroundColor: selectedCategory === 'services' ? '#27272a' : 'transparent',
-                  color: selectedCategory === 'services' ? '#ffffff' : '#a1a1aa',
-                }}
+                className={`py-1 text-xs font-medium rounded-md transition-colors ${
+                  selectedCategory === 'services'
+                    ? 'bg-zinc-800 text-white'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
               >
                 Services (10)
               </button>
@@ -334,47 +318,32 @@ export const MetaDashboard: React.FC = () => {
                   setSelectedCategory('core');
                   setSelectedSlug(corePageSlugs[0].slug);
                 }}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  backgroundColor: selectedCategory === 'core' ? '#27272a' : 'transparent',
-                  color: selectedCategory === 'core' ? '#ffffff' : '#a1a1aa',
-                }}
+                className={`py-1 text-xs font-medium rounded-md transition-colors ${
+                  selectedCategory === 'core'
+                    ? 'bg-zinc-800 text-white'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
               >
                 Core Pages (5)
               </button>
             </div>
 
             {/* List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '500px', overflowY: 'auto' }}>
+            <div className="space-y-1 max-h-[480px] overflow-y-auto">
               {(selectedCategory === 'services' ? serviceSlugs : corePageSlugs).map((p) => {
                 const isActive = selectedSlug === p.slug;
                 return (
                   <button
                     key={p.slug}
                     onClick={() => setSelectedSlug(p.slug)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      textAlign: 'left',
-                      border: isActive ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
-                      backgroundColor: isActive ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
-                      color: isActive ? '#ffffff' : '#a1a1aa',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-md text-xs text-left transition-colors cursor-pointer ${
+                      isActive
+                        ? 'bg-indigo-950/40 border border-indigo-800 text-white font-medium'
+                        : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 border border-transparent'
+                    }`}
                   >
-                    <span style={{ fontWeight: isActive ? 600 : 400 }}>{p.name}</span>
-                    {isActive && <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#818cf8' }} />}
+                    <span className="truncate">{p.name}</span>
+                    {isActive && <div className="size-1.5 rounded-full bg-indigo-400 shrink-0" />}
                   </button>
                 );
               })}
@@ -383,60 +352,44 @@ export const MetaDashboard: React.FC = () => {
         </Card>
 
         {/* Editor Area */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="lg:col-span-3 space-y-6">
           {/* SERP Google Preview Card */}
-          <Card>
-            <CardHeader style={{ padding: '16px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <CardTitle style={{ fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Search size={16} color="#818cf8" /> Live Google Search SERP Snippet Preview
-                </CardTitle>
-                <Badge variant="outline">Desktop & Mobile</Badge>
-              </div>
+          <Card className="border-zinc-800 bg-zinc-900/40">
+            <CardHeader className="p-4 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Search className="size-4 text-indigo-400" /> Google Search SERP Snippet Preview
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px]">SERP Preview</Badge>
             </CardHeader>
-            <CardContent style={{ padding: '16px 20px' }}>
-              <div
-                style={{
-                  padding: '14px 18px',
-                  borderRadius: '8px',
-                  backgroundColor: '#ffffff',
-                  color: '#1f1f1f',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                }}
-              >
-                <div style={{ fontSize: '12px', color: '#202124', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+            <CardContent className="p-4 pt-0">
+              <div className="p-4 rounded-lg bg-white text-zinc-900 space-y-1 shadow-sm font-sans">
+                <div className="text-xs text-zinc-600 flex items-center gap-1">
                   <span>https://www.revlytics.in › {selectedCategory === 'services' ? `services › ${selectedSlug}` : selectedSlug}</span>
                 </div>
-                <div style={{ fontSize: '18px', color: '#1a0dab', fontWeight: 500, lineHeight: 1.3, marginBottom: '4px' }}>
-                  {formData.meta_title || 'Revlytics | Travel Digital Acceleration'}
+                <div className="text-base text-blue-800 font-medium hover:underline cursor-pointer">
+                  {formData.meta_title || 'Revlytics | High-Performance Travel Digital Agency'}
                 </div>
-                <div style={{ fontSize: '13px', color: '#4d5156', lineHeight: 1.4 }}>
-                  {formData.meta_description || 'Revlytics is a travel digital acceleration agency helping luxury resorts, boutique hotels, and destinations scale direct bookings.'}
+                <div className="text-xs text-zinc-700 leading-relaxed">
+                  {formData.meta_description || 'Revlytics is a travel digital acceleration agency helping luxury resorts scale direct bookings.'}
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Form Fields: Meta Title, Description, Keywords */}
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900/40">
             <CardHeader>
               <CardTitle>Core SEO & OpenGraph Meta Tags</CardTitle>
-              <CardDescription>Target character counts ensure ideal search engine display without truncation.</CardDescription>
+              <CardDescription>Target character counts ensure ideal search engine display.</CardDescription>
             </CardHeader>
-            <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <CardContent className="space-y-4">
               {/* Meta Title */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 500, color: '#e4e4e7' }}>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-medium text-zinc-300">
                     {'SEO Meta Title Tag (<title>)'}
                   </label>
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      color: formData.meta_title.length > 60 ? '#f87171' : '#4ade80',
-                      fontWeight: 500,
-                    }}
-                  >
+                  <span className={`text-[11px] font-mono ${formData.meta_title.length > 60 ? 'text-red-400' : 'text-emerald-400'}`}>
                     {formData.meta_title.length} / 60 chars (Ideal: 50-60)
                   </span>
                 </div>
@@ -448,21 +401,12 @@ export const MetaDashboard: React.FC = () => {
               </div>
 
               {/* Meta Description */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: 500, color: '#e4e4e7' }}>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-medium text-zinc-300">
                     {'Meta Description (<meta name="description">)'}
                   </label>
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      color:
-                        formData.meta_description.length > 165 || formData.meta_description.length < 120
-                          ? '#facc15'
-                          : '#4ade80',
-                      fontWeight: 500,
-                    }}
-                  >
+                  <span className={`text-[11px] font-mono ${formData.meta_description.length > 165 || formData.meta_description.length < 120 ? 'text-amber-400' : 'text-emerald-400'}`}>
                     {formData.meta_description.length} / 160 chars (Ideal: 140-160)
                   </span>
                 </div>
@@ -470,14 +414,14 @@ export const MetaDashboard: React.FC = () => {
                   value={formData.meta_description}
                   onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
                   placeholder="Compelling description summarizing the offering and encouraging direct booking inquiries..."
-                  style={{ minHeight: '75px' }}
+                  className="min-h-[70px]"
                 />
               </div>
 
-              {/* Keywords & OG Image URL */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+              {/* Keywords & OG Image */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">
                     Keywords
                   </label>
                   <Input
@@ -487,8 +431,8 @@ export const MetaDashboard: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">
                     OpenGraph Image URL (Absolute HTTPS)
                   </label>
                   <Input
@@ -503,23 +447,21 @@ export const MetaDashboard: React.FC = () => {
 
           {/* D1 `service_details` Specific Columns (If category is service) */}
           {selectedCategory === 'services' && (
-            <Card>
-              <CardHeader>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <CardTitle>Cloudflare D1 `service_details` Schema Columns</CardTitle>
-                    <CardDescription>
-                      Full 21-column database mapping for `{formData.slug}`
-                    </CardDescription>
-                  </div>
-                  <Badge variant="purple">D1 Table: service_details</Badge>
+            <Card className="border-zinc-800 bg-zinc-900/40">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Cloudflare D1 `service_details` Schema Columns</CardTitle>
+                  <CardDescription>
+                    Full 21-column database mapping for `{formData.slug}`
+                  </CardDescription>
                 </div>
+                <Badge variant="purple">service_details</Badge>
               </CardHeader>
-              <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <CardContent className="space-y-4">
                 {/* Service Name & Category */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
                       Service Name (`service_name`)
                     </label>
                     <Input
@@ -527,8 +469,8 @@ export const MetaDashboard: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
                       Category (`category`)
                     </label>
                     <Input
@@ -539,8 +481,8 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Summary */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">
                     Executive Summary (`summary`)
                   </label>
                   <Textarea
@@ -551,70 +493,70 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Features & Approach Title */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
-                      Features (`features` JSON/Array)
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
+                      Features (`features` JSON)
                     </label>
                     <Textarea
                       value={formData.features}
                       onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                      style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                      className="font-mono text-xs"
                     />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
                       Approach Steps (`approach_steps` JSON)
                     </label>
                     <Textarea
                       value={formData.approach_steps}
                       onChange={(e) => setFormData({ ...formData, approach_steps: e.target.value })}
-                      style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                      className="font-mono text-xs"
                     />
                   </div>
                 </div>
 
-                {/* Process Steps & Why Choose Items */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                {/* Process Steps & Why Choose */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
                       Process Steps (`process_steps` JSON)
                     </label>
                     <Textarea
                       value={formData.process_steps}
                       onChange={(e) => setFormData({ ...formData, process_steps: e.target.value })}
-                      style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                      className="font-mono text-xs"
                     />
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300">
                       Why Choose Items (`why_choose_items` JSON)
                     </label>
                     <Textarea
                       value={formData.why_choose_items}
                       onChange={(e) => setFormData({ ...formData, why_choose_items: e.target.value })}
-                      style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                      className="font-mono text-xs"
                     />
                   </div>
                 </div>
 
                 {/* Service Specific FAQs */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">
                     Service Specific FAQs (`faqs` JSON)
                   </label>
                   <Textarea
                     value={formData.faqs}
                     onChange={(e) => setFormData({ ...formData, faqs: e.target.value })}
-                    style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                    className="font-mono text-xs"
                   />
                 </div>
 
                 {/* Pexels Query 2 */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#e4e4e7', marginBottom: '6px' }}>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300">
                     Pexels Visual Stream Query (`pexels_query_2`)
                   </label>
                   <Input
@@ -628,10 +570,10 @@ export const MetaDashboard: React.FC = () => {
           )}
 
           {/* Schema.org JSON-LD Editor */}
-          <Card>
+          <Card className="border-zinc-800 bg-zinc-900/40">
             <CardHeader>
-              <CardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Code2 size={16} color="#818cf8" /> Schema.org JSON-LD Structured Data
+              <CardTitle className="flex items-center gap-2">
+                <Code2 className="size-4 text-indigo-400" /> Schema.org JSON-LD Structured Data
               </CardTitle>
               <CardDescription>{'Injected directly into page <head> for rich Google search result badges.'}</CardDescription>
             </CardHeader>
@@ -639,7 +581,7 @@ export const MetaDashboard: React.FC = () => {
               <Textarea
                 value={formData.schema_markup}
                 onChange={(e) => setFormData({ ...formData, schema_markup: e.target.value })}
-                style={{ fontFamily: 'monospace', fontSize: '12px', minHeight: '120px' }}
+                className="font-mono text-xs min-h-[100px]"
               />
             </CardContent>
           </Card>

@@ -12,8 +12,6 @@ import {
   Settings,
   LogOut,
   ExternalLink,
-  ShieldCheck,
-  Database,
   Search,
 } from 'lucide-react';
 
@@ -25,7 +23,6 @@ interface AdminLayoutProps {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', onNavigate }) => {
   const [activeTab, setActiveTab] = useState<'meta' | 'blogs' | 'settings'>(initialTab);
   const [username, setUsername] = useState('Admin');
-  const [hasGroq, setHasGroq] = useState(false);
 
   // Authenticate on mount
   useEffect(() => {
@@ -47,7 +44,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
         if (res.ok) {
           const data = (await res.json()) as any;
           if (data.username) setUsername(data.username);
-          setHasGroq(!!data.hasGroqKey);
         }
       } catch (e) {
         console.warn('Auth check fallback:', e);
@@ -64,124 +60,55 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#09090b',
-        color: '#f4f4f5',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col antialiased">
       {/* Top Navigation Bar */}
-      <header
-        style={{
-          height: '68px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          backgroundColor: 'rgba(12, 12, 16, 0.95)',
-          backdropFilter: 'blur(12px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 32px',
-        }}
-      >
-        {/* Brand & Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '14px',
-              }}
-            >
-              R
-            </div>
-            <div>
-              <span style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
-                Revlytics
-              </span>
-              <span style={{ fontSize: '12px', color: '#818cf8', fontWeight: 500, marginLeft: '6px' }}>
-                Admin
-              </span>
-            </div>
+      <header className="sticky top-0 z-40 h-16 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur px-6 flex items-center justify-between">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <div className="size-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-md">
+            R
           </div>
-
-          <Badge variant="purple" style={{ fontSize: '10px' }}>
-            Cloudflare D1 & Groq AI
-          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-base text-zinc-50 tracking-tight">Revlytics</span>
+            <Badge variant="purple" className="text-[10px] py-0 px-2">Admin D1</Badge>
+          </div>
         </div>
 
         {/* Center Tabs */}
-        <TabsList>
+        <TabsList className="bg-zinc-900 border border-zinc-800">
           <TabsTrigger
             active={activeTab === 'meta'}
             onClick={() => setActiveTab('meta')}
           >
-            <Search size={14} /> Page Meta & Services
+            <Search className="size-3.5" /> Page Meta & Services
           </TabsTrigger>
           <TabsTrigger
             active={activeTab === 'blogs'}
             onClick={() => setActiveTab('blogs')}
           >
-            <BookOpen size={14} /> Blogs & AI Studio
+            <BookOpen className="size-3.5" /> Blogs & AI Studio
           </TabsTrigger>
           <TabsTrigger
             active={activeTab === 'settings'}
             onClick={() => setActiveTab('settings')}
           >
-            <Settings size={14} /> Settings
+            <Settings className="size-3.5" /> Settings
           </TabsTrigger>
         </TabsList>
 
         {/* Right Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="flex items-center gap-3">
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#a1a1aa',
-              textDecoration: 'none',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              transition: 'all 0.15s ease',
-            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-300 hover:text-zinc-50 bg-zinc-900 border border-zinc-800 transition-colors"
           >
-            <ExternalLink size={12} /> View Live Website
+            <ExternalLink className="size-3" /> View Website
           </a>
 
-          <div
-            style={{
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#d4d4d8',
-              backgroundColor: '#18181b',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <div style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: '#4ade80' }} />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-zinc-300 bg-zinc-900 border border-zinc-800">
+            <div className="size-2 rounded-full bg-emerald-400" />
             <span>{username}</span>
           </div>
 
@@ -189,15 +116,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            style={{ color: '#f87171', padding: '6px 10px' }}
+            className="text-red-400 hover:text-red-300 hover:bg-red-950/40 text-xs px-2"
           >
-            <LogOut size={14} /> Logout
+            <LogOut className="size-3.5 mr-1" /> Logout
           </Button>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main style={{ flex: 1, padding: '32px', maxWidth: '1440px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+      {/* Main Content Workspace */}
+      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
         {activeTab === 'meta' && <MetaDashboard />}
         {activeTab === 'blogs' && <BlogDashboard />}
         {activeTab === 'settings' && <SettingsDashboard />}

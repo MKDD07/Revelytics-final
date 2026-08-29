@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/input';
-import { Lock, User, Key, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, User, Key, Sparkles, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface LoginProps {
   onLoginSuccess?: () => void;
@@ -26,7 +26,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
 
     try {
       if (showGroqSetup && groqKey) {
-        // Setup initial or update credentials with Groq key
         const res = await fetch('/api/auth/setup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -43,11 +42,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
           if (onLoginSuccess) onLoginSuccess();
           else if (onNavigate) onNavigate('admin');
           else window.location.href = '/admin';
-        }, 600);
+        }, 500);
         return;
       }
 
-      // Normal Login
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +54,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
       const data = (await res.json()) as any;
 
       if (!res.ok || !data.success) {
-        // Fallback for default local admin password if table freshly initialized
         if (username === 'admin' && password === 'revlytics2026!') {
           localStorage.setItem('revlytics_admin_token', 'temp_master_token');
           localStorage.setItem('revlytics_admin_user', 'admin');
@@ -70,7 +67,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
 
       localStorage.setItem('revlytics_admin_token', data.token);
       localStorage.setItem('revlytics_admin_user', data.username);
-      setSuccessMsg('Authentication successful. Redirecting to Dashboard...');
+      setSuccessMsg('Authentication successful. Redirecting...');
       setTimeout(() => {
         if (onLoginSuccess) onLoginSuccess();
         else if (onNavigate) onNavigate('admin');
@@ -84,196 +81,133 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        backgroundColor: '#09090b',
-        backgroundImage: 'radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 70%), radial-gradient(ellipse at bottom, rgba(168, 85, 247, 0.1), transparent 70%)',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: '440px' }}>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-zinc-950 text-zinc-50">
+      <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '54px',
-              height: '54px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-              color: '#ffffff',
-              boxShadow: '0 8px 24px rgba(99, 102, 241, 0.35)',
-              marginBottom: '16px',
-            }}
-          >
-            <ShieldCheck size={28} />
+        <div className="text-center space-y-2">
+          <div className="inline-flex size-12 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 shadow-lg text-white">
+            <ShieldCheck className="size-6" />
           </div>
-          <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             Revlytics Admin Portal
           </h1>
-          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#a1a1aa' }}>
-            Cloudflare D1 & Groq AI Content Studio
+          <p className="text-sm text-zinc-400">
+            Cloudflare D1 Database & Groq AI Content Studio
           </p>
         </div>
 
         {/* Shadcn Card */}
-        <Card>
+        <Card className="border-zinc-800 bg-zinc-900/50 shadow-2xl">
           <CardHeader>
-            <CardTitle>Sign in to Dashboard</CardTitle>
+            <CardTitle>Sign In</CardTitle>
             <CardDescription>
               Manage SEO metadata for all pages and generate AI blogs using Groq API.
             </CardDescription>
           </CardHeader>
 
           <form onSubmit={handleLogin}>
-            <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <CardContent className="space-y-4">
               {error && (
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: '#f87171',
-                    fontSize: '13px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <span>⚠️</span> {error}
+                <div className="flex items-center gap-2 rounded-md bg-red-950/50 p-3 text-sm text-red-400 border border-red-800">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 
               {successMsg && (
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    color: '#4ade80',
-                    fontSize: '13px',
-                  }}
-                >
-                  ✓ {successMsg}
+                <div className="flex items-center gap-2 rounded-md bg-emerald-950/50 p-3 text-sm text-emerald-400 border border-emerald-800">
+                  <CheckCircle2 className="size-4 shrink-0" />
+                  <span>{successMsg}</span>
                 </div>
               )}
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d8', marginBottom: '6px' }}>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-zinc-300">
                   Username
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <Input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="admin"
                     required
-                    style={{ paddingLeft: '38px' }}
+                    className="pl-9"
                   />
-                  <User
-                    size={16}
-                    style={{ position: 'absolute', left: '12px', top: '12px', color: '#71717a' }}
-                  />
+                  <User className="absolute left-3 top-2.5 size-4 text-zinc-500" />
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#d4d4d8', marginBottom: '6px' }}>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-zinc-300">
                   Password
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="relative">
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    style={{ paddingLeft: '38px' }}
+                    className="pl-9"
                   />
-                  <Lock
-                    size={16}
-                    style={{ position: 'absolute', left: '12px', top: '12px', color: '#71717a' }}
-                  />
+                  <Lock className="absolute left-3 top-2.5 size-4 text-zinc-500" />
                 </div>
               </div>
 
               {/* Optional Groq API Key Setup */}
-              <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '14px' }}>
+              <div className="pt-2 border-t border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setShowGroqSetup(!showGroqSetup)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#818cf8',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: 0,
-                  }}
+                  className="flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
                 >
-                  <Sparkles size={14} />
+                  <Sparkles className="size-3.5" />
                   {showGroqSetup ? 'Hide Groq API Key Setup' : '+ Setup / Update Groq API Key (Optional)'}
                 </button>
 
                 {showGroqSetup && (
-                  <div style={{ marginTop: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#a1a1aa', marginBottom: '6px' }}>
+                  <div className="mt-3 space-y-1.5">
+                    <label className="text-xs text-zinc-400">
                       Groq API Key (`gsk_...`)
                     </label>
-                    <div style={{ position: 'relative' }}>
+                    <div className="relative">
                       <Input
                         type="password"
                         value={groqKey}
                         onChange={(e) => setGroqKey(e.target.value)}
                         placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
-                        style={{ paddingLeft: '38px', fontSize: '13px' }}
+                        className="pl-9 font-mono text-xs"
                       />
-                      <Key
-                        size={15}
-                        style={{ position: 'absolute', left: '12px', top: '12px', color: '#818cf8' }}
-                      />
+                      <Key className="absolute left-3 top-2.5 size-4 text-indigo-400" />
                     </div>
-                    <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: '#71717a' }}>
-                      Stored securely in Cloudflare D1 `credentials` table.
+                    <p className="text-[11px] text-zinc-500">
+                      Saved to Cloudflare D1 `credentials` table.
                     </p>
                   </div>
                 )}
               </div>
             </CardContent>
 
-            <CardFooter style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <CardFooter className="flex flex-col gap-3">
               <Button
                 type="submit"
                 variant="gradient"
                 loading={loading}
-                style={{ width: '100%', height: '42px', fontSize: '14px', fontWeight: 600 }}
+                className="w-full font-semibold"
               >
-                Sign In to Admin Dashboard <ArrowRight size={16} />
+                Sign In to Dashboard <ArrowRight className="size-4 ml-1" />
               </Button>
 
-              <p style={{ margin: 0, fontSize: '12px', color: '#71717a', textAlign: 'center' }}>
-                Default Login: <code style={{ color: '#a1a1aa' }}>admin</code> / <code style={{ color: '#a1a1aa' }}>revlytics2026!</code>
+              <p className="text-xs text-zinc-500 text-center">
+                Default: <code className="text-zinc-400">admin</code> / <code className="text-zinc-400">revlytics2026!</code>
               </p>
             </CardFooter>
           </form>
         </Card>
 
         {/* Back to website */}
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <div className="text-center">
           <a
             href="/"
             onClick={(e) => {
@@ -281,7 +215,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onNavigate }) => {
               if (onNavigate) onNavigate('home');
               else window.location.href = '/';
             }}
-            style={{ fontSize: '13px', color: '#a1a1aa', textDecoration: 'none' }}
+            className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             ← Back to Revlytics Website
           </a>

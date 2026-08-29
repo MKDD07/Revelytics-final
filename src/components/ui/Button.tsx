@@ -1,24 +1,64 @@
-import React from 'react';
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '../../lib/utils';
+
+const buttonVariants = cva(
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer',
+  {
+    variants: {
+      variant: {
+        default: 'bg-zinc-50 text-zinc-900 shadow hover:bg-zinc-50/90',
+        destructive: 'bg-red-600 text-zinc-50 shadow-sm hover:bg-red-600/90',
+        outline: 'border border-zinc-800 bg-transparent shadow-sm hover:bg-zinc-800 hover:text-zinc-50 text-zinc-100',
+        secondary: 'bg-zinc-800 text-zinc-50 shadow-sm hover:bg-zinc-800/80',
+        ghost: 'hover:bg-zinc-800 hover:text-zinc-50 text-zinc-300',
+        link: 'text-zinc-50 underline-offset-4 hover:underline',
+        gradient: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow hover:opacity-90',
+        'fill-red': 'bg-red-600 text-white hover:bg-red-700',
+        'fill-black': 'bg-black text-white hover:bg-zinc-900',
+        'fill-grey': 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700',
+        'border-red': 'border border-red-600 text-red-600 hover:bg-red-600 hover:text-white',
+        'border-white': 'border border-white text-white hover:bg-white hover:text-black',
+        'border-black': 'border border-black text-black hover:bg-black hover:text-white',
+        'border-grey': 'border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white',
+      },
+      size: {
+        default: 'h-9 px-4 py-2',
+        sm: 'h-8 rounded-md px-3 text-xs',
+        lg: 'h-10 rounded-md px-8',
+        icon: 'h-9 w-9',
+        md: 'h-9 px-4 py-2',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+);
 
 export type ButtonVariant =
   | 'default'
-  | 'secondary'
-  | 'outline'
   | 'destructive'
+  | 'outline'
+  | 'secondary'
   | 'ghost'
   | 'link'
   | 'gradient'
   | 'fill-red'
   | 'fill-black'
+  | 'fill-grey'
   | 'border-red'
   | 'border-white'
-  | 'border-black';
+  | 'border-black'
+  | 'border-grey';
 
 export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon' | 'md';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant | string;
-  size?: ButtonSize | string;
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   loading?: boolean;
   text?: string;
   href?: string;
@@ -26,17 +66,17 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   icon?: React.ReactNode;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
+const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
   (
     {
-      className = '',
-      variant = 'default',
-      size = 'default',
-      loading = false,
+      className,
+      variant,
+      size,
+      loading,
       disabled,
       text,
       href,
-      showIcon = false,
+      showIcon,
       icon,
       children,
       onClick,
@@ -44,63 +84,11 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
     },
     ref
   ) => {
-    let bg = '#ffffff';
-    let color = '#09090b';
-    let border = '1px solid transparent';
-
-    if (variant === 'secondary' || variant === 'fill-black') {
-      bg = '#27272a';
-      color = '#fafafa';
-      border = '1px solid rgba(255, 255, 255, 0.08)';
-    } else if (variant === 'outline' || variant === 'border-white') {
-      bg = 'transparent';
-      color = '#f4f4f5';
-      border = '1px solid rgba(255, 255, 255, 0.15)';
-    } else if (variant === 'destructive' || variant === 'fill-red') {
-      bg = '#ef4444';
-      color = '#ffffff';
-      border = '1px solid #dc2626';
-    } else if (variant === 'border-red') {
-      bg = 'transparent';
-      color = '#ef4444';
-      border = '1px solid #ef4444';
-    } else if (variant === 'ghost') {
-      bg = 'transparent';
-      color = '#e4e4e7';
-      border = '1px solid transparent';
-    } else if (variant === 'gradient') {
-      bg = 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)';
-      color = '#ffffff';
-      border = '1px solid rgba(255, 255, 255, 0.2)';
-    }
-
-    let padding = '10px 18px';
-    let fontSize = '14px';
-    if (size === 'sm') {
-      padding = '6px 14px';
-      fontSize = '12px';
-    } else if (size === 'lg') {
-      padding = '12px 26px';
-      fontSize = '16px';
-    } else if (size === 'icon') {
-      padding = '8px';
-      fontSize = '14px';
-    }
-
     const content = (
       <>
-        {loading ? (
-          <span
-            className="inline-block animate-spin"
-            style={{
-              width: 14,
-              height: 14,
-              border: '2px solid currentColor',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-            }}
-          />
-        ) : null}
+        {loading && (
+          <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        )}
         {text || children}
         {showIcon && (icon || (
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -110,32 +98,12 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
       </>
     );
 
-    const baseStyle: React.CSSProperties = {
-      background: bg,
-      color,
-      border,
-      padding,
-      fontSize,
-      fontWeight: 500,
-      borderRadius: '8px',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      cursor: disabled || loading ? 'not-allowed' : 'pointer',
-      opacity: disabled || loading ? 0.6 : 1,
-      textDecoration: 'none',
-      transition: 'all 0.15s ease-in-out',
-      ...props.style,
-    };
-
     if (href) {
       return (
         <a
           ref={ref as React.Ref<HTMLAnchorElement>}
           href={href}
-          className={`tp-btn inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all ${className}`}
-          style={baseStyle}
+          className={cn(buttonVariants({ variant: variant as any, size: size as any, className }))}
           onClick={onClick as any}
         >
           {content}
@@ -147,8 +115,7 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
       <button
         ref={ref as React.Ref<HTMLButtonElement>}
         disabled={disabled || loading}
-        className={`tp-btn inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all cursor-pointer ${className}`}
-        style={baseStyle}
+        className={cn(buttonVariants({ variant: variant as any, size: size as any, className }))}
         onClick={onClick}
         {...props}
       >
@@ -159,4 +126,5 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
 );
 Button.displayName = 'Button';
 
+export { Button, buttonVariants };
 export default Button;
