@@ -159,8 +159,8 @@ const Contact1: React.FC<Contact1Props> = ({ showMap = true }) => {
                     <a className="tp-contact-mail" href="mailto:info@revlytics.in">info@revlytics.in</a>
                   </div>
                   <div className="tp-contact-address mb-30">
-                    <h4>India &amp; Global Hubs</h4>
-                    <span className="d-block text-muted">Bangalore &bull; Mumbai &bull; New Delhi</span>
+                    <h4>Gurugram, India</h4>
+                    <span className="d-block text-muted">Gurugram &bull; Haryana &bull; India</span>
                   </div>
 
                   {/* Single Large 10-Stage Morphing Icon - No Background */}
