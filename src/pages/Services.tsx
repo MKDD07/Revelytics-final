@@ -4,7 +4,7 @@ import {
   ServiceList,
   ResumeSpecialties,
   ServiceGallery,
-  Pricing,
+  Contact1,
   Cta1,
 } from '../components';
 
@@ -27,8 +27,8 @@ const Services: React.FC = () => {
       {/* Destination & Hospitality Gallery */}
       <ServiceGallery />
 
-      {/* Travel Digital Packages & Pricing */}
-      <Pricing />
+      {/* Direct Inquiries & Contact Consultation Form */}
+      <Contact1 />
 
       {/* Start Your Travel Brand Project */}
       <Cta1 />

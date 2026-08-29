@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { fetchServiceDetailBySlug, type ServiceDetailItem, type ProcessStep } from '../../../services/api';
 
 // ==================================================
@@ -34,6 +34,9 @@ const DEFAULT_PROCESS_STEPS: ProcessStep[] = [
 ];
 
 const Process: React.FC<ServiceDetailsProcessProps> = ({ slug: propSlug }) => {
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const pathRef = useRef<SVGPathElement | null>(null);
+
   // Extract slug from prop, pathname (/service-details/ui-ux-design), or hash
   const currentSlug = useMemo(() => {
     if (propSlug) return propSlug;
@@ -94,6 +97,50 @@ const Process: React.FC<ServiceDetailsProcessProps> = ({ slug: propSlug }) => {
     return DEFAULT_PROCESS_STEPS;
   }, [detail]);
 
+  const clipRectRef = useRef<SVGRectElement | null>(null);
+
+  // GSAP ScrollTrigger animation to reveal the filled ribbon path left-to-right
+  useEffect(() => {
+    const gsap = (window as any).gsap;
+    const ScrollTrigger = (window as any).ScrollTrigger;
+    if (!gsap || !ScrollTrigger || !sectionRef.current || !clipRectRef.current) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.set(clipRectRef.current, {
+      attr: { width: 0 },
+    });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: 'top 75%',
+        end: 'bottom 55%',
+        scrub: 1.2,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    tl.to(clipRectRef.current, {
+      attr: { width: 1103 },
+      ease: 'none',
+    });
+
+    const handleResize = () => {
+      if (ScrollTrigger) ScrollTrigger.refresh();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
+      }
+      tl.kill();
+    };
+  }, [steps]);
+
   const processTitle = detail?.process_title || 'Product making for friendly users';
   const ctaText = detail?.process_cta_text || 'Don’t hesitate collaborate with expertise-';
   const ctaLink = detail?.process_cta_link || '/contact';
@@ -108,10 +155,13 @@ const Process: React.FC<ServiceDetailsProcessProps> = ({ slug: propSlug }) => {
     }
   };
 
+  const pathData =
+    'M1102.02 51.5625C1081.73 51.1974 1064.88 38.4341 1048.98 27.0853C1038.04 19.2177 1027.14 10.9691 1014.53 5.60294C1008.59 3.10402 1002.15 1.79409 995.688 1.74838C948.056 3.57459 915.727 48.1061 870.399 49.542C858.42 49.4729 846.441 49.4076 834.462 49.3458C785.999 51.4824 753.96 96.084 709.172 97.536C664.385 95.8257 632.911 51.0873 583.883 48.5711C573.238 48.5654 562.593 48.5625 551.948 48.5625C549.92 48.5625 547.892 48.5626 545.864 48.5628C501.251 47.0237 469.484 2.3562 420.575 -0.000678539C371.666 2.57469 340.377 47.358 295.286 49.2183C283.654 49.2731 272.023 49.3314 260.392 49.3931C211.964 51.9966 180.963 96.8495 135.102 99.0063C106.299 98.5712 82.0489 79.5003 56.8277 66.2993C42.2956 58.561 26.5776 51.3538 9.8133 51.4643C6.5422 51.4968 3.2711 51.5295 0 51.5625C3.2711 51.5955 6.5422 51.6282 9.8133 51.6607C26.5083 51.8867 41.9381 59.3284 56.2798 67.2989C81.2208 80.8592 104.949 100.559 135.102 101.587C182.889 99.7076 215.173 55.1651 260.392 53.7319C272.023 53.7936 283.654 53.8519 295.286 53.9067C343.841 51.7303 375.837 7.11822 420.575 5.65693C465.312 7.33671 496.83 52.0646 545.864 54.5622C547.892 54.5624 549.92 54.5625 551.948 54.5625C562.593 54.5625 573.238 54.5596 583.883 54.5539C628.502 56.0744 660.313 100.731 709.172 103.058C758.032 100.473 789.277 55.6793 834.462 53.7792C846.441 53.7174 858.42 53.6521 870.399 53.583C918.718 50.9822 949.674 6.11829 995.688 3.90787C1001.87 3.85206 1008.07 5.00313 1013.83 7.31207C1026.22 12.3343 1037.24 20.3414 1048.32 28.0148C1064.42 39.0782 1081.71 51.6212 1102.02 51.5625Z';
+
   return (
     <>
       {/* Process Section */}
-      <div className="tp-process-area pt-85 pb-130 p-relative z-index-1">
+      <div ref={sectionRef} className="tp-process-area pt-85 pb-130 p-relative z-index-1">
         <div className="container">
           <div className="row">
             <div className="col-12">
@@ -119,13 +169,47 @@ const Process: React.FC<ServiceDetailsProcessProps> = ({ slug: propSlug }) => {
                 <h2 className="tp-section-title reveal-text fs-72">{processTitle}</h2>
               </div>
             </div>
-            <div className="col-xxl-10 offset-xxl-1 col-12">
+            <div className="col-xxl-10 offset-xxl-1 col-12 p-relative">
               <div className="tp-process-border d-none d-lg-block">
-                <svg viewBox="0 0 1320 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg
+                  width="1103"
+                  height="104"
+                  viewBox="0 0 1103 104"
+                  preserveAspectRatio="none"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-100"
+                  style={{ width: '100%', height: '104px', display: 'block', overflow: 'visible' }}
+                >
+                  <defs>
+                    <clipPath id="tp-process-ribbon-clip">
+                      <rect ref={clipRectRef} x="0" y="-10" width="0" height="130" />
+                    </clipPath>
+                    <radialGradient
+                      id="paint0_radial_716_989"
+                      cx="0"
+                      cy="0"
+                      r="1"
+                      gradientUnits="userSpaceOnUse"
+                      gradientTransform="translate(551.01 51.5625) scale(551.01 48.7344)"
+                    >
+                      <stop stopColor="#CD4631" />
+                      <stop offset="1" stopColor="white" />
+                    </radialGradient>
+                  </defs>
+
+                  {/* Subtle Guide Background */}
                   <path
-                    d="M5 2.5L0 0.113249V5.88675L5 3.5V2.5ZM1315 3.5L1320 5.88675V0.113249L1315 2.5V3.5ZM4.5 3.5H1315.5V2.5H4.5V3.5Z"
+                    d={pathData}
                     fill="currentColor"
-                    fillOpacity="0.1"
+                    fillOpacity="0.08"
+                  />
+
+                  {/* Animated Active Filled Ribbon with Radial Gradient */}
+                  <path
+                    d={pathData}
+                    fill="url(#paint0_radial_716_989)"
+                    clipPath="url(#tp-process-ribbon-clip)"
                   />
                 </svg>
               </div>

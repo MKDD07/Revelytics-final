@@ -17,6 +17,7 @@ import {
   Awards1,
   Blog1,
   SplitImageScroll,
+  VideoScrollShowcase,
 } from '../components';
 
 const Home: React.FC = () => {
@@ -47,6 +48,9 @@ const Home: React.FC = () => {
         showServicesList={true}
       />
 
+      {/* 4.5 Editorial Video Trio Showcase with GSAP Parallax Scroll */}
+      <VideoScrollShowcase />
+
       {/* 5. Dynamic Text Slider */}
       <TextSlider />
 
@@ -59,15 +63,6 @@ const Home: React.FC = () => {
       {/* 9. Travel Performance Metrics & Fun Facts */}
       <Funfact />
 
-      {/* 10. Hospitality & Travel Packages */}
-      <Pricing />
-
-      {/* 12. Masterpiece Showcase Hero Banner */}
-      <Hero4 />
-
-      <Awards1 />
-      {/* 13. Featured Work Portfolio Showcase */}
-      <Portfolio3 />
 
       {/* 10. Testimonials from Hotel & Travel Leaders */}
       <Testimonial1 />

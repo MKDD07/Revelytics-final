@@ -7,7 +7,7 @@ import React from 'react';
 const Hero = () => {
   return (
     <>{ /* Case Study Gallery Hero Area (from portfolio-details-gallery-light.html) */ }
-    <div className="tp-pd-2-ptb pt-175 pb-40">
+    <div className="tp-pd-2-ptb pt-40 pb-40">
        <div className="container">
           <div className="row">
              <div className="col-12">

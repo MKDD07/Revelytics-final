@@ -159,14 +159,16 @@
 
 	////////////////////////////////////////////////////
 	// 09. mobile menu Js
-	var tpMenuWrap = $('.tp-mobile-menu-active > ul').clone();
 	var tpSideMenu = $('.tp-offcanvas-menu nav');
-	tpSideMenu.append(tpMenuWrap);
-	if ($(tpSideMenu).find('.tp-submenu').length != 0) {
-		$(tpSideMenu).find('.tp-submenu').parent().append('<button class="tp-menu-close"><i class="fa-solid fa-plus"></i></button>');
+	if (tpSideMenu.length && tpSideMenu.children().length === 0) {
+		var tpMenuWrap = $('.tp-mobile-menu-active > ul').clone();
+		tpSideMenu.append(tpMenuWrap);
+		if ($(tpSideMenu).find('.tp-submenu').length != 0) {
+			$(tpSideMenu).find('.tp-submenu').parent().append('<button class="tp-menu-close"><i class="fa-solid fa-plus"></i></button>');
+		}
 	}
 	var sideMenuList = $('.tp-offcanvas-menu nav > ul > li button.tp-menu-close, .tp-offcanvas-menu nav > ul li.has-dropdown > a, .tp-offcanvas-menu nav > ul li.has-dropdown > ul > li.menu-item-has-children > a');
-	$(sideMenuList).on('click', function (e) {
+	$(sideMenuList).off('click').on('click', function (e) {
 		e.preventDefault();
 		if (!($(this).parent().hasClass('active'))) {
 			$(this).parent().addClass('active');

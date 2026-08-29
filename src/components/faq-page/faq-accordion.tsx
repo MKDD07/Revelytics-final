@@ -233,7 +233,7 @@ const FaqAccordion: React.FC<FaqAccordionProps> = ({
                   {subtitle}
                 </span>
               )}
-              <h2 className="tp-section-title reveal-text fs-72 mb-40">
+              <h2 className="tp-section-title reveal-text fs-72 mb-40 mt-40">
                 {title || (
                   <>
                     Explore Answers to<br />

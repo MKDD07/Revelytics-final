@@ -136,7 +136,7 @@ const Faq: React.FC<ServiceDetailsFaqProps> = ({ slug: propSlug }) => {
             </div>
             <div className="col-xxl-7 col-xl-9">
               <div className="tp-faq tp-service-details-faq-two tp-service-details-faq mb-30">
-                <h2 className="tp-section-title reveal-text fs-72 mb-40">
+                <h2 className="tp-section-title reveal-text fs-72 mb-40 mt-40">
                   Explore Answers to
                   <br />
                   Our Most Asked Questions

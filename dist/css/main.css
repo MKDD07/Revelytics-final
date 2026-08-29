@@ -6033,7 +6033,6 @@ body.tp-magic-cursor #magic-cursor {
   font-weight: 500;
   font-size: 16px;
   letter-spacing: -0.02em;
-  text-align: center;
   color: var(--tp-common-black);
 }
 @media only screen and (min-width: 768px) and (max-width: 991px), only screen and (min-width: 576px) and (max-width: 767px), (max-width: 574.98px) {
@@ -6042,17 +6041,17 @@ body.tp-magic-cursor #magic-cursor {
   }
 }
 .tp-footer-email {
-  font-size: 52px;
+  font-size: 36px;
   letter-spacing: -0.02em;
 }
 @media only screen and (min-width: 1400px) and (max-width: 1599px), only screen and (min-width: 1200px) and (max-width: 1399px), only screen and (min-width: 992px) and (max-width: 1199px), only screen and (min-width: 768px) and (max-width: 991px), only screen and (min-width: 576px) and (max-width: 767px), (max-width: 574.98px) {
   .tp-footer-email {
-    font-size: 46px;
+    font-size: 32px;
   }
 }
 @media (max-width: 574.98px) {
   .tp-footer-email {
-    font-size: 38px;
+    font-size: 24px;
   }
 }
 .tp-footer-email a {
@@ -6326,28 +6325,28 @@ body.tp-magic-cursor #magic-cursor {
   }
 }
 .cs-footer-bigtitle {
-  font-size: 300px;
+  font-size: 144px;
   letter-spacing: -0.02em;
   line-height: 0.9;
 }
 @media only screen and (min-width: 1700px) and (max-width: 1800px) {
   .cs-footer-bigtitle {
-    font-size: 285px;
+    font-size: 144px;
   }
 }
 @media only screen and (min-width: 1600px) and (max-width: 1700px) {
   .cs-footer-bigtitle {
-    font-size: 275px;
+    font-size: 144px;
   }
 }
 @media only screen and (min-width: 1400px) and (max-width: 1599px) {
   .cs-footer-bigtitle {
-    font-size: 235px;
+    font-size: 144px;
   }
 }
 @media only screen and (min-width: 1200px) and (max-width: 1399px) {
   .cs-footer-bigtitle {
-    font-size: 190px;
+    font-size: 144px;
   }
 }
 @media only screen and (min-width: 992px) and (max-width: 1199px) {
@@ -7250,7 +7249,8 @@ body.tp-magic-cursor #magic-cursor {
 }
 .tp-hero-social {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
   gap: 10px;
   justify-content: end;
 }
@@ -7272,7 +7272,7 @@ body.tp-magic-cursor #magic-cursor {
   color: var(--tp-grey-1);
   border: 1px solid rgba(38, 38, 38, 0.1);
   border-radius: 20px;
-  padding: 6px 20px;
+  padding: 6px 0px;
   display: inline-block;
 }
 .tp-hero-social a:hover {

@@ -95,6 +95,14 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const isTransitioningRef = useRef<boolean>(false);
 
+  // Guarantee loading state finishes within 2.2s
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Barba.js Curtain Transition Effect
   const triggerBarbaTransition = (nextState: RouteState) => {
     const gsap = (window as any).gsap;
@@ -177,6 +185,79 @@ function App() {
       if (typeof w.initCursor === 'function') {
         w.initCursor();
       }
+
+      // Initialize Background SVG Slash ONLY on .tp-about-title-wrap with GSAP ScrollTrigger
+      const gsap = (window as any).gsap;
+      const ScrollTrigger = (window as any).ScrollTrigger;
+      if (gsap && ScrollTrigger) {
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Remove title-bg-svg-slash from any titles outside .tp-about-title-wrap
+        document.querySelectorAll('.title-bg-svg-slash').forEach((slash) => {
+          if (!slash.closest('.tp-about-title-wrap')) {
+            slash.remove();
+          }
+        });
+
+        // Only target titles within .tp-about-title-wrap
+        const titles = document.querySelectorAll('.tp-about-title-wrap .tp-section-title:not(.no-title-bg), .tp-about-title-wrap.mb-30 .tp-section-title:not(.no-title-bg)');
+        titles.forEach((title) => {
+          if (title.classList.contains('no-title-bg')) {
+            return;
+          }
+
+          if (!title.querySelector('.title-bg-svg-slash')) {
+            const svgWrap = document.createElement('div');
+            svgWrap.className = 'title-bg-svg-slash';
+            svgWrap.setAttribute('aria-hidden', 'true');
+            svgWrap.innerHTML = `
+              <svg width="256" height="58" viewBox="0 0 256 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.208008 29.8984L255.475 28" stroke="#B57BEE" stroke-width="56" stroke-linecap="round"/>
+              </svg>
+            `;
+            title.prepend(svgWrap);
+
+            const path = svgWrap.querySelector('path');
+            if (path) {
+              const pathLength = path.getTotalLength() || 260;
+              gsap.set(path, {
+                strokeDasharray: pathLength,
+                strokeDashoffset: pathLength,
+              });
+
+              gsap.to(path, {
+                strokeDashoffset: 0,
+                duration: 1.1,
+                ease: 'power2.out',
+                scrollTrigger: {
+                  trigger: title,
+                  start: 'top 85%',
+                  toggleActions: 'play none none reverse',
+                },
+              });
+
+              // Subtle scale & parallax scrub on the background brush
+              gsap.fromTo(
+                svgWrap,
+                { scaleX: 0.8, x: -15, opacity: 0.5 },
+                {
+                  scaleX: 1.05,
+                  x: 0,
+                  opacity: 0.85,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: title,
+                    start: 'top 95%',
+                    end: 'top 40%',
+                    scrub: 1.2,
+                  },
+                }
+              );
+            }
+          }
+        });
+      }
+
       if (w.ScrollTrigger && typeof w.ScrollTrigger.refresh === 'function') {
         w.ScrollTrigger.refresh();
       }

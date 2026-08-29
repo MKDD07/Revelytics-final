@@ -19,24 +19,77 @@ const FALLBACK_ARTICLES: RevDbItem[] = [
     date: '2026-08-25',
     image_url: 'https://images.pexels.com/photos/2108845/pexels-photo-2108845.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
   },
+  {
+    id: 2,
+    page_name: 'hospitality-tech-ux',
+    slug: 'transforming-direct-hotel-bookings-2025',
+    heading: 'Transforming Direct Hotel Bookings in 2025: Tech & UX Playbook',
+    subheading: 'How boutique hotels and luxury resorts reduce OTA dependency with seamless mobile booking flows.',
+    category: 'Hospitality Tech',
+    author: 'Vikram Mehta',
+    date: '2026-08-26',
+    image_url: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+  },
+  {
+    id: 3,
+    page_name: 'destination-branding',
+    slug: 'building-modern-identities-boutique-resorts',
+    heading: 'Building Modern Identities for Boutique Resorts & Villas',
+    subheading: 'Crafting luxury visual identity and experiential marketing that resonate with global travelers.',
+    category: 'Brand Strategy',
+    author: 'Aria Chen',
+    date: '2026-08-27',
+    image_url: 'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+  },
+  {
+    id: 4,
+    page_name: 'travel-performance-ads',
+    slug: 'scaling-high-roas-campaigns-luxury-stays',
+    heading: 'Scaling High-ROAS Meta & Google Campaigns for Stays',
+    subheading: 'Precision audience targeting and multi-variant creative testing to maximize booking revenue.',
+    category: 'Performance Ads',
+    author: 'Sarah Jenkins',
+    date: '2026-08-28',
+    image_url: 'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+  },
+  {
+    id: 5,
+    page_name: 'ai-hospitality-automation',
+    slug: 'automating-guest-inquiries-ai-concierge',
+    heading: 'Automating Guest Inquiries with Intelligent AI Concierge',
+    subheading: 'Empower hotel operations with 24/7 autonomous guest assistance and instant booking recommendations.',
+    category: 'AI Solutions',
+    author: 'Devon Lee',
+    date: '2026-08-28',
+    image_url: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+  },
+  {
+    id: 6,
+    page_name: 'hospitality-seo-authority',
+    slug: 'dominating-local-destination-keywords',
+    heading: 'Dominating Local & Destination Keywords for Luxury Villas',
+    subheading: 'Organic search strategy to rank #1 on Google for high-intent destination search queries.',
+    category: 'Search Authority',
+    author: 'Carlos Ramos',
+    date: '2026-08-29',
+    image_url: 'https://images.pexels.com/photos/221457/pexels-photo-221457.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+  },
 ];
 
 const Grid = () => {
   const [articles, setArticles] = useState<RevDbItem[]>(FALLBACK_ARTICLES);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     async function load() {
       try {
         const data = await fetchRevDbArticles();
-        if (isMounted && data.length > 0) {
+        if (isMounted && data && data.length > 0) {
           setArticles(data);
         }
       } catch {
         // keep fallback
-      } finally {
-        if (isMounted) setLoading(false);
       }
     }
     load();

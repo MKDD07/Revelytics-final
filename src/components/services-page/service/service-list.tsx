@@ -8,23 +8,33 @@ import { searchPexelsPhotos } from '../../../services/pexels';
 // Connected with D1 `services` Table & Smooth Scroll To Category
 // ==================================================
 
+// Helper to resize any image URL inside tp-about-border to max 500px width for fast loading
+const toIntrinsic500px = (url: string) => {
+  if (!url) return url;
+  if (url.includes('images.pexels.com')) {
+    const base = url.split('?')[0];
+    return `${base}?auto=compress&cs=tinysrgb&w=500&fit=crop`;
+  }
+  return url;
+};
+
 const FALLBACK_CATEGORY_IMAGES: Record<string, string> = {
   'web-design':
-    'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
   'web-development':
-    'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
   'api-integration':
-    'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
   'app-development':
-    'https://images.pexels.com/photos/1092646/pexels-photo-1092646.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/1092646/pexels-photo-1092646.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
   'e-commerce-solutions':
-    'https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
   'digital-marketing':
-    'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop',
+    'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop',
 };
 
 const DEFAULT_SERVICE_IMAGE =
-  'https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop';
+  'https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=500&fit=crop';
 
 export interface ServiceListProps {
   id?: string;
@@ -109,7 +119,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
           try {
             const photos = await searchPexelsPhotos(query, 1, 'portrait');
             if (photos && photos.length > 0) {
-              imgMap[cat.slug] = photos[0];
+              imgMap[cat.slug] = toIntrinsic500px(photos[0]);
             } else if (FALLBACK_CATEGORY_IMAGES[cat.slug]) {
               imgMap[cat.slug] = FALLBACK_CATEGORY_IMAGES[cat.slug];
             }
@@ -180,10 +190,11 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
   };
 
   const activeCategory = distinctCategories[activeIndex] || distinctCategories[0];
-  const activeImageUrl =
+  const activeImageUrl = toIntrinsic500px(
     (activeCategory && categoryImages[activeCategory.slug]) ||
     (activeCategory && FALLBACK_CATEGORY_IMAGES[activeCategory.slug]) ||
-    DEFAULT_SERVICE_IMAGE;
+    DEFAULT_SERVICE_IMAGE
+  );
 
   return (
     <>
@@ -211,15 +222,15 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
                     className="tp-service-sales-wrap tp-panel-pin fix p-relative"
                     style={{
                       width: '100%',
-                      maxWidth: '350px',
-                      height: '450px',
+                      maxWidth: '380px',
+                      height: '500px',
                       borderRadius: '20px',
                       overflow: 'hidden',
                       position: 'relative',
                       boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
                     }}
                   >
-                    <div className="tp-service-img-wrapper image-container" style={{ width: '100%', height: '100%', position: 'relative' }}>
+                    <div className="tp-service-img-wrapper image-container" style={{ width: '100%', height: '500px', position: 'relative' }}>
                       <img
                         key={activeImageUrl}
                         className="thumb"

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { usePexelsImage } from '../../hooks';
+import { getPexelsImageQualityUrl } from '../../services/pexels';
 import { FlowingSvgTrack } from './flowing-svg-track';
 
 // ============================================================================
@@ -14,9 +15,9 @@ export interface SplitImageScrollProps {
   fallbackImage?: string;
 }
 
-// Default luxury fallback image
+// Default luxury fallback image in HD 1280p
 const DEFAULT_IMAGE =
-  'https://images.pexels.com/photos/2679501/pexels-photo-2679501.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+  'https://images.pexels.com/photos/2679501/pexels-photo-2679501.jpeg?auto=compress&cs=tinysrgb&w=1280&fit=crop';
 
 export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
   leftText = 'We',
@@ -26,8 +27,9 @@ export const SplitImageScroll: React.FC<SplitImageScrollProps> = ({
   pexelsIndex = 0,
   fallbackImage = DEFAULT_IMAGE,
 }) => {
-  const dynamicImage = usePexelsImage(pexelsQuery, pexelsIndex, fallbackImage);
-  const imageSrc = dynamicImage || fallbackImage;
+  const dynamicImage = usePexelsImage(pexelsQuery, pexelsIndex, fallbackImage, 'hd');
+  const rawImageSrc = dynamicImage || fallbackImage;
+  const imageSrc = getPexelsImageQualityUrl(rawImageSrc, 'hd');
 
   // DOM Refs
   const sectionRef = useRef<HTMLDivElement | null>(null);

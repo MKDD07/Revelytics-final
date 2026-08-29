@@ -6,17 +6,21 @@ import { usePexelsVideo } from '../../hooks';
 // ==================================================
 
 const Hero3: React.FC = () => {
-  // Live Pexels API HD Video streams
+  // Live Pexels API UHD / 4K Video streams
   const digitalMarketingVideo = usePexelsVideo(
-    'digital marketing',
+    'digital marketing agency modern',
     0,
-    'https://html.aqlova.com/videos/cunnet/ca-video-2.mp4'
+    'https://html.aqlova.com/videos/cunnet/ca-video-2.mp4',
+    'uhd',
+    'landscape'
   );
 
   const hikerVideo = usePexelsVideo(
     'Hiker trekking in foggy mountains with backpack',
     0,
-    'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-hiker-on-top-of-a-mountain-42525-large.mp4'
+    'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-hiker-on-top-of-a-mountain-42525-large.mp4',
+    'uhd',
+    'landscape'
   );
 
   const digitalMarketingRef = useRef<HTMLVideoElement>(null);
@@ -44,7 +48,7 @@ const Hero3: React.FC = () => {
           <div className="row">
             <div className="col-xl-4 col-lg-5 col-md-5">
               <div className="ca-hero-left pt-65 pb-30">
-                <div className="ca-hero-video p-relative">
+                <div className="ca-hero-video p-relative video-uhd">
                   <video
                     ref={digitalMarketingRef}
                     key={digitalMarketingVideo}
@@ -52,6 +56,7 @@ const Hero3: React.FC = () => {
                     muted
                     autoPlay
                     playsInline
+                    className="video-uhd"
                   >
                     <source src={digitalMarketingVideo} type="video/mp4" />
                   </video>
@@ -171,7 +176,7 @@ const Hero3: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="ca-hero-thumb fix scale-up-img" style={{ position: 'relative', overflow: 'hidden' }}>
+        <div className="ca-hero-thumb fix scale-up-img video-uhd" style={{ position: 'relative', overflow: 'hidden' }}>
           <video
             ref={hikerVideoRef}
             key={hikerVideo}
@@ -179,7 +184,7 @@ const Hero3: React.FC = () => {
             loop
             muted
             playsInline
-            className="img-cover scale-up w-100"
+            className="img-cover scale-up w-100 video-uhd"
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           >
             <source src={hikerVideo} type="video/mp4" />

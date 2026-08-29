@@ -46,23 +46,52 @@ export interface PexelsPhotoItem {
 const memoryVideoCache = new Map<string, string[]>();
 const memoryPhotoCache = new Map<string, string[]>();
 
+// Quality presets for universal video and image loading
+export type VideoQuality = 'sd' | 'hd' | 'uhd';
+export type ImageQuality = 'thumb' | 'sd' | 'hd' | 'uhd';
+
 /**
- * Searches and fetches real HD video stream URLs from Pexels API.
- * @param query Search query, e.g. "tropical resort", "travel luxury", "creative agency"
- * @param perPage Number of videos to fetch (default: 10)
+ * Transforms any Pexels image URL to a specific quality tier.
+ * @param url Pexels photo URL
+ * @param quality 'thumb' | 'sd' | 'hd' | 'uhd'
+ */
+export function getPexelsImageQualityUrl(url: string, quality: ImageQuality = 'hd'): string {
+  if (!url) return url;
+  if (!url.includes('images.pexels.com')) return url;
+
+  const base = url.split('?')[0];
+  switch (quality) {
+    case 'thumb':
+      return `${base}?auto=compress&cs=tinysrgb&w=350&fit=crop`;
+    case 'sd':
+      return `${base}?auto=compress&cs=tinysrgb&w=640&fit=crop`;
+    case 'uhd':
+      return `${base}?auto=compress&cs=tinysrgb&w=2560&fit=crop`;
+    case 'hd':
+    default:
+      return `${base}?auto=compress&cs=tinysrgb&w=1280&fit=crop`;
+  }
+}
+
+/**
+ * Searches and fetches video stream URLs from Pexels API with strict quality tiering.
+ * @param query Search query
+ * @param quality 'sd' (480p), 'hd' (720p/1080p), 'uhd' (4K/2160p)
+ * @param perPage Number of videos to fetch
+ * @param orientation 'landscape' | 'portrait'
  */
 export async function searchPexelsVideos(
-  query: string = 'tropical travel',
-  perPage: number = 10
+  query: string = 'travel luxury resort',
+  perPage: number = 5,
+  orientation: 'landscape' | 'portrait' = 'portrait',
+  quality: VideoQuality = 'hd'
 ): Promise<string[]> {
-  const cacheKey = `pexels_videos_${query.toLowerCase().trim()}_${perPage}`;
+  const cacheKey = `pexels_videos_${query.toLowerCase().trim()}_${perPage}_${orientation}_${quality}`;
 
-  // Check in-memory cache
   if (memoryVideoCache.has(cacheKey)) {
     return memoryVideoCache.get(cacheKey)!;
   }
 
-  // Check localStorage cache if available
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -73,13 +102,13 @@ export async function searchPexelsVideos(
       }
     }
   } catch {
-    // localStorage might be unavailable or restricted
+    // Ignore localStorage read errors
   }
 
   try {
     const encodedQuery = encodeURIComponent(query.trim());
     const res = await fetch(
-      `https://api.pexels.com/videos/search?query=${encodedQuery}&per_page=${perPage}&orientation=landscape`,
+      `https://api.pexels.com/videos/search?query=${encodedQuery}&per_page=${perPage}&orientation=${orientation}`,
       {
         headers: {
           Authorization: PEXELS_API_KEY,
@@ -94,15 +123,34 @@ export async function searchPexelsVideos(
     const data = await res.json();
     const videos: PexelsVideoItem[] = data.videos || [];
 
-    // Extract best quality HD MP4 links
     const videoUrls: string[] = videos
       .map((item) => {
-        // Find best HD mp4 file
-        const hdFile =
-          item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4' && f.width >= 1280) ||
-          item.video_files.find((f) => f.file_type === 'video/mp4') ||
-          item.video_files[0];
-        return hdFile ? hdFile.link : '';
+        let matchedFile: PexelsVideoFile | undefined;
+
+        if (quality === 'uhd') {
+          // UHD / 4K / 2160p search
+          matchedFile =
+            item.video_files.find((f) => (f.width >= 2160 || f.height >= 2160) && f.file_type === 'video/mp4') ||
+            item.video_files.find((f) => f.quality === 'uhd' && f.file_type === 'video/mp4') ||
+            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4' && (f.width >= 1920 || f.height >= 1920));
+        } else if (quality === 'sd') {
+          // SD / 480p search
+          matchedFile =
+            item.video_files.find((f) => f.quality === 'sd' && f.file_type === 'video/mp4') ||
+            item.video_files.find((f) => f.file_type === 'video/mp4' && (f.width <= 720 && f.height <= 720));
+        } else {
+          // HD / 720p / 1080p search (default)
+          matchedFile =
+            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4' && ((f.width >= 1280 && f.width <= 1920) || (f.height >= 1280 && f.height <= 1920))) ||
+            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4') ||
+            item.video_files.find((f) => f.file_type === 'video/mp4');
+        }
+
+        if (!matchedFile) {
+          matchedFile = item.video_files.find((f) => f.file_type === 'video/mp4') || item.video_files[0];
+        }
+
+        return matchedFile ? matchedFile.link : '';
       })
       .filter((url) => Boolean(url));
 
@@ -119,7 +167,14 @@ export async function searchPexelsVideos(
     console.warn(`[Pexels Service] Failed to fetch videos for "${query}":`, err);
   }
 
-  // Default fallback curated video URLs
+  // Fallbacks per quality tier
+  if (quality === 'sd') {
+    return [
+      'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-hiker-on-top-of-a-mountain-42525-medium.mp4',
+      'https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-medium.mp4',
+    ];
+  }
+
   return [
     'https://html.aqlova.com/videos/cunnet/video-3.mp4',
     'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-luxury-hotel-and-pool-42845-large.mp4',
@@ -131,13 +186,16 @@ export async function searchPexelsVideos(
  * Searches and fetches real high-res photography URLs from Pexels API.
  * @param query Search query, e.g. "luxury resort", "travel architecture"
  * @param perPage Number of photos to fetch (default: 10)
+ * @param orientation 'landscape' | 'portrait' | 'square'
+ * @param quality 'thumb' | 'sd' | 'hd' | 'uhd'
  */
 export async function searchPexelsPhotos(
   query: string = 'travel resort',
   perPage: number = 10,
-  orientation: 'landscape' | 'portrait' | 'square' = 'portrait'
+  orientation: 'landscape' | 'portrait' | 'square' = 'portrait',
+  quality: ImageQuality = 'hd'
 ): Promise<string[]> {
-  const cacheKey = `pexels_photos_${query.toLowerCase().trim()}_${perPage}_${orientation}`;
+  const cacheKey = `pexels_photos_${query.toLowerCase().trim()}_${perPage}_${orientation}_${quality}`;
 
   if (memoryPhotoCache.has(cacheKey)) {
     return memoryPhotoCache.get(cacheKey)!;
@@ -161,7 +219,18 @@ export async function searchPexelsPhotos(
     const data = await res.json();
     const photos: PexelsPhotoItem[] = data.photos || [];
     const photoUrls: string[] = photos
-      .map((p) => p.src.original || p.src.large2x || p.src.large)
+      .map((p) => {
+        if (quality === 'uhd') {
+          return p.src.large2x || p.src.original || p.src.large;
+        } else if (quality === 'sd') {
+          return p.src.small || p.src.medium || getPexelsImageQualityUrl(p.src.original, 'sd');
+        } else if (quality === 'thumb') {
+          return p.src.tiny || getPexelsImageQualityUrl(p.src.original, 'thumb');
+        } else {
+          // HD (default)
+          return p.src.large || p.src.portrait || p.src.medium || getPexelsImageQualityUrl(p.src.original, 'hd');
+        }
+      })
       .filter(Boolean);
 
     if (photoUrls.length > 0) {
@@ -178,7 +247,7 @@ export async function searchPexelsPhotos(
   }
 
   return [
-    'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1920',
-    'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1920',
+    getPexelsImageQualityUrl('https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg', quality),
+    getPexelsImageQualityUrl('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg', quality),
   ];
 }
