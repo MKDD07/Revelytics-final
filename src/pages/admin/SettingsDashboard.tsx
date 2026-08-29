@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
-import { AdminButton as Button } from '../../components/ui/admin-button';
-import { Input, Badge } from '../../components/ui/input';
+import './main-dashboard.css';
 import { Key, Shield, Database, Sparkles, RefreshCw, AlertCircle, CheckCircle2, Cpu } from 'lucide-react';
 import { GROQ_MODELS, getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
@@ -162,83 +160,83 @@ export const SettingsDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div style={{ maxWidth: '896px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-white">
+        <h2 className="admin-page-title">
           Settings & Integrations
         </h2>
-        <p className="text-xs text-zinc-500">
+        <p className="admin-page-desc">
           Manage your Groq AI API keys, default model selector, administrator credentials, and Cloudflare D1 database.
         </p>
       </div>
 
       {statusMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-emerald-50/50 p-3 text-xs text-emerald-600 border border-emerald-200">
-          <CheckCircle2 className="size-4 shrink-0" />
+        <div className="admin-alert-success">
+          <CheckCircle2 size={16} />
           <span>{statusMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
-          <AlertCircle className="size-4 shrink-0" />
+        <div className="admin-alert-error">
+          <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Groq API Integration Card */}
-      <Card className="border-zinc-200 bg-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-9 rounded-lg bg-indigo-50/60 text-indigo-600 border border-indigo-200 flex items-center justify-center">
-              <Sparkles className="size-4" />
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#eef2ff', color: '#6366f1', border: '1px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={16} />
             </div>
             <div>
-              <CardTitle>Groq AI API Integration</CardTitle>
-              <CardDescription>Configure your Groq API key and select your preferred LLM model</CardDescription>
+              <h3 className="admin-card-title">Groq AI API Integration</h3>
+              <div className="admin-card-subtitle">Configure your Groq API key and select your preferred LLM model</div>
             </div>
           </div>
 
           {hasGroqKey ? (
-            <Badge variant="success">Connected</Badge>
+            <span className="admin-badge admin-badge-success">Connected</span>
           ) : (
-            <Badge variant="warning">Setup Required</Badge>
+            <span className="admin-badge admin-badge-warning">Setup Required</span>
           )}
-        </CardHeader>
+        </div>
 
         <form onSubmit={handleSaveGroqKey}>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Groq API Key (`gsk_...`)
-              </label>
-              <Input
+          <div className="admin-card-body">
+            <div className="admin-form-group">
+              <div className="admin-form-label">
+                <span>Groq API Key (`gsk_...`)</span>
+              </div>
+              <input
                 type="password"
+                className="admin-input admin-code-font"
                 value={groqKey}
                 onChange={(e) => setGroqKey(e.target.value)}
                 placeholder={hasGroqKey ? '•••••••••••••••••••• (Configured in D1 credentials)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
-                className="font-mono text-xs"
               />
-              <p className="text-[11px] text-zinc-500">
-                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-indigo-600 underline">console.groq.com/keys</a>.
+              <p style={{ fontSize: '11px', color: '#64748b', margin: '6px 0 0 0' }}>
+                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: '#6366f1' }}>console.groq.com/keys</a>.
               </p>
             </div>
 
             {/* Groq Model Selector Option */}
-            <div className="space-y-2 pt-2 border-t border-zinc-200">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-zinc-600 flex items-center gap-1.5">
-                  <Cpu className="size-3.5 text-purple-600" /> Default AI Model Selection
-                </label>
-                <span className="text-[11px] font-mono text-purple-600">
+            <div style={{ paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+              <div className="admin-form-label">
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Cpu size={14} color="#7e22ce" /> Default AI Model Selection
+                </span>
+                <span className="admin-code-font" style={{ color: '#7e22ce' }}>
                   Active: {selectedModel}
                 </span>
               </div>
 
               <select
+                className="admin-select"
                 value={isCustomModel ? 'custom' : selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
               >
                 <optgroup label="Meta Llama">
                   <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k context)</option>
@@ -279,140 +277,144 @@ export const SettingsDashboard: React.FC = () => {
               </select>
 
               {isCustomModel && (
-                <div className="flex gap-2 pt-1">
-                  <Input
+                <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
+                  <input
                     type="text"
+                    className="admin-input admin-code-font"
                     value={customModel}
                     onChange={(e) => setCustomModel(e.target.value)}
                     placeholder="e.g. openai/gpt-oss-120b"
-                    className="text-xs font-mono"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="secondary"
-                    size="sm"
+                    className="admin-btn admin-btn-secondary"
                     onClick={handleCustomModelSave}
                   >
                     Apply
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
 
             {testResult && (
-              <div className="p-3 rounded-md bg-indigo-50/40 border border-indigo-200 text-xs text-indigo-700">
+              <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '6px', background: '#eef2ff', border: '1px solid #c7d2fe', fontSize: '12px', color: '#4338ca' }}>
                 ✓ {testResult}
               </div>
             )}
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex justify-between items-center">
-            <Button
+          <div className="admin-card-footer">
+            <button
               type="button"
-              variant="outline"
-              size="sm"
+              className="admin-btn admin-btn-outline admin-btn-sm"
               onClick={handleTestGroq}
-              loading={testingKey}
+              disabled={testingKey}
             >
-              <RefreshCw className="size-3.5 mr-1" /> Test AI Connection
-            </Button>
+              <RefreshCw size={13} /> {testingKey ? 'Testing...' : 'Test AI Connection'}
+            </button>
 
-            <Button
+            <button
               type="submit"
-              variant="gradient"
-              size="sm"
-              loading={savingKey}
+              className="admin-btn admin-btn-gradient admin-btn-sm"
+              disabled={savingKey}
             >
-              <Key className="size-3.5 mr-1" /> Save Groq API Key
-            </Button>
-          </CardFooter>
+              <Key size={13} /> {savingKey ? 'Saving...' : 'Save Groq API Key'}
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
 
       {/* Admin Password Card */}
-      <Card className="border-zinc-200 bg-white shadow-sm">
-        <CardHeader className="flex flex-row items-center gap-3">
-          <div className="size-9 rounded-lg bg-amber-50/60 text-amber-600 border border-amber-200 flex items-center justify-center">
-            <Shield className="size-4" />
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Shield size={16} />
+            </div>
+            <div>
+              <h3 className="admin-card-title">Admin Credentials</h3>
+              <div className="admin-card-subtitle">Update administrator password in Cloudflare D1 `credentials` table</div>
+            </div>
           </div>
-          <div>
-            <CardTitle>Admin Credentials</CardTitle>
-            <CardDescription>Update administrator password in Cloudflare D1 `credentials` table</CardDescription>
-          </div>
-        </CardHeader>
+        </div>
 
         <form onSubmit={handleChangePassword}>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-600">
-                  Username
-                </label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} />
+          <div className="admin-card-body">
+            <div className="admin-grid-2">
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Username</span>
+                </div>
+                <input
+                  type="text"
+                  className="admin-input"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-600">
-                  New Password
-                </label>
-                <Input
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>New Password</span>
+                </div>
+                <input
                   type="password"
+                  className="admin-input"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="New strong password"
                 />
               </div>
             </div>
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex justify-end">
-            <Button
+          <div className="admin-card-footer" style={{ justifyContent: 'flex-end' }}>
+            <button
               type="submit"
-              variant="secondary"
-              size="sm"
-              loading={savingPassword}
+              className="admin-btn admin-btn-secondary admin-btn-sm"
+              disabled={savingPassword}
             >
-              Update Admin Password
-            </Button>
-          </CardFooter>
+              {savingPassword ? 'Updating...' : 'Update Admin Password'}
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
 
       {/* Cloudflare D1 Status Card */}
-      <Card className="border-zinc-200 bg-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-9 rounded-lg bg-emerald-50/60 text-emerald-600 border border-emerald-200 flex items-center justify-center">
-              <Database className="size-4" />
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Database size={16} />
             </div>
             <div>
-              <CardTitle>Cloudflare D1 Database</CardTitle>
-              <CardDescription>Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</CardDescription>
+              <h3 className="admin-card-title">Cloudflare D1 Database</h3>
+              <div className="admin-card-subtitle">Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</div>
             </div>
           </div>
-          <Badge variant="success">Connected</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-              <div className="text-[11px] font-medium text-zinc-500 uppercase">Credentials Table</div>
-              <div className="text-sm font-semibold text-white mt-1">`credentials`</div>
-              <div className="text-xs text-emerald-600 mt-0.5">Active & Hashed</div>
+          <span className="admin-badge admin-badge-success">Connected</span>
+        </div>
+        <div className="admin-card-body">
+          <div className="admin-grid-3">
+            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Credentials Table</div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`credentials`</div>
+              <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '2px' }}>Active & Hashed</div>
             </div>
 
-            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-              <div className="text-[11px] font-medium text-zinc-500 uppercase">Service Details</div>
-              <div className="text-sm font-semibold text-white mt-1">`service_details`</div>
-              <div className="text-xs text-indigo-600 mt-0.5">21 Schema Columns</div>
+            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Service Details</div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`service_details`</div>
+              <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>21 Schema Columns</div>
             </div>
 
-            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-              <div className="text-[11px] font-medium text-zinc-500 uppercase">Article CMS</div>
-              <div className="text-sm font-semibold text-white mt-1">`rev_db` & `blogs`</div>
-              <div className="text-xs text-purple-600 mt-0.5">Live Structured Data</div>
+            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Article CMS</div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`rev_db` & `blogs`</div>
+              <div style={{ fontSize: '12px', color: '#7e22ce', marginTop: '2px' }}>Live Structured Data</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

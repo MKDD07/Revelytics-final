@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
-import { AdminButton as Button } from '../../components/ui/admin-button';
-import { Input, Textarea, Badge } from '../../components/ui/input';
-import { Dialog } from '../../components/ui/dialog';
-import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '../../components/ui/tabs';
+import './main-dashboard.css';
 import {
   Sparkles,
   Plus,
@@ -17,6 +13,7 @@ import {
   BookOpen,
   AlertCircle,
   Cpu,
+  X,
 } from 'lucide-react';
 import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
@@ -273,447 +270,506 @@ export const BlogDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-page-header">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">
+          <h2 className="admin-page-title">
             Blog CMS & Groq AI Studio
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="admin-page-desc">
             Generate, edit, and publish high-converting travel hospitality articles directly to Cloudflare D1 (`rev_db`).
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="gradient"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="admin-btn admin-btn-gradient"
             onClick={() => setIsAiModalOpen(true)}
           >
-            <Sparkles className="size-4" /> New AI Blog with Groq
-          </Button>
+            <Sparkles size={14} /> New AI Blog with Groq
+          </button>
 
-          <Button
-            variant="secondary"
+          <button
+            className="admin-btn admin-btn-secondary"
             onClick={handleNewArticle}
           >
-            <Plus className="size-4" /> New Blank Article
-          </Button>
+            <Plus size={14} /> New Blank Article
+          </button>
         </div>
       </div>
 
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-emerald-50/50 p-3 text-xs text-emerald-600 border border-emerald-200">
-          <CheckCircle2 className="size-4 shrink-0" />
+        <div className="admin-alert-success">
+          <CheckCircle2 size={16} />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
-          <AlertCircle className="size-4 shrink-0" />
+        <div className="admin-alert-error">
+          <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Articles Table Card */}
-      <Card className="border-zinc-200 bg-white shadow-sm">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="admin-card">
+        <div className="admin-card-header">
           <div>
-            <CardTitle>Published Articles in Cloudflare D1</CardTitle>
-            <CardDescription>
+            <h3 className="admin-card-title">Published Articles in Cloudflare D1</h3>
+            <div className="admin-card-subtitle">
               Live CMS articles queryable via `/api/rev_db` and `/blog/:slug`
-            </CardDescription>
+            </div>
           </div>
 
           {/* Search Input */}
-          <div className="w-full sm:w-64 relative">
-            <Input
+          <div style={{ position: 'relative', width: '240px' }}>
+            <input
+              type="text"
+              className="admin-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search articles..."
-              className="pl-8 h-8 text-xs"
+              style={{ paddingLeft: '32px', height: '34px', fontSize: '12px' }}
             />
-            <Search className="absolute left-2.5 top-2 size-3.5 text-zinc-500" />
+            <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '10px' }} />
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="p-0">
+        <div className="admin-table-wrap">
           {loading ? (
-            <div className="p-12 text-center text-zinc-500 space-y-2">
-              <div className="size-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent mx-auto" />
-              <p className="text-xs">Loading articles from Cloudflare D1...</p>
+            <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+              <p style={{ fontSize: '13px' }}>Loading articles from Cloudflare D1...</p>
             </div>
           ) : filteredArticles.length === 0 ? (
-            <div className="p-12 text-center text-zinc-500 space-y-3">
-              <BookOpen className="size-8 mx-auto opacity-50 text-zinc-500" />
-              <p className="text-sm font-medium text-zinc-600">No articles found</p>
-              <p className="text-xs text-zinc-500">Generate your first travel article with Groq AI in seconds.</p>
-              <Button variant="gradient" size="sm" onClick={() => setIsAiModalOpen(true)}>
-                <Sparkles className="size-3.5 mr-1" /> Generate with Groq AI
-              </Button>
+            <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+              <BookOpen size={32} color="#94a3b8" style={{ margin: '0 auto 8px auto', display: 'block' }} />
+              <p style={{ fontSize: '14px', fontWeight: 600, color: '#334155', margin: '0 0 4px 0' }}>No articles found</p>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px 0' }}>Generate your first travel article with Groq AI in seconds.</p>
+              <button className="admin-btn admin-btn-gradient admin-btn-sm" onClick={() => setIsAiModalOpen(true)}>
+                <Sparkles size={13} /> Generate with Groq AI
+              </button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Article Title & Slug</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Published Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Article Title & Slug</th>
+                  <th>Category</th>
+                  <th>Author</th>
+                  <th>Published Date</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {filteredArticles.map((art) => (
-                  <TableRow key={art.slug || art.id}>
-                    <TableCell>
-                      <div className="font-semibold text-zinc-900 text-sm">
+                  <tr key={art.slug || art.id}>
+                    <td>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
                         {art.heading}
                       </div>
-                      <div className="text-xs text-indigo-600 font-mono">
+                      <div className="admin-code-font" style={{ color: '#6366f1', marginTop: '2px' }}>
                         /blog/{art.slug}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="purple">{art.category || 'Travel Insights'}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-zinc-600">
-                      <div className="flex items-center gap-1.5">
-                        <User className="size-3.5 text-zinc-500" />
+                    </td>
+                    <td>
+                      <span className="admin-badge admin-badge-purple">{art.category || 'Travel Insights'}</span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569' }}>
+                        <User size={13} color="#94a3b8" />
                         {art.author || 'Elena Rostova'}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-xs text-zinc-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="size-3.5 text-zinc-500" />
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b' }}>
+                        <Calendar size={13} color="#94a3b8" />
                         {art.date || art.created_at?.split('T')[0] || '2026-08-29'}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                         <a
                           href={`/blog/${art.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs transition-colors"
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
                         >
-                          <Eye className="size-3" /> View
+                          <Eye size={12} /> View
                         </a>
                         <button
                           onClick={() => handleEditArticle(art)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs transition-colors cursor-pointer"
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
                         >
-                          <Edit className="size-3" /> Edit
+                          <Edit size={12} /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(art.slug)}
-                          className="inline-flex items-center p-1.5 rounded bg-red-50/40 hover:bg-red-100/60 text-red-600 text-xs transition-colors cursor-pointer"
+                          className="admin-btn admin-btn-danger admin-btn-sm"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2 size={12} />
                         </button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Groq AI Blog Generator Dialog */}
-      <Dialog
-        open={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        title="✨ Generate SEO Travel Article with Groq AI"
-        description="Powered by Groq's ultra-fast Llama 3.3 70B model. Generates full H2 sections, meta tags, and structured data."
-      >
-        <form onSubmit={handleGenerateBlog} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Article Topic / Focus Subject *
-            </label>
-            <Input
-              value={aiTopic}
-              onChange={(e) => setAiTopic(e.target.value)}
-              placeholder="e.g. How Luxury Eco-Resorts Triple Direct Bookings with Frictionless Mobile UX"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Editorial Tone
-              </label>
-              <Input
-                value={aiTone}
-                onChange={(e) => setAiTone(e.target.value)}
-                placeholder="Luxury & Authoritative"
-              />
+      {/* Groq AI Blog Generator Modal */}
+      {isAiModalOpen && (
+        <div className="admin-dialog-overlay" onClick={() => setIsAiModalOpen(false)}>
+          <div className="admin-dialog-container" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-dialog-header">
+              <div>
+                <h3 className="admin-card-title">✨ Generate SEO Travel Article with Groq AI</h3>
+                <div className="admin-card-subtitle">
+                  Select your preferred LLM model and generate comprehensive structured articles.
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAiModalOpen(false)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
             </div>
+            <div className="admin-dialog-body">
+              <form onSubmit={handleGenerateBlog} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Article Topic / Focus Subject *</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                    placeholder="e.g. How Luxury Eco-Resorts Triple Direct Bookings with Frictionless Mobile UX"
+                    required
+                  />
+                </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Target Audience
-              </label>
-              <Input
-                value={aiAudience}
-                onChange={(e) => setAiAudience(e.target.value)}
-                placeholder="Luxury Resort Directors"
-              />
+                <div className="admin-grid-2">
+                  <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                    <div className="admin-form-label">
+                      <span>Editorial Tone</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      value={aiTone}
+                      onChange={(e) => setAiTone(e.target.value)}
+                      placeholder="Luxury & Authoritative"
+                    />
+                  </div>
+
+                  <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                    <div className="admin-form-label">
+                      <span>Target Audience</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="admin-input"
+                      value={aiAudience}
+                      onChange={(e) => setAiAudience(e.target.value)}
+                      placeholder="Luxury Resort Directors"
+                    />
+                  </div>
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>SEO Keywords to Target (Comma separated)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={aiKeywords}
+                    onChange={(e) => setAiKeywords(e.target.value)}
+                    placeholder="direct bookings, boutique resort, hospitality UX, CRS integration"
+                  />
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Cpu size={14} color="#7e22ce" /> Groq LLM Model
+                    </span>
+                    <span className="admin-code-font" style={{ color: '#7e22ce' }}>
+                      {selectedModel}
+                    </span>
+                  </div>
+                  <select
+                    className="admin-select"
+                    value={selectedModel}
+                    onChange={(e) => {
+                      setSelectedModel(e.target.value);
+                      setStoredGroqModel(e.target.value);
+                    }}
+                  >
+                    <optgroup label="Meta Llama">
+                      <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k)</option>
+                      <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                      <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Ultra Fast)</option>
+                      <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
+                    </optgroup>
+                    <optgroup label="OpenAI">
+                      <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+                      <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+                    </optgroup>
+                    <optgroup label="Alibaba Cloud (Qwen)">
+                      <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+                      <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
+                    </optgroup>
+                    <optgroup label="DeepSeek & Mistral">
+                      <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
+                      <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                      <option value="gemma2-9b-it">gemma2-9b-it</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '8px' }}>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-outline"
+                    onClick={() => setIsAiModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="admin-btn admin-btn-gradient"
+                    disabled={isGenerating}
+                  >
+                    <Sparkles size={14} /> {isGenerating ? 'Generating...' : 'Generate Article Now'}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              SEO Keywords to Target (Comma separated)
-            </label>
-            <Input
-              value={aiKeywords}
-              onChange={(e) => setAiKeywords(e.target.value)}
-              placeholder="direct bookings, boutique resort, hospitality UX, CRS integration"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-zinc-600 flex items-center gap-1.5">
-                <Cpu className="size-3.5 text-purple-600" /> Groq LLM Model
-              </label>
-              <span className="text-[11px] font-mono text-purple-600">
-                {selectedModel}
-              </span>
-            </div>
-            <select
-              value={selectedModel}
-              onChange={(e) => {
-                setSelectedModel(e.target.value);
-                setStoredGroqModel(e.target.value);
-              }}
-              className="flex h-9 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
-            >
-              <optgroup label="Meta Llama">
-                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k)</option>
-                <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
-                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Ultra Fast)</option>
-                <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
-              </optgroup>
-              <optgroup label="OpenAI">
-                <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
-                <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
-              </optgroup>
-              <optgroup label="Alibaba Cloud (Qwen)">
-                <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
-                <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
-              </optgroup>
-              <optgroup label="DeepSeek & Mistral">
-                <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
-                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-                <option value="gemma2-9b-it">gemma2-9b-it</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsAiModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="gradient"
-              loading={isGenerating}
-            >
-              <Sparkles className="size-4" /> Generate Article Now
-            </Button>
-          </div>
-        </form>
-      </Dialog>
-
-      {/* Edit / Review Article Dialog */}
-      <Dialog
-        open={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        title={editingArticle.heading ? `Edit Article: ${editingArticle.heading}` : 'Create New Article'}
-        description="Review, modify, and publish this article to Cloudflare D1."
-      >
-        <div className="space-y-4">
-          {/* Title & Slug */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Article Heading (`heading` / H1) *
-              </label>
-              <Input
-                value={editingArticle.heading}
-                onChange={(e) => setEditingArticle({ ...editingArticle, heading: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                URL Slug (`slug`) *
-              </label>
-              <Input
-                value={editingArticle.slug}
-                onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })}
-                placeholder="url-safe-kebab-case"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Meta Title & Meta Description */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                SEO Meta Title (`meta_heading`)
-              </label>
-              <Input
-                value={editingArticle.meta_heading || ''}
-                onChange={(e) => setEditingArticle({ ...editingArticle, meta_heading: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Meta Description (`meta_data`)
-              </label>
-              <Input
-                value={editingArticle.meta_data || ''}
-                onChange={(e) => setEditingArticle({ ...editingArticle, meta_data: e.target.value })}
-              />
-            </div>
-          </div>
-
-          {/* Category, Author, Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Category
-              </label>
-              <Input
-                value={editingArticle.category || ''}
-                onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Author
-              </label>
-              <Input
-                value={editingArticle.author || ''}
-                onChange={(e) => setEditingArticle({ ...editingArticle, author: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
-                Date (YYYY-MM-DD)
-              </label>
-              <Input
-                value={editingArticle.date || ''}
-                onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
-              />
-            </div>
-          </div>
-
-          {/* Featured Image URL */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Featured Image URL (`image_url`)
-            </label>
-            <Input
-              value={editingArticle.image_url || ''}
-              onChange={(e) => setEditingArticle({ ...editingArticle, image_url: e.target.value })}
-            />
-          </div>
-
-          {/* Executive Summary */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Executive Summary (`description`)
-            </label>
-            <Textarea
-              value={editingArticle.description || ''}
-              onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
-              className="min-h-[60px]"
-            />
-          </div>
-
-          {/* Narrative Paragraph */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Intro Narrative Paragraph (`paragraph`)
-            </label>
-            <Textarea
-              value={editingArticle.paragraph || ''}
-              onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
-              className="min-h-[70px]"
-            />
-          </div>
-
-          {/* Quote */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Highlight Quote (`useful_quote`)
-            </label>
-            <Input
-              value={editingArticle.useful_quote || ''}
-              onChange={(e) => setEditingArticle({ ...editingArticle, useful_quote: e.target.value })}
-            />
-          </div>
-
-          {/* H2 Sections */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              H2 Sections (`sections_h2_para` JSON Array)
-            </label>
-            <Textarea
-              value={rawSectionsJson}
-              onChange={(e) => setRawSectionsJson(e.target.value)}
-              className="font-mono text-xs min-h-[120px]"
-            />
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-600">
-              Tags (`tags` JSON Array)
-            </label>
-            <Input
-              value={rawTagsJson}
-              onChange={(e) => setRawTagsJson(e.target.value)}
-              className="font-mono text-xs"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2.5 pt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditorOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="gradient"
-              onClick={handleSaveArticle}
-              loading={isSaving}
-            >
-              <CheckCircle2 className="size-4" /> Publish to Cloudflare D1
-            </Button>
           </div>
         </div>
-      </Dialog>
+      )}
+
+      {/* Edit / Review Article Modal */}
+      {isEditorOpen && (
+        <div className="admin-dialog-overlay" onClick={() => setIsEditorOpen(false)}>
+          <div className="admin-dialog-container" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-dialog-header">
+              <div>
+                <h3 className="admin-card-title">
+                  {editingArticle.heading ? `Edit Article: ${editingArticle.heading}` : 'Create New Article'}
+                </h3>
+                <div className="admin-card-subtitle">Review, modify, and publish this article to Cloudflare D1.</div>
+              </div>
+              <button
+                onClick={() => setIsEditorOpen(false)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="admin-dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Title & Slug */}
+              <div className="admin-grid-2">
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Article Heading (`heading` / H1) *</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.heading}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, heading: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>URL Slug (`slug`) *</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.slug}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })}
+                    placeholder="url-safe-kebab-case"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Meta Title & Meta Description */}
+              <div className="admin-grid-2">
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>SEO Meta Title (`meta_heading`)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.meta_heading || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, meta_heading: e.target.value })}
+                  />
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Meta Description (`meta_data`)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.meta_data || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, meta_data: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Category, Author, Date */}
+              <div className="admin-grid-3">
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Category</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.category || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
+                  />
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Author</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.author || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, author: e.target.value })}
+                  />
+                </div>
+
+                <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                  <div className="admin-form-label">
+                    <span>Date (YYYY-MM-DD)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    value={editingArticle.date || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Featured Image URL */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Featured Image URL (`image_url`)</span>
+                </div>
+                <input
+                  type="text"
+                  className="admin-input"
+                  value={editingArticle.image_url || ''}
+                  onChange={(e) => setEditingArticle({ ...editingArticle, image_url: e.target.value })}
+                />
+              </div>
+
+              {/* Executive Summary */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Executive Summary (`description`)</span>
+                </div>
+                <textarea
+                  className="admin-textarea"
+                  value={editingArticle.description || ''}
+                  onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
+                  style={{ minHeight: '60px' }}
+                />
+              </div>
+
+              {/* Narrative Paragraph */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Intro Narrative Paragraph (`paragraph`)</span>
+                </div>
+                <textarea
+                  className="admin-textarea"
+                  value={editingArticle.paragraph || ''}
+                  onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
+                  style={{ minHeight: '70px' }}
+                />
+              </div>
+
+              {/* Highlight Quote */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Highlight Quote (`useful_quote`)</span>
+                </div>
+                <input
+                  type="text"
+                  className="admin-input"
+                  value={editingArticle.useful_quote || ''}
+                  onChange={(e) => setEditingArticle({ ...editingArticle, useful_quote: e.target.value })}
+                />
+              </div>
+
+              {/* H2 Sections */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>H2 Sections (`sections_h2_para` JSON Array)</span>
+                </div>
+                <textarea
+                  className="admin-textarea admin-code-font"
+                  value={rawSectionsJson}
+                  onChange={(e) => setRawSectionsJson(e.target.value)}
+                  style={{ minHeight: '120px' }}
+                />
+              </div>
+
+              {/* Tags */}
+              <div className="admin-form-group" style={{ marginBottom: 0 }}>
+                <div className="admin-form-label">
+                  <span>Tags (`tags` JSON Array)</span>
+                </div>
+                <input
+                  type="text"
+                  className="admin-input admin-code-font"
+                  value={rawTagsJson}
+                  onChange={(e) => setRawTagsJson(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '8px' }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-outline"
+                  onClick={() => setIsEditorOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-gradient"
+                  onClick={handleSaveArticle}
+                  disabled={isSaving}
+                >
+                  <CheckCircle2 size={14} /> {isSaving ? 'Publishing...' : 'Publish to Cloudflare D1'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

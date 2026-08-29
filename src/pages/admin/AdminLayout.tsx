@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import './main-dashboard.css';
 import { MetaDashboard } from './MetaDashboard';
 import { BlogDashboard } from './BlogDashboard';
 import { SettingsDashboard } from './SettingsDashboard';
-import { TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { AdminButton as Button } from '../../components/ui/admin-button';
-import { Badge } from '../../components/ui/input';
 import {
   Layers,
   Sparkles,
@@ -60,71 +58,69 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col antialiased">
+    <div className="admin-shell">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-40 h-16 border-b border-zinc-200 bg-white/95 backdrop-blur px-6 flex items-center justify-between shadow-sm">
+      <header className="admin-header">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-md">
+        <div className="admin-brand">
+          <div className="admin-brand-icon">
             R
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-base text-zinc-900 tracking-tight">Revlytics</span>
-            <Badge variant="purple" className="text-[10px] py-0 px-2">Admin D1</Badge>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="admin-brand-title">Revlytics</span>
+            <span className="admin-badge admin-badge-purple">Admin D1</span>
           </div>
         </div>
 
         {/* Center Tabs */}
-        <TabsList className="bg-zinc-50 border border-zinc-200">
-          <TabsTrigger
-            active={activeTab === 'meta'}
+        <div className="admin-tabs">
+          <button
+            className={`admin-tab-btn ${activeTab === 'meta' ? 'active' : ''}`}
             onClick={() => setActiveTab('meta')}
           >
-            <Search className="size-3.5" /> Page Meta & Services
-          </TabsTrigger>
-          <TabsTrigger
-            active={activeTab === 'blogs'}
+            <Search size={14} /> Page Meta & Services
+          </button>
+          <button
+            className={`admin-tab-btn ${activeTab === 'blogs' ? 'active' : ''}`}
             onClick={() => setActiveTab('blogs')}
           >
-            <BookOpen className="size-3.5" /> Blogs & AI Studio
-          </TabsTrigger>
-          <TabsTrigger
-            active={activeTab === 'settings'}
+            <BookOpen size={14} /> Blogs & AI Studio
+          </button>
+          <button
+            className={`admin-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
-            <Settings className="size-3.5" /> Settings
-          </TabsTrigger>
-        </TabsList>
+            <Settings size={14} /> Settings
+          </button>
+        </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="admin-header-actions">
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-600 hover:text-zinc-900 bg-zinc-50 border border-zinc-200 transition-colors"
+            className="admin-pill-link"
           >
-            <ExternalLink className="size-3" /> View Website
+            <ExternalLink size={13} /> View Website
           </a>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-zinc-600 bg-zinc-50 border border-zinc-200">
-            <div className="size-2 rounded-full bg-emerald-500" />
+          <div className="admin-user-tag">
+            <div className="admin-status-dot" />
             <span>{username}</span>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={handleLogout}
-            className="text-red-600 hover:text-red-700 hover:bg-red-100/40 text-xs px-2"
+            className="admin-logout-btn"
           >
-            <LogOut className="size-3.5 mr-1" /> Logout
-          </Button>
+            <LogOut size={13} /> Logout
+          </button>
         </div>
       </header>
 
       {/* Main Content Workspace */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <main className="admin-main">
         {activeTab === 'meta' && <MetaDashboard />}
         {activeTab === 'blogs' && <BlogDashboard />}
         {activeTab === 'settings' && <SettingsDashboard />}

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
-import { AdminButton as Button } from '../../components/ui/admin-button';
-import { Input, Textarea, Badge } from '../../components/ui/input';
+import './main-dashboard.css';
 import { Sparkles, Save, CheckCircle2, Search, Code2, AlertCircle, RefreshCw, Cpu } from 'lucide-react';
 import { getMetadataForPath } from '../../utils/seoData';
 import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
@@ -245,29 +243,29 @@ export const MetaDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Top Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="admin-page-header">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">
+          <h2 className="admin-page-title">
             Page Metadata & Service Details
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="admin-page-desc">
             Manage live SEO meta tags, Google SERP snippet previews, and Cloudflare D1 `service_details`.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
           {/* Model Selector */}
-          <div className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-md px-2 py-1">
-            <Cpu className="size-3.5 text-purple-600" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 8px' }}>
+            <Cpu size={14} color="#7e22ce" />
             <select
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value);
                 setStoredGroqModel(e.target.value);
               }}
-              className="bg-transparent text-xs text-zinc-700 border-none outline-none cursor-pointer pr-1"
+              style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#0f172a', outline: 'none', cursor: 'pointer' }}
             >
               <optgroup label="Meta Llama">
                 <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
@@ -291,61 +289,59 @@ export const MetaDashboard: React.FC = () => {
             </select>
           </div>
 
-          <Button
-            variant="outline"
+          <button
+            className="admin-btn admin-btn-outline"
             onClick={handleAIGenerate}
-            loading={aiGenerating}
-            className="border-indigo-200 text-indigo-600 hover:bg-indigo-100/40"
+            disabled={aiGenerating}
           >
-            <Sparkles className="size-4 text-indigo-600" /> Generate with Groq AI
-          </Button>
+            <Sparkles size={14} color="#6366f1" /> {aiGenerating ? 'Generating...' : 'Generate with Groq AI'}
+          </button>
 
-          <Button
-            variant="gradient"
+          <button
+            className="admin-btn admin-btn-gradient"
             onClick={handleSave}
-            loading={saveStatus === 'saving'}
+            disabled={saveStatus === 'saving'}
           >
             {saveStatus === 'saved' ? (
               <>
-                <CheckCircle2 className="size-4" /> Saved to D1
+                <CheckCircle2 size={14} /> Saved to D1
               </>
             ) : (
               <>
-                <Save className="size-4" /> Save Changes
+                <Save size={14} /> Save Changes
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="flex items-center gap-2 rounded-md bg-red-50/50 p-3 text-xs text-red-600 border border-red-200">
-          <AlertCircle className="size-4 shrink-0" />
+        <div className="admin-alert-error">
+          <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="admin-layout-sidebar">
         {/* Page Selector Sidebar */}
-        <Card className="lg:col-span-1 border-zinc-200 bg-white shadow-sm h-fit">
-          <CardHeader className="p-4">
-            <CardTitle className="text-sm">Select Page</CardTitle>
-            <CardDescription className="text-xs">Choose route to edit</CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 pt-0 space-y-3">
+        <div className="admin-card" style={{ height: 'fit-content' }}>
+          <div className="admin-card-header">
+            <div>
+              <h3 className="admin-card-title">Select Page</h3>
+              <div className="admin-card-subtitle">Choose route to edit</div>
+            </div>
+          </div>
+          <div className="admin-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Category Toggle */}
-            <div className="grid grid-cols-2 gap-1 bg-zinc-50 p-1 rounded-lg border border-zinc-200">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <button
                 onClick={() => {
                   setSelectedCategory('services');
                   setSelectedSlug(serviceSlugs[0].slug);
                 }}
-                className={`py-1 text-xs font-medium rounded-md transition-colors ${
-                  selectedCategory === 'services'
-                    ? 'bg-zinc-100 text-white'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
+                className={`admin-tab-btn ${selectedCategory === 'services' ? 'active' : ''}`}
+                style={{ justifyContent: 'center' }}
               >
                 Services (10)
               </button>
@@ -354,82 +350,78 @@ export const MetaDashboard: React.FC = () => {
                   setSelectedCategory('core');
                   setSelectedSlug(corePageSlugs[0].slug);
                 }}
-                className={`py-1 text-xs font-medium rounded-md transition-colors ${
-                  selectedCategory === 'core'
-                    ? 'bg-zinc-100 text-white'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
+                className={`admin-tab-btn ${selectedCategory === 'core' ? 'active' : ''}`}
+                style={{ justifyContent: 'center' }}
               >
                 Core Pages (5)
               </button>
             </div>
 
             {/* List */}
-            <div className="space-y-1 max-h-[480px] overflow-y-auto">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '480px', overflowY: 'auto' }}>
               {(selectedCategory === 'services' ? serviceSlugs : corePageSlugs).map((p) => {
                 const isActive = selectedSlug === p.slug;
                 return (
                   <button
                     key={p.slug}
                     onClick={() => setSelectedSlug(p.slug)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-md text-xs text-left transition-colors cursor-pointer ${
-                      isActive
-                        ? 'bg-indigo-50/40 border border-indigo-200 text-white font-medium'
-                        : 'text-zinc-500 hover:bg-zinc-100/40 hover:text-zinc-700 border border-transparent'
-                    }`}
+                    className={`admin-page-item ${isActive ? 'active' : ''}`}
                   >
-                    <span className="truncate">{p.name}</span>
-                    {isActive && <div className="size-1.5 rounded-full bg-indigo-500 shrink-0" />}
+                    <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{p.name}</span>
+                    {isActive && <div className="admin-status-dot" style={{ backgroundColor: '#6366f1' }} />}
                   </button>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Editor Area */}
-        <div className="lg:col-span-3 space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* SERP Google Preview Card */}
-          <Card className="border-zinc-200 bg-white shadow-sm">
-            <CardHeader className="p-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Search className="size-4 text-indigo-600" /> Google Search SERP Snippet Preview
-              </CardTitle>
-              <Badge variant="outline" className="text-[10px]">SERP Preview</Badge>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="p-4 rounded-lg bg-white text-zinc-900 space-y-1 shadow-sm font-sans">
-                <div className="text-xs text-zinc-600 flex items-center gap-1">
-                  <span>https://www.revlytics.in › {selectedCategory === 'services' ? `services › ${selectedSlug}` : selectedSlug}</span>
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Search size={16} color="#6366f1" />
+                <h3 className="admin-card-title">Google Search SERP Snippet Preview</h3>
+              </div>
+              <span className="admin-badge admin-badge-outline">SERP Preview</span>
+            </div>
+            <div className="admin-card-body">
+              <div className="admin-serp-box">
+                <div className="admin-serp-url">
+                  https://www.revlytics.in › {selectedCategory === 'services' ? `services › ${selectedSlug}` : selectedSlug}
                 </div>
-                <div className="text-base text-blue-800 font-medium hover:underline cursor-pointer">
+                <div className="admin-serp-title">
                   {formData.meta_title || 'Revlytics | High-Performance Travel Digital Agency'}
                 </div>
-                <div className="text-xs text-zinc-700 leading-relaxed">
+                <div className="admin-serp-snippet">
                   {formData.meta_description || 'Revlytics is a travel digital acceleration agency helping luxury resorts scale direct bookings.'}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Form Fields: Meta Title, Description, Keywords */}
-          <Card className="border-zinc-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle>Core SEO & OpenGraph Meta Tags</CardTitle>
-              <CardDescription>Target character counts ensure ideal search engine display.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <div>
+                <h3 className="admin-card-title">Core SEO & OpenGraph Meta Tags</h3>
+                <div className="admin-card-subtitle">Target character counts ensure ideal search engine display.</div>
+              </div>
+            </div>
+            <div className="admin-card-body">
               {/* Meta Title */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-600">
-                    {'SEO Meta Title Tag (<title>)'}
-                  </label>
-                  <span className={`text-[11px] font-mono ${formData.meta_title.length > 60 ? 'text-red-600' : 'text-emerald-600'}`}>
+              <div className="admin-form-group">
+                <div className="admin-form-label">
+                  <span>{'SEO Meta Title Tag (<title>)'}</span>
+                  <span className="admin-code-font" style={{ color: formData.meta_title.length > 60 ? '#dc2626' : '#16a34a' }}>
                     {formData.meta_title.length} / 60 chars (Ideal: 50-60)
                   </span>
                 </div>
-                <Input
+                <input
+                  type="text"
+                  className="admin-input"
                   value={formData.meta_title}
                   onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
                   placeholder="Service Name | Revlytics"
@@ -437,79 +429,86 @@ export const MetaDashboard: React.FC = () => {
               </div>
 
               {/* Meta Description */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-600">
-                    {'Meta Description (<meta name="description">)'}
-                  </label>
-                  <span className={`text-[11px] font-mono ${formData.meta_description.length > 165 || formData.meta_description.length < 120 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              <div className="admin-form-group">
+                <div className="admin-form-label">
+                  <span>{'Meta Description (<meta name="description">)'}</span>
+                  <span className="admin-code-font" style={{ color: formData.meta_description.length > 165 || formData.meta_description.length < 120 ? '#d97706' : '#16a34a' }}>
                     {formData.meta_description.length} / 160 chars (Ideal: 140-160)
                   </span>
                 </div>
-                <Textarea
+                <textarea
+                  className="admin-textarea"
                   value={formData.meta_description}
                   onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
                   placeholder="Compelling description summarizing the offering and encouraging direct booking inquiries..."
-                  className="min-h-[70px]"
+                  style={{ minHeight: '70px' }}
                 />
               </div>
 
               {/* Keywords & OG Image */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Keywords
-                  </label>
-                  <Input
+              <div className="admin-grid-2">
+                <div className="admin-form-group">
+                  <div className="admin-form-label">
+                    <span>Keywords</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
                     value={formData.meta_keywords}
                     onChange={(e) => setFormData({ ...formData, meta_keywords: e.target.value })}
                     placeholder="hospitality, direct bookings, resort branding"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-600">
-                    OpenGraph Image URL (Absolute HTTPS)
-                  </label>
-                  <Input
+                <div className="admin-form-group">
+                  <div className="admin-form-label">
+                    <span>OpenGraph Image URL (Absolute HTTPS)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
                     value={formData.og_image}
                     onChange={(e) => setFormData({ ...formData, og_image: e.target.value })}
                     placeholder="https://images.pexels.com/..."
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* D1 `service_details` Specific Columns (If category is service) */}
           {selectedCategory === 'services' && (
-            <Card className="border-zinc-200 bg-white shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <div className="admin-card">
+              <div className="admin-card-header">
                 <div>
-                  <CardTitle>Cloudflare D1 `service_details` Schema Columns</CardTitle>
-                  <CardDescription>
+                  <h3 className="admin-card-title">Cloudflare D1 `service_details` Schema Columns</h3>
+                  <div className="admin-card-subtitle">
                     Full 21-column database mapping for `{formData.slug}`
-                  </CardDescription>
+                  </div>
                 </div>
-                <Badge variant="purple">service_details</Badge>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                <span className="admin-badge admin-badge-purple">service_details</span>
+              </div>
+              <div className="admin-card-body">
                 {/* Service Name & Category */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Service Name (`service_name`)
-                    </label>
-                    <Input
+                <div className="admin-grid-2">
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Service Name (`service_name`)</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={formData.service_name}
                       onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Category (`category`)
-                    </label>
-                    <Input
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Category (`category`)</span>
+                    </div>
+                    <input
+                      type="text"
+                      className="admin-input"
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     />
@@ -517,11 +516,12 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Summary */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Executive Summary (`summary`)
-                  </label>
-                  <Textarea
+                <div className="admin-form-group">
+                  <div className="admin-form-label">
+                    <span>Executive Summary (`summary`)</span>
+                  </div>
+                  <textarea
+                    className="admin-textarea"
                     value={formData.summary}
                     onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
                     placeholder="Summary paragraph displayed in hero and overview..."
@@ -529,98 +529,102 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Features & Approach Title */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Features (`features` JSON)
-                    </label>
-                    <Textarea
+                <div className="admin-grid-2">
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Features (`features` JSON)</span>
+                    </div>
+                    <textarea
+                      className="admin-textarea admin-code-font"
                       value={formData.features}
                       onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                      className="font-mono text-xs"
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Approach Steps (`approach_steps` JSON)
-                    </label>
-                    <Textarea
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Approach Steps (`approach_steps` JSON)</span>
+                    </div>
+                    <textarea
+                      className="admin-textarea admin-code-font"
                       value={formData.approach_steps}
                       onChange={(e) => setFormData({ ...formData, approach_steps: e.target.value })}
-                      className="font-mono text-xs"
                     />
                   </div>
                 </div>
 
                 {/* Process Steps & Why Choose */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Process Steps (`process_steps` JSON)
-                    </label>
-                    <Textarea
+                <div className="admin-grid-2">
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Process Steps (`process_steps` JSON)</span>
+                    </div>
+                    <textarea
+                      className="admin-textarea admin-code-font"
                       value={formData.process_steps}
                       onChange={(e) => setFormData({ ...formData, process_steps: e.target.value })}
-                      className="font-mono text-xs"
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-600">
-                      Why Choose Items (`why_choose_items` JSON)
-                    </label>
-                    <Textarea
+                  <div className="admin-form-group">
+                    <div className="admin-form-label">
+                      <span>Why Choose Items (`why_choose_items` JSON)</span>
+                    </div>
+                    <textarea
+                      className="admin-textarea admin-code-font"
                       value={formData.why_choose_items}
                       onChange={(e) => setFormData({ ...formData, why_choose_items: e.target.value })}
-                      className="font-mono text-xs"
                     />
                   </div>
                 </div>
 
                 {/* Service Specific FAQs */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Service Specific FAQs (`faqs` JSON)
-                  </label>
-                  <Textarea
+                <div className="admin-form-group">
+                  <div className="admin-form-label">
+                    <span>Service Specific FAQs (`faqs` JSON)</span>
+                  </div>
+                  <textarea
+                    className="admin-textarea admin-code-font"
                     value={formData.faqs}
                     onChange={(e) => setFormData({ ...formData, faqs: e.target.value })}
-                    className="font-mono text-xs"
                   />
                 </div>
 
                 {/* Pexels Query 2 */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-600">
-                    Pexels Visual Stream Query (`pexels_query_2`)
-                  </label>
-                  <Input
+                <div className="admin-form-group">
+                  <div className="admin-form-label">
+                    <span>Pexels Visual Stream Query (`pexels_query_2`)</span>
+                  </div>
+                  <input
+                    type="text"
+                    className="admin-input"
                     value={formData.pexels_query_2}
                     onChange={(e) => setFormData({ ...formData, pexels_query_2: e.target.value })}
                     placeholder="e.g. luxury resort hotel pool tropical"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Schema.org JSON-LD Editor */}
-          <Card className="border-zinc-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Code2 className="size-4 text-indigo-600" /> Schema.org JSON-LD Structured Data
-              </CardTitle>
-              <CardDescription>{'Injected directly into page <head> for rich Google search result badges.'}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Code2 size={16} color="#6366f1" />
+                <h3 className="admin-card-title">Schema.org JSON-LD Structured Data</h3>
+              </div>
+              <div className="admin-card-subtitle">{'Injected directly into page <head> for rich Google search result badges.'}</div>
+            </div>
+            <div className="admin-card-body">
+              <textarea
+                className="admin-textarea admin-code-font"
                 value={formData.schema_markup}
                 onChange={(e) => setFormData({ ...formData, schema_markup: e.target.value })}
-                className="font-mono text-xs min-h-[100px]"
+                style={{ minHeight: '100px' }}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
