@@ -10,6 +10,7 @@ import {
   ServiceDetailsSlider,
   ServiceDetailsHorizontalScroll,
   Contact1,
+  SEO,
 } from '../components';
 
 export interface ServiceDetailsProps {
@@ -58,73 +59,26 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({ slug: propSlug }) => {
     };
   }, [currentSlug]);
 
-  // Inject dynamic SEO Meta Tags and Schema.org JSON-LD
-  useEffect(() => {
-    if (!detail) return;
-
-    // 1. Document Title
-    const originalTitle = document.title;
-    if (detail.meta_title) {
-      document.title = detail.meta_title;
-    } else if (detail.service_name) {
-      document.title = `${detail.service_name} | Revlytics`;
-    }
-
-    // Helper function to safely update or append meta tags
-    const setMetaTag = (selector: string, attr: string, value?: string) => {
-      if (!value) return;
-      let el = document.querySelector(selector);
-      if (!el) {
-        el = document.createElement('meta');
-        if (selector.includes('name=')) {
-          const name = selector.replace(/meta\[name=['"]?|['"]?\]/g, '');
-          el.setAttribute('name', name);
-        } else if (selector.includes('property=')) {
-          const prop = selector.replace(/meta\[property=['"]?|['"]?\]/g, '');
-          el.setAttribute('property', prop);
-        }
-        document.head.appendChild(el);
-      }
-      el.setAttribute(attr, value);
-    };
-
-    // 2. Meta Description & Keywords
-    setMetaTag('meta[name="description"]', 'content', detail.meta_description);
-    setMetaTag('meta[name="keywords"]', 'content', detail.meta_keywords);
-
-    // 3. OpenGraph Tags
-    setMetaTag('meta[property="og:title"]', 'content', detail.meta_title || detail.service_name);
-    setMetaTag('meta[property="og:description"]', 'content', detail.meta_description);
-    if (detail.og_image) {
-      setMetaTag('meta[property="og:image"]', 'content', detail.og_image);
-    }
-
-    // 4. Schema.org JSON-LD Structured Data
-    let schemaScript = document.getElementById('service-schema-markup') as HTMLScriptElement | null;
-    if (detail.schema_markup) {
-      const schemaString =
-        typeof detail.schema_markup === 'string'
-          ? detail.schema_markup
-          : JSON.stringify(detail.schema_markup, null, 2);
-
-      if (!schemaScript) {
-        schemaScript = document.createElement('script');
-        schemaScript.id = 'service-schema-markup';
-        schemaScript.type = 'application/ld+json';
-        document.head.appendChild(schemaScript);
-      }
-      schemaScript.textContent = schemaString;
-    }
-
-    return () => {
-      document.title = originalTitle;
-      const script = document.getElementById('service-schema-markup');
-      if (script) script.remove();
-    };
-  }, [detail]);
+  const serviceTitle = detail?.meta_title
+    ? detail.meta_title
+    : detail?.service_name
+    ? `${detail.service_name} | Revlytics`
+    : 'Travel Digital Service | Revlytics';
+  const serviceDescription =
+    detail?.meta_description ||
+    'Transform your travel brand with Revlytics high-performance digital acceleration, direct booking UX, and custom hospitality solutions.';
 
   return (
     <>
+      <SEO
+        title={serviceTitle}
+        description={serviceDescription}
+        keywords={detail?.meta_keywords || 'hospitality service, travel digital transformation, resort direct booking'}
+        ogType="service"
+        ogImage={detail?.og_image || detail?.image_url}
+        schema={detail?.schema_markup}
+      />
+
       {/* Service Details Header */}
       <ServiceDetailsHero slug={currentSlug} />
 

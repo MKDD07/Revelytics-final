@@ -80,3 +80,8 @@ export type { FlowingSvgTrackProps } from './home/flowing-svg-track';
 export { default as VideoScrollShowcase } from './home/video-scroll-showcase';
 export { default as DotMatrixLoader } from './ui/dot-matrix-loader';
 export type { DotMatrixLoaderProps } from './ui/dot-matrix-loader';
+
+// SEO & Metadata Component
+export { default as SEO } from './seo/SEO';
+export type { SEOProps } from './seo/SEO';
+

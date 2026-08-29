@@ -124,6 +124,453 @@ async function verifyApiKey(request: Request, env: Env): Promise<{ valid: boolea
   return { valid: false };
 }
 
+// Sitemap & Robots Handlers (Connected to Cloudflare D1 Database)
+async function handleRobots(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const robotsTxt = `User-agent: *
+Allow: /
+Allow: /services
+Allow: /services/*
+Allow: /blog
+Allow: /blog/*
+Allow: /faq
+Allow: /contact
+
+Sitemap: ${origin}/sitemap.xml`;
+  return new Response(robotsTxt, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
+/**
+ * Dynamic Complete Sitemap containing all static pages + D1 services + D1 blogs in a single <urlset>
+ */
+async function handleDynamicSitemapXml(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const today = new Date().toISOString().split('T')[0];
+
+  const toDateStr = (val: any) => {
+    if (!val) return today;
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return today;
+      return d.toISOString().split('T')[0];
+    } catch {
+      return today;
+    }
+  };
+
+  // 1. Static Core Pages
+  const staticPages = [
+    { loc: `${origin}/`, priority: '1.0', changefreq: 'daily', lastmod: today },
+    { loc: `${origin}/services`, priority: '0.95', changefreq: 'daily', lastmod: today },
+    { loc: `${origin}/blog`, priority: '0.90', changefreq: 'daily', lastmod: today },
+    { loc: `${origin}/faq`, priority: '0.80', changefreq: 'monthly', lastmod: today },
+    { loc: `${origin}/contact`, priority: '0.80', changefreq: 'monthly', lastmod: today },
+  ];
+
+  // 2. Dynamic Services from Cloudflare D1
+  const STATIC_SERVICES = [
+    'luxury-resort-branding',
+    'direct-booking-engine-ux',
+    'destination-marketing-seo',
+    'virtual-travel-experience-3d',
+    'hospitality-mobile-app-suite',
+    'ui-ux-design',
+    'web-development',
+    'brand-identity',
+    'digital-marketing',
+    'motion-graphics',
+  ];
+
+  let dbServices: any[] = [];
+  if (env?.DB) {
+    try {
+      const svcRes = await env.DB.prepare(
+        `SELECT service_slug, updated_at, created_at FROM services
+         WHERE is_active = 1 OR is_active IS NULL
+         ORDER BY sort_order ASC, id ASC`
+      ).all();
+      dbServices = svcRes?.results || [];
+    } catch (e) {
+      console.warn('D1 services query error in sitemap:', e);
+    }
+  }
+
+  const seenServiceSlugs = new Set(
+    dbServices.map((s: any) => s.service_slug || s.slug).filter(Boolean)
+  );
+
+  const serviceEntries = [
+    ...dbServices
+      .filter((s: any) => s && (s.service_slug || s.slug))
+      .map((s: any) => ({
+        loc: `${origin}/services/${s.service_slug || s.slug}`,
+        lastmod: toDateStr(s.updated_at || s.created_at),
+        changefreq: 'weekly',
+        priority: '0.85',
+      })),
+    ...STATIC_SERVICES
+      .filter((slug) => !seenServiceSlugs.has(slug))
+      .map((slug) => ({
+        loc: `${origin}/services/${slug}`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: '0.85',
+      })),
+  ];
+
+  // 3. Dynamic Blogs from Cloudflare D1 (rev_db + blogs tables)
+  const STATIC_BLOGS = [
+    'mastering-travel-digital-marketing-growth-guide',
+    'transforming-direct-hotel-bookings-2025',
+    'crafting-immersive-destination-web-experiences',
+    'building-modern-identities-for-boutique-resorts',
+  ];
+
+  let dbBlogs: any[] = [];
+  if (env?.DB) {
+    try {
+      const revRes = await env.DB.prepare(
+        `SELECT slug, updated_at, created_at, date FROM rev_db
+         WHERE slug IS NOT NULL AND slug != ''
+         ORDER BY id DESC`
+      ).all();
+      dbBlogs = revRes?.results || [];
+
+      if (dbBlogs.length === 0) {
+        const blogRes = await env.DB.prepare(
+          `SELECT slug, updated_at, created_at FROM blogs
+           WHERE is_published = 1 OR is_published IS NULL
+           ORDER BY id DESC`
+        ).all();
+        dbBlogs = blogRes?.results || [];
+      }
+    } catch (e) {
+      console.warn('D1 blogs query error in sitemap:', e);
+    }
+  }
+
+  const seenBlogSlugs = new Set<string>();
+  const blogEntries: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
+
+  for (const post of dbBlogs) {
+    if (post?.slug && !seenBlogSlugs.has(post.slug)) {
+      seenBlogSlugs.add(post.slug);
+      blogEntries.push({
+        loc: `${origin}/blog/${post.slug}`,
+        lastmod: toDateStr(post.updated_at || post.created_at || post.date),
+        changefreq: 'weekly',
+        priority: '0.80',
+      });
+    }
+  }
+
+  for (const slug of STATIC_BLOGS) {
+    if (!seenBlogSlugs.has(slug)) {
+      seenBlogSlugs.add(slug);
+      blogEntries.push({
+        loc: `${origin}/blog/${slug}`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: '0.80',
+      });
+    }
+  }
+
+  // Assemble full dynamic URL set
+  const allUrls = [...staticPages, ...serviceEntries, ...blogEntries];
+
+  const xmlEntries = allUrls
+    .map(
+      (item) => `  <url>
+    <loc>${item.loc}</loc>
+    <lastmod>${item.lastmod}</lastmod>
+    <changefreq>${item.changefreq}</changefreq>
+    <priority>${item.priority}</priority>
+  </url>`
+    )
+    .join('\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${xmlEntries}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
+async function handleSitemapIndex(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const today = new Date().toISOString().split('T')[0];
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${origin}/sitemap-pages.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${origin}/sitemap-services.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${origin}/sitemap-blogs.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+</sitemapindex>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
+async function handleSitemapPages(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const today = new Date().toISOString().split('T')[0];
+
+  const staticUrls = [
+    { loc: `${origin}/`, priority: '1.0', changefreq: 'daily' },
+    { loc: `${origin}/services`, priority: '0.95', changefreq: 'daily' },
+    { loc: `${origin}/blog`, priority: '0.90', changefreq: 'daily' },
+    { loc: `${origin}/faq`, priority: '0.80', changefreq: 'monthly' },
+    { loc: `${origin}/contact`, priority: '0.80', changefreq: 'monthly' },
+  ];
+
+  const urls = staticUrls
+    .map(
+      (page) =>
+`  <url>
+    <loc>${page.loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`
+    )
+    .join('\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
+async function handleSitemapServices(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const today = new Date().toISOString().split('T')[0];
+
+  const toDateStr = (val: any) => {
+    if (!val) return today;
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return today;
+      return d.toISOString().split('T')[0];
+    } catch {
+      return today;
+    }
+  };
+
+  const STATIC_SERVICES = [
+    'luxury-resort-branding',
+    'direct-booking-engine-ux',
+    'destination-marketing-seo',
+    'virtual-travel-experience-3d',
+    'hospitality-mobile-app-suite',
+    'ui-ux-design',
+    'web-development',
+    'brand-identity',
+    'digital-marketing',
+    'motion-graphics',
+  ];
+
+  let dbResults: any[] = [];
+  if (env?.DB) {
+    try {
+      const queryRes = await env.DB.prepare(
+        `SELECT service_slug, updated_at, created_at FROM services
+         WHERE is_active = 1 OR is_active IS NULL
+         ORDER BY sort_order ASC, id ASC`
+      ).all();
+      dbResults = queryRes?.results || [];
+    } catch (e) {
+      console.warn('sitemap-services query error:', e);
+    }
+  }
+
+  const dbSlugs = new Set(dbResults.map((s: any) => s.service_slug || s.slug).filter(Boolean));
+  const allEntries: Array<{ slug: string; lastmod: string }> = [
+    ...dbResults
+      .filter((svc: any) => svc && (svc.service_slug || svc.slug))
+      .map((svc: any) => ({
+        slug: svc.service_slug || svc.slug,
+        lastmod: toDateStr(svc.updated_at || svc.created_at),
+      })),
+    ...STATIC_SERVICES
+      .filter((s) => !dbSlugs.has(s))
+      .map((s) => ({ slug: s, lastmod: today })),
+  ];
+
+  const urls = allEntries
+    .map(
+      ({ slug, lastmod }) =>
+`  <url>
+    <loc>${origin}/services/${slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>`
+    )
+    .join('\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
+async function handleSitemapBlogs(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const origin =
+    url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')
+      ? url.origin
+      : 'https://www.revlytics.in';
+  const today = new Date().toISOString().split('T')[0];
+
+  const toDateStr = (val: any) => {
+    if (!val) return today;
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return today;
+      return d.toISOString().split('T')[0];
+    } catch {
+      return today;
+    }
+  };
+
+  const STATIC_BLOGS = [
+    'mastering-travel-digital-marketing-growth-guide',
+    'transforming-direct-hotel-bookings-2025',
+    'crafting-immersive-destination-web-experiences',
+    'building-modern-identities-for-boutique-resorts',
+  ];
+
+  let results: any[] = [];
+  if (env?.DB) {
+    try {
+      const queryRes = await env.DB.prepare(
+        `SELECT slug, updated_at, created_at, date FROM rev_db
+         WHERE slug IS NOT NULL AND slug != ''
+         ORDER BY id DESC`
+      ).all();
+      results = queryRes?.results || [];
+
+      if (results.length === 0) {
+        const blogsRes = await env.DB.prepare(
+          `SELECT slug, updated_at, created_at FROM blogs
+           WHERE is_published = 1 OR is_published IS NULL
+           ORDER BY id DESC`
+        ).all();
+        results = blogsRes?.results || [];
+      }
+    } catch (e) {
+      console.warn('sitemap-blogs query error:', e);
+    }
+  }
+
+  const seenSlugs = new Set<string>();
+  const dbEntries = results
+    .filter((post) => {
+      if (!post?.slug || seenSlugs.has(post.slug)) return false;
+      seenSlugs.add(post.slug);
+      return true;
+    })
+    .map((post) => ({
+      slug: post.slug,
+      lastmod: toDateStr(post.updated_at || post.created_at || post.date),
+    }));
+
+  const fallbackEntries = STATIC_BLOGS
+    .filter((s) => !seenSlugs.has(s))
+    .map((s) => ({ slug: s, lastmod: today }));
+
+  const allEntries = [...dbEntries, ...fallbackEntries];
+
+  const urls = allEntries
+    .map(
+      ({ slug, lastmod }) =>
+`  <url>
+    <loc>${origin}/blog/${slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>`
+    )
+    .join('\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      ...corsHeaders,
+    },
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -138,14 +585,38 @@ export default {
       });
     }
 
-    // 2. Serve Static Frontend Assets (SPA-aware)
+    // 2. Robots.txt & Sitemap XML Endpoints (Dynamic D1 generation with exact application/xml MIME type)
+    if (path === '/robots.txt') {
+      return await handleRobots(request, env);
+    }
+    if (path === '/sitemap.xml' || path === '/api/sitemap.xml' || path === '/sitemap-all.xml') {
+      return await handleDynamicSitemapXml(request, env);
+    }
+    if (path === '/sitemap-index.xml' || path === '/api/sitemap-index.xml' || path === '/sitemap_index.xml') {
+      return await handleSitemapIndex(request, env);
+    }
+    if (path === '/sitemap-pages.xml' || path === '/api/sitemap-pages.xml') {
+      return await handleSitemapPages(request, env);
+    }
+    if (path === '/sitemap-services.xml' || path === '/api/sitemap-services.xml') {
+      return await handleSitemapServices(request, env);
+    }
+    if (path === '/sitemap-blogs.xml' || path === '/api/sitemap-blogs.xml') {
+      return await handleSitemapBlogs(request, env);
+    }
+
+    // 3. Serve Static Frontend Assets (SPA-aware)
     if (!path.startsWith('/api') && env.ASSETS) {
       const response = await env.ASSETS.fetch(request);
       if (response.status !== 404) {
         return response;
       }
-      // SPA fallback: serve index.html for unmatched client routes
-      return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+      // SPA fallback: only serve index.html for client route navigations (no file extension in path)
+      const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(path);
+      if (method === 'GET' && !hasFileExtension) {
+        return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+      }
+      return response;
     }
 
     try {
@@ -1182,229 +1653,6 @@ export default {
             201
           );
         }
-      }
-
-      // -----------------------------------------------------------------------
-      // 9. SITEMAP XML HANDLERS (Pages, Services, Blogs & Master Index)
-      // -----------------------------------------------------------------------
-      const origin = url.origin || 'https://revelytics-final.mkmkataria07.workers.dev';
-      const today = new Date().toISOString().split('T')[0];
-
-      const toDateStr = (val: any) => {
-        if (!val) return today;
-        try {
-          const d = new Date(val);
-          if (isNaN(d.getTime())) return today;
-          return d.toISOString().split('T')[0];
-        } catch {
-          return today;
-        }
-      };
-
-      // ---- robots.txt (dynamic Sitemap line) ----
-      if (path === '/robots.txt') {
-        const robotsTxt = `User-agent: *
-Allow: /
-Allow: /services
-Allow: /services/*
-Allow: /blog
-Allow: /blog/*
-Allow: /faq
-Allow: /contact
-
-Sitemap: ${origin}/sitemap.xml`;
-        return new Response(robotsTxt, {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-        });
-      }
-
-      if (path === '/sitemap.xml' || path === '/api/sitemap.xml') {
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>${origin}/sitemap-pages.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${origin}/sitemap-services.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${origin}/sitemap-blogs.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-</sitemapindex>`;
-
-        return new Response(xml, {
-          headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-            ...corsHeaders,
-          },
-        });
-      }
-
-      if (path === '/sitemap-pages.xml' || path === '/api/sitemap-pages.xml') {
-        const staticUrls = [
-          { loc: `${origin}/`, priority: '1.0', changefreq: 'daily' },
-          { loc: `${origin}/services`, priority: '0.95', changefreq: 'daily' },
-          { loc: `${origin}/blog`, priority: '0.90', changefreq: 'daily' },
-          { loc: `${origin}/faq`, priority: '0.80', changefreq: 'monthly' },
-          { loc: `${origin}/contact`, priority: '0.80', changefreq: 'monthly' },
-        ];
-
-        const urls = staticUrls
-          .map(
-            (page) =>
-`  <url>
-    <loc>${page.loc}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`
-          )
-          .join('\n');
-
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
-
-        return new Response(xml, {
-          headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-            ...corsHeaders,
-          },
-        });
-      }
-
-      if (path === '/sitemap-services.xml' || path === '/api/sitemap-services.xml') {
-        // Static service slugs as fallback (always included)
-        const STATIC_SERVICES = [
-          'ui-ux-design',
-          'web-development',
-          'brand-identity',
-          'digital-marketing',
-          'motion-graphics',
-        ];
-
-        let dbResults: any[] = [];
-        try {
-          const queryRes = await env.DB.prepare(
-            `SELECT service_slug, updated_at, created_at FROM services
-             WHERE is_active = 1 OR is_active IS NULL
-             ORDER BY sort_order ASC, id ASC`
-          ).all();
-          dbResults = queryRes?.results || [];
-        } catch (e) {
-          console.warn('sitemap-services query error:', e);
-        }
-
-        // Merge DB results with static fallbacks (DB wins on duplicates)
-        const dbSlugs = new Set(dbResults.map((s: any) => s.service_slug || s.slug).filter(Boolean));
-        const allEntries: Array<{ slug: string; lastmod: string }> = [
-          ...dbResults
-            .filter((svc: any) => svc && (svc.service_slug || svc.slug))
-            .map((svc: any) => ({
-              slug: svc.service_slug || svc.slug,
-              lastmod: toDateStr(svc.updated_at || svc.created_at),
-            })),
-          ...STATIC_SERVICES
-            .filter((s) => !dbSlugs.has(s))
-            .map((s) => ({ slug: s, lastmod: today })),
-        ];
-
-        const urls = allEntries
-          .map(
-            ({ slug, lastmod }) =>
-`  <url>
-    <loc>${origin}/services/${slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-  </url>`
-          )
-          .join('\n');
-
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
-
-        return new Response(xml, {
-          headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-            ...corsHeaders,
-          },
-        });
-      }
-
-      if (path === '/sitemap-blogs.xml' || path === '/api/sitemap-blogs.xml') {
-        let results: any[] = [];
-        try {
-          // Primary: rev_db table
-          const queryRes = await env.DB.prepare(
-            `SELECT slug, updated_at, created_at, date FROM rev_db
-             WHERE slug IS NOT NULL AND slug != ''
-             ORDER BY id DESC`
-          ).all();
-          results = queryRes?.results || [];
-
-          // Fallback 1: blogs table with is_published filter
-          if (results.length === 0) {
-            const blogsRes = await env.DB.prepare(
-              `SELECT slug, updated_at, created_at FROM blogs
-               WHERE is_published = 1 OR is_published IS NULL
-               ORDER BY id DESC`
-            ).all();
-            results = blogsRes?.results || [];
-          }
-
-          // Fallback 2: blogs table without filter
-          if (results.length === 0) {
-            const blogsRes2 = await env.DB.prepare(
-              `SELECT slug, updated_at, created_at FROM blogs
-               WHERE slug IS NOT NULL AND slug != ''
-               ORDER BY id DESC`
-            ).all();
-            results = blogsRes2?.results || [];
-          }
-        } catch (e) {
-          console.warn('sitemap-blogs query error:', e);
-        }
-
-        const seenSlugs = new Set<string>();
-        const urls = results
-          .filter((post) => {
-            if (!post?.slug || seenSlugs.has(post.slug)) return false;
-            seenSlugs.add(post.slug);
-            return true;
-          })
-          .map((post) => {
-            const lastmod = toDateStr(post.updated_at || post.created_at || post.date);
-            return `  <url>
-    <loc>${origin}/blog/${post.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-  </url>`;
-          })
-          .join('\n');
-
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
-
-        return new Response(xml, {
-          headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-            ...corsHeaders,
-          },
-        });
       }
 
       // Route Not Found

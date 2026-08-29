@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Hero3,
   Brand1,
@@ -18,11 +18,63 @@ import {
   Blog1,
   SplitImageScroll,
   VideoScrollShowcase,
+  SEO,
 } from '../components';
+import { fetchRevDbHeading, type RevDbItem } from '../services/api';
 
 const Home: React.FC = () => {
+  const [metaItem, setMetaItem] = useState<RevDbItem | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadMeta() {
+      try {
+        const item =
+          (await fetchRevDbHeading('home', 'hero')) ||
+          (await fetchRevDbHeading('home', 'meta'));
+        if (isMounted && item) {
+          setMetaItem(item);
+        }
+      } catch (err) {
+        console.warn('Failed to load home meta from D1:', err);
+      }
+    }
+    loadMeta();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const pageTitle = metaItem?.meta_heading
+    ? `${metaItem.meta_heading} | Revlytics`
+    : 'Revlytics | High-Performance Travel Digital Agency & Direct Booking UX';
+  const pageDescription =
+    metaItem?.meta_data ||
+    metaItem?.description ||
+    'Revlytics is a full-service travel digital acceleration agency helping luxury resorts, boutique hotels, and global destination brands scale direct bookings through high-performance design, custom engineering, and growth strategy.';
+
   return (
     <>
+      <SEO
+        title={pageTitle}
+        description={pageDescription}
+        keywords="travel digital agency, luxury resort branding, direct booking UX, hotel website design, destination marketing, hospitality digital transformation"
+        ogType="website"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Revlytics',
+          url: 'https://revelytics-final.mkmkataria07.workers.dev/',
+          logo: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800',
+          description: pageDescription,
+          sameAs: [
+            'https://twitter.com/revlytics',
+            'https://linkedin.com/company/revlytics',
+            'https://instagram.com/revlytics',
+          ],
+        }}
+      />
+
       {/* 1. Hero Section 3 */}
       <Hero3 />
 
