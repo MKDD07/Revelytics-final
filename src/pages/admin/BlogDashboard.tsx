@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/Button';
+import { AdminButton as Button } from '../../components/ui/admin-button';
 import { Input, Textarea, Badge } from '../../components/ui/input';
 import { Dialog } from '../../components/ui/dialog';
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '../../components/ui/tabs';
@@ -16,7 +16,9 @@ import {
   User,
   BookOpen,
   AlertCircle,
+  Cpu,
 } from 'lucide-react';
+import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
 interface ArticleItem {
   id?: number;
@@ -40,6 +42,7 @@ interface ArticleItem {
 export const BlogDashboard: React.FC = () => {
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedModel, setSelectedModel] = useState(getStoredGroqModel());
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -171,6 +174,7 @@ export const BlogDashboard: React.FC = () => {
           tone: aiTone,
           keywords: aiKeywords,
           targetAudience: aiAudience,
+          model: selectedModel,
         }),
       });
 
@@ -471,6 +475,45 @@ export const BlogDashboard: React.FC = () => {
               onChange={(e) => setAiKeywords(e.target.value)}
               placeholder="direct bookings, boutique resort, hospitality UX, CRS integration"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+                <Cpu className="size-3.5 text-purple-400" /> Groq LLM Model
+              </label>
+              <span className="text-[11px] font-mono text-purple-400">
+                {selectedModel}
+              </span>
+            </div>
+            <select
+              value={selectedModel}
+              onChange={(e) => {
+                setSelectedModel(e.target.value);
+                setStoredGroqModel(e.target.value);
+              }}
+              className="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-50 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
+            >
+              <optgroup label="Meta Llama">
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k)</option>
+                <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Ultra Fast)</option>
+                <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
+              </optgroup>
+              <optgroup label="OpenAI">
+                <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+                <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+              </optgroup>
+              <optgroup label="Alibaba Cloud (Qwen)">
+                <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+                <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
+              </optgroup>
+              <optgroup label="DeepSeek & Mistral">
+                <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                <option value="gemma2-9b-it">gemma2-9b-it</option>
+              </optgroup>
+            </select>
           </div>
 
           <div className="flex justify-end gap-2.5 pt-2">

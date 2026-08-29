@@ -761,7 +761,8 @@ async function getGroqKey(env: Env): Promise<string> {
   return '';
 }
 
-async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: string): Promise<any> {
+async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: string, model?: string): Promise<any> {
+  const chosenModel = model || 'llama-3.3-70b-versatile';
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -769,7 +770,7 @@ async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: strin
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: chosenModel,
       messages: [
         {
           role: 'system',
@@ -2272,7 +2273,7 @@ export default {
           if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
 
           const body = (await request.json()) as any;
-          const { topic, tone = 'Luxury & Authoritative', keywords = '', targetAudience = 'Luxury Hotel Owners & Resort Directors' } = body || {};
+          const { topic, tone = 'Luxury & Authoritative', keywords = '', targetAudience = 'Luxury Hotel Owners & Resort Directors', model } = body || {};
 
           if (!topic) {
             return jsonResponse({ error: 'Topic or prompt is required for AI generation.' }, 400);
@@ -2313,7 +2314,8 @@ Respond with a valid JSON object matching exactly this schema:
           const result = await callGroqChat(
             groqKey,
             prompt,
-            'You are the Chief Strategy Officer and Lead Travel Marketing Writer for Revlytics. Generate high-value, factual, conversion-oriented travel hospitality insights in valid JSON format.'
+            'You are the Chief Strategy Officer and Lead Travel Marketing Writer for Revlytics. Generate high-value, factual, conversion-oriented travel hospitality insights in valid JSON format.',
+            model
           );
 
           return jsonResponse({ success: true, data: result });
@@ -2326,7 +2328,7 @@ Respond with a valid JSON object matching exactly this schema:
           if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
 
           const body = (await request.json()) as any;
-          const { pageType = 'service', name, description = '', keywords = '' } = body || {};
+          const { pageType = 'service', name, description = '', keywords = '', model } = body || {};
 
           let groqKey = body.groqApiKey || (await getGroqKey(env));
           if (!groqKey) {
@@ -2350,7 +2352,8 @@ Respond with a valid JSON object matching this schema:
           const result = await callGroqChat(
             groqKey,
             prompt,
-            'You are an elite Technical SEO Director specializing in luxury travel, hotel booking conversions, and Schema.org structured data. Respond strictly with valid JSON.'
+            'You are an elite Technical SEO Director specializing in luxury travel, hotel booking conversions, and Schema.org structured data. Respond strictly with valid JSON.',
+            model
           );
 
           return jsonResponse({ success: true, data: result });

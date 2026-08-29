@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { Button } from '../components/ui/Button';
+import { AdminButton as Button } from '../components/ui/admin-button';
 import { Input } from '../components/ui/input';
 import { Lock, User, Key, Sparkles, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 

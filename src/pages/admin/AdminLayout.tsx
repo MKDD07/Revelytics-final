@@ -3,7 +3,7 @@ import { MetaDashboard } from './MetaDashboard';
 import { BlogDashboard } from './BlogDashboard';
 import { SettingsDashboard } from './SettingsDashboard';
 import { TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Button } from '../../components/ui/Button';
+import { AdminButton as Button } from '../../components/ui/admin-button';
 import { Badge } from '../../components/ui/input';
 import {
   Layers,

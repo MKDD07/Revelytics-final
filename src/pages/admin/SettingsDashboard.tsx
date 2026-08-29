@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
-import { Button } from '../../components/ui/Button';
+import { AdminButton as Button } from '../../components/ui/admin-button';
 import { Input, Badge } from '../../components/ui/input';
-import { Key, Shield, Database, Sparkles, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Key, Shield, Database, Sparkles, RefreshCw, AlertCircle, CheckCircle2, Cpu } from 'lucide-react';
+import { GROQ_MODELS, getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
 export const SettingsDashboard: React.FC = () => {
   const [groqKey, setGroqKey] = useState('');
   const [hasGroqKey, setHasGroqKey] = useState(false);
   const [savingKey, setSavingKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(getStoredGroqModel());
+  const [customModel, setCustomModel] = useState('');
+  const [isCustomModel, setIsCustomModel] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testingKey, setTestingKey] = useState(false);
 
@@ -36,6 +40,25 @@ export const SettingsDashboard: React.FC = () => {
     }
     checkStatus();
   }, []);
+
+  const handleModelChange = (modelId: string) => {
+    if (modelId === 'custom') {
+      setIsCustomModel(true);
+    } else {
+      setIsCustomModel(false);
+      setSelectedModel(modelId);
+      setStoredGroqModel(modelId);
+    }
+  };
+
+  const handleCustomModelSave = () => {
+    if (customModel.trim()) {
+      setSelectedModel(customModel.trim());
+      setStoredGroqModel(customModel.trim());
+      setStatusMsg(`✓ Selected custom model: ${customModel.trim()}`);
+      setTimeout(() => setStatusMsg(''), 3000);
+    }
+  };
 
   const handleSaveGroqKey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +99,7 @@ export const SettingsDashboard: React.FC = () => {
     setErrorMsg('');
 
     try {
+      const activeModel = isCustomModel && customModel ? customModel.trim() : selectedModel;
       const token = localStorage.getItem('revlytics_admin_token');
       const res = await fetch('/api/ai/generate-meta', {
         method: 'POST',
@@ -86,7 +110,8 @@ export const SettingsDashboard: React.FC = () => {
         body: JSON.stringify({
           pageType: 'service',
           name: 'Direct Booking Acceleration',
-          description: 'Testing Groq Llama 3.3 70B connection',
+          description: 'Testing Groq AI connection',
+          model: activeModel,
         }),
       });
 
@@ -95,7 +120,7 @@ export const SettingsDashboard: React.FC = () => {
         throw new Error(data.error || 'Groq connection test failed');
       }
 
-      setTestResult(`Success! Connected to Groq Llama 3.3 70B. Title: "${data.data?.meta_title || 'OK'}"`);
+      setTestResult(`Success! Connected to Groq model (${activeModel}). Output: "${data.data?.meta_title || 'OK'}"`);
     } catch (err: any) {
       setErrorMsg(`Groq Connection Failed: ${err.message}`);
     } finally {
@@ -143,7 +168,7 @@ export const SettingsDashboard: React.FC = () => {
           Settings & Integrations
         </h2>
         <p className="text-xs text-zinc-400">
-          Manage your Groq AI API keys, administrator credentials, and Cloudflare D1 database connections.
+          Manage your Groq AI API keys, default model selector, administrator credentials, and Cloudflare D1 database.
         </p>
       </div>
 
@@ -170,7 +195,7 @@ export const SettingsDashboard: React.FC = () => {
             </div>
             <div>
               <CardTitle>Groq AI API Integration</CardTitle>
-              <CardDescription>Powers real-time blog generation & SEO metadata generation</CardDescription>
+              <CardDescription>Configure your Groq API key and select your preferred LLM model</CardDescription>
             </div>
           </div>
 
@@ -191,12 +216,87 @@ export const SettingsDashboard: React.FC = () => {
                 type="password"
                 value={groqKey}
                 onChange={(e) => setGroqKey(e.target.value)}
-                placeholder={hasGroqKey ? '•••••••••••••••••••• (Configured)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
+                placeholder={hasGroqKey ? '•••••••••••••••••••• (Configured in D1 credentials)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
                 className="font-mono text-xs"
               />
               <p className="text-[11px] text-zinc-500">
-                Model used: <code className="text-purple-400 font-mono">llama-3.3-70b-versatile</code>. Get key at console.groq.com.
+                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="text-indigo-400 underline">console.groq.com/keys</a>.
               </p>
+            </div>
+
+            {/* Groq Model Selector Option */}
+            <div className="space-y-2 pt-2 border-t border-zinc-800">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+                  <Cpu className="size-3.5 text-purple-400" /> Default AI Model Selection
+                </label>
+                <span className="text-[11px] font-mono text-purple-400">
+                  Active: {selectedModel}
+                </span>
+              </div>
+
+              <select
+                value={isCustomModel ? 'custom' : selectedModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs text-zinc-50 shadow-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 cursor-pointer"
+              >
+                <optgroup label="Meta Llama">
+                  <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k context)</option>
+                  <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                  <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Ultra Fast)</option>
+                  <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
+                  <option value="meta-llama/llama-prompt-guard-2-86m">meta-llama/llama-prompt-guard-2-86m</option>
+                  <option value="meta-llama/llama-prompt-guard-2-22m">meta-llama/llama-prompt-guard-2-22m</option>
+                </optgroup>
+
+                <optgroup label="OpenAI">
+                  <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+                  <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+                  <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
+                </optgroup>
+
+                <optgroup label="Alibaba Cloud (Qwen)">
+                  <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+                  <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
+                </optgroup>
+
+                <optgroup label="DeepSeek & Mistral">
+                  <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b (Reasoning)</option>
+                  <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                  <option value="gemma2-9b-it">gemma2-9b-it</option>
+                </optgroup>
+
+                <optgroup label="Groq & Canopy Labs">
+                  <option value="groq/compound">groq/compound</option>
+                  <option value="groq/compound-mini">groq/compound-mini</option>
+                  <option value="canopylabs/orpheus-v1-english">canopylabs/orpheus-v1-english</option>
+                  <option value="canopylabs/orpheus-arabic-saudi">canopylabs/orpheus-arabic-saudi</option>
+                </optgroup>
+
+                <optgroup label="Custom">
+                  <option value="custom">✏️ Enter Custom Groq Model ID...</option>
+                </optgroup>
+              </select>
+
+              {isCustomModel && (
+                <div className="flex gap-2 pt-1">
+                  <Input
+                    type="text"
+                    value={customModel}
+                    onChange={(e) => setCustomModel(e.target.value)}
+                    placeholder="e.g. openai/gpt-oss-120b"
+                    className="text-xs font-mono"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleCustomModelSave}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              )}
             </div>
 
             {testResult && (

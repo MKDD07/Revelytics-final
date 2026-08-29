@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
-import { Button } from '../../components/ui/Button';
+import { AdminButton as Button } from '../../components/ui/admin-button';
 import { Input, Textarea, Badge } from '../../components/ui/input';
-import { Sparkles, Save, CheckCircle2, Search, Code2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, Save, CheckCircle2, Search, Code2, AlertCircle, RefreshCw, Cpu } from 'lucide-react';
 import { getMetadataForPath } from '../../utils/seoData';
+import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
 export const MetaDashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<'core' | 'services'>('services');
   const [selectedSlug, setSelectedSlug] = useState('luxury-resort-branding');
+  const [selectedModel, setSelectedModel] = useState(getStoredGroqModel());
   const [loading, setLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -167,6 +169,7 @@ export const MetaDashboard: React.FC = () => {
           name: formData.service_name || selectedSlug,
           description: formData.meta_description,
           keywords: formData.meta_keywords,
+          model: selectedModel,
         }),
       });
 
@@ -254,7 +257,40 @@ export const MetaDashboard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Model Selector */}
+          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-md px-2 py-1">
+            <Cpu className="size-3.5 text-purple-400" />
+            <select
+              value={selectedModel}
+              onChange={(e) => {
+                setSelectedModel(e.target.value);
+                setStoredGroqModel(e.target.value);
+              }}
+              className="bg-transparent text-xs text-zinc-200 border-none outline-none cursor-pointer pr-1"
+            >
+              <optgroup label="Meta Llama">
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
+              </optgroup>
+              <optgroup label="OpenAI">
+                <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+                <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+              </optgroup>
+              <optgroup label="Alibaba Cloud (Qwen)">
+                <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+                <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
+              </optgroup>
+              <optgroup label="DeepSeek & Mistral">
+                <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                <option value="gemma2-9b-it">gemma2-9b-it</option>
+              </optgroup>
+            </select>
+          </div>
+
           <Button
             variant="outline"
             onClick={handleAIGenerate}
