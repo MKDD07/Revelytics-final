@@ -13,7 +13,9 @@ import {
   BookOpen,
   AlertCircle,
   Cpu,
-  X,
+  RefreshCw,
+  Play,
+  Layers,
 } from 'lucide-react';
 import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
@@ -44,18 +46,18 @@ export const BlogDashboard: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Dialog State: AI Generation Modal
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiTopic, setAiTopic] = useState('');
+  // Inline AI Generator Prompt State (NO MODAL)
+  const [aiPrompt, setAiPrompt] = useState('');
   const [aiTone, setAiTone] = useState('Luxury & Authoritative');
   const [aiKeywords, setAiKeywords] = useState('direct bookings, boutique resort, hospitality UX');
   const [aiAudience, setAiAudience] = useState('Luxury Hotel Owners & Resort General Managers');
+  const [showAiOptions, setShowAiOptions] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [canContinue, setCanContinue] = useState(false);
 
-  // Dialog State: Edit/Create Article Modal
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  // Active Draft / Editor State
   const [isSaving, setIsSaving] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<ArticleItem>({
+  const [activeArticle, setActiveArticle] = useState<ArticleItem>({
     slug: '',
     heading: '',
     meta_heading: '',
@@ -67,8 +69,11 @@ export const BlogDashboard: React.FC = () => {
     description: '',
     paragraph: '',
     useful_quote: '',
-    sections_h2_para: [],
-    tags: ['DirectBookings', 'HospitalityTech'],
+    sections_h2_para: [
+      { title: 'The Direct Booking Imperative in 2026', para: 'Why luxury resorts must rethink their guest acquisition...' },
+      { title: 'Designing Frictionless Mobile Funnels', para: 'Key conversion engineering patterns for mobile checkout...' }
+    ],
+    tags: ['HospitalityTech', 'DirectBookings'],
   });
 
   const [rawSectionsJson, setRawSectionsJson] = useState('[]');
@@ -77,7 +82,6 @@ export const BlogDashboard: React.FC = () => {
   // Load articles from D1
   const loadArticles = async () => {
     setLoading(true);
-    setErrorMsg('');
     try {
       const res = await fetch('/api/admin/blogs');
       if (res.ok) {
@@ -104,7 +108,7 @@ export const BlogDashboard: React.FC = () => {
       a.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleNewArticle = () => {
+  const handleNewBlank = () => {
     const today = new Date().toISOString().split('T')[0];
     const initial: ArticleItem = {
       slug: '',
@@ -118,20 +122,17 @@ export const BlogDashboard: React.FC = () => {
       description: '',
       paragraph: '',
       useful_quote: '',
-      sections_h2_para: [
-        { title: 'The Direct Booking Imperative in 2026', para: 'Why luxury resorts must rethink their guest acquisition...' },
-        { title: 'Designing Frictionless Mobile Funnels', para: 'Key conversion engineering patterns for mobile checkout...' }
-      ],
+      sections_h2_para: [],
       tags: ['HospitalityTech', 'DirectBookings'],
     };
-    setEditingArticle(initial);
-    setRawSectionsJson(JSON.stringify(initial.sections_h2_para, null, 2));
+    setActiveArticle(initial);
+    setRawSectionsJson('[]');
     setRawTagsJson(JSON.stringify(initial.tags, null, 2));
-    setIsEditorOpen(true);
+    setCanContinue(false);
   };
 
-  const handleEditArticle = (item: ArticleItem) => {
-    setEditingArticle(item);
+  const handleSelectArticle = (item: ArticleItem) => {
+    setActiveArticle(item);
     let parsedSections = item.sections_h2_para;
     if (typeof parsedSections === 'string') {
       try {
@@ -150,11 +151,18 @@ export const BlogDashboard: React.FC = () => {
     }
     setRawSectionsJson(JSON.stringify(parsedSections || [], null, 2));
     setRawTagsJson(JSON.stringify(parsedTags || [], null, 2));
-    setIsEditorOpen(true);
+    setCanContinue(true);
+    window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
-  const handleGenerateBlog = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Generate or Continue Generation from Prompt (NO MODAL)
+  const handleGenerateBlog = async (isContinue = false) => {
+    const promptToUse = aiPrompt.trim() || activeArticle.heading;
+    if (!promptToUse && !isContinue) {
+      setErrorMsg('Please enter a topic or prompt for AI generation.');
+      return;
+    }
+
     setIsGenerating(true);
     setErrorMsg('');
 
@@ -167,36 +175,60 @@ export const BlogDashboard: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          topic: aiTopic,
+          topic: promptToUse,
+          prompt: promptToUse,
           tone: aiTone,
           keywords: aiKeywords,
           targetAudience: aiAudience,
           model: selectedModel,
+          isContinue,
+          currentDraft: isContinue ? activeArticle : undefined,
         }),
       });
 
       const data = (await res.json()) as any;
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to generate blog. Verify your Groq API key.');
+        throw new Error(data.error || 'Failed to generate blog. Check your Groq API key in Settings.');
       }
 
       const generated = data.data;
-      setEditingArticle(generated);
-      setRawSectionsJson(JSON.stringify(generated.sections_h2_para || [], null, 2));
-      setRawTagsJson(JSON.stringify(generated.tags || [], null, 2));
+      const merged: ArticleItem = {
+        slug: generated.slug || activeArticle.slug || (generated.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        heading: generated.heading || activeArticle.heading,
+        meta_heading: generated.meta_heading || activeArticle.meta_heading || generated.heading,
+        meta_data: generated.meta_data || activeArticle.meta_data || generated.description,
+        category: generated.category || activeArticle.category || 'Travel Insights',
+        author: generated.author || activeArticle.author || 'Elena Rostova',
+        date: generated.date || activeArticle.date || new Date().toISOString().split('T')[0],
+        image_url: generated.image_url || activeArticle.image_url,
+        description: generated.description || activeArticle.description,
+        paragraph: generated.paragraph || activeArticle.paragraph,
+        useful_quote: generated.useful_quote || activeArticle.useful_quote,
+        sections_h2_para: generated.sections_h2_para && generated.sections_h2_para.length > 0 ? generated.sections_h2_para : activeArticle.sections_h2_para,
+        tags: generated.tags || activeArticle.tags,
+      };
 
-      setIsAiModalOpen(false);
-      setIsEditorOpen(true);
-      setSuccessMsg('✨ Article generated with Groq AI! Review and publish below.');
+      setActiveArticle(merged);
+      setRawSectionsJson(JSON.stringify(merged.sections_h2_para || [], null, 2));
+      setRawTagsJson(JSON.stringify(merged.tags || [], null, 2));
+      setCanContinue(true);
+
+      setSuccessMsg(isContinue ? '✓ Article generation continued and completed!' : '✨ Blog draft generated from prompt with Groq AI!');
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Groq AI generation failed.');
+      setErrorMsg(err.message || 'Groq AI generation error. You can click "Continue Generation" to resume.');
+      setCanContinue(true);
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleSaveArticle = async () => {
+    if (!activeArticle.heading || !activeArticle.slug) {
+      setErrorMsg('Article Heading and URL Slug are required.');
+      return;
+    }
+
     setIsSaving(true);
     setErrorMsg('');
 
@@ -215,7 +247,7 @@ export const BlogDashboard: React.FC = () => {
       }
 
       const payload = {
-        ...editingArticle,
+        ...activeArticle,
         sections_h2_para: sectionsParsed,
         tags: tagsParsed,
       };
@@ -235,8 +267,7 @@ export const BlogDashboard: React.FC = () => {
         throw new Error(data.error || 'Failed to publish blog to D1');
       }
 
-      setIsEditorOpen(false);
-      setSuccessMsg(`✓ Article "${editingArticle.heading}" published to Cloudflare D1!`);
+      setSuccessMsg(`✓ Article "${activeArticle.heading}" saved and published to Cloudflare D1!`);
       setTimeout(() => setSuccessMsg(''), 4000);
       loadArticles();
     } catch (err: any) {
@@ -284,17 +315,19 @@ export const BlogDashboard: React.FC = () => {
 
         <div className="page-header__actions">
           <button
-            className="btn btn--primary"
-            onClick={() => setIsAiModalOpen(true)}
+            className="btn btn--outline"
+            onClick={handleNewBlank}
           >
-            <Sparkles size={14} /> New AI Blog with Groq
+            <Plus size={14} /> New Blank Article
           </button>
 
           <button
-            className="btn btn--outline"
-            onClick={handleNewArticle}
+            className="btn btn--primary"
+            onClick={handleSaveArticle}
+            disabled={isSaving}
           >
-            <Plus size={14} /> New Blank Article
+            {isSaving ? <span className="btn__spinner" /> : <CheckCircle2 size={14} />}
+            <span>{isSaving ? 'Publishing...' : 'Save & Publish to D1'}</span>
           </button>
         </div>
       </div>
@@ -312,6 +345,327 @@ export const BlogDashboard: React.FC = () => {
           <span>{errorMsg}</span>
         </div>
       )}
+
+      {/* INLINE PROMPT GENERATOR (NO MODAL) */}
+      <div className="card">
+        <div className="card__eyebrow-row">
+          <div className="icon-tile icon-tile--indigo">
+            <Sparkles size={16} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 className="card__title">✨ Groq AI Prompt-Based Blog Generator</h3>
+            <p className="card__description">Enter your topic or prompt below to automatically write structured articles.</p>
+          </div>
+
+          <div className="model-select-wrap">
+            <Cpu size={14} />
+            <select
+              className="select--bare"
+              value={selectedModel}
+              onChange={(e) => {
+                setSelectedModel(e.target.value);
+                setStoredGroqModel(e.target.value);
+              }}
+            >
+              <optgroup label="Meta Llama">
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
+              </optgroup>
+              <optgroup label="OpenAI">
+                <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
+                <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+              </optgroup>
+              <optgroup label="Alibaba Cloud (Qwen)">
+                <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+                <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
+              </optgroup>
+              <optgroup label="DeepSeek & Mistral">
+                <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                <option value="gemma2-9b-it">gemma2-9b-it</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div className="card__content stack-3">
+          {/* Main Prompt Field */}
+          <div className="field">
+            <div className="row row-gap-2">
+              <input
+                type="text"
+                className="input"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleGenerateBlog(false);
+                }}
+                placeholder="Enter prompt / topic (e.g. How Luxury Eco-Resorts Triple Direct Bookings with Frictionless Mobile UX)..."
+              />
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => handleGenerateBlog(false)}
+                disabled={isGenerating}
+              >
+                {isGenerating ? <span className="btn__spinner" /> : <Sparkles size={14} />}
+                <span>{isGenerating ? 'Generating...' : 'Generate with Groq'}</span>
+              </button>
+
+              {/* Continue If Failed At Between */}
+              {canContinue && (
+                <button
+                  type="button"
+                  className="btn btn--outline-indigo"
+                  onClick={() => handleGenerateBlog(true)}
+                  disabled={isGenerating}
+                  title="Resume or complete generation from the current draft"
+                >
+                  <RefreshCw size={13} />
+                  <span>Continue Generation</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Collapsible Fine-Tuning Options */}
+          <div>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => setShowAiOptions(!showAiOptions)}
+              style={{ color: 'var(--color-indigo-text)', padding: '2px 0' }}
+            >
+              {showAiOptions ? '▲ Hide Prompt Parameters' : '▼ Customize Tone, Keywords & Target Audience'}
+            </button>
+
+            {showAiOptions && (
+              <div className="grid-3" style={{ marginTop: '10px' }}>
+                <div className="field">
+                  <label className="field__label">Tone</label>
+                  <input
+                    type="text"
+                    className="input input--sm"
+                    value={aiTone}
+                    onChange={(e) => setAiTone(e.target.value)}
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="field__label">SEO Keywords</label>
+                  <input
+                    type="text"
+                    className="input input--sm"
+                    value={aiKeywords}
+                    onChange={(e) => setAiKeywords(e.target.value)}
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="field__label">Target Audience</label>
+                  <input
+                    type="text"
+                    className="input input--sm"
+                    value={aiAudience}
+                    onChange={(e) => setAiAudience(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ARTICLE EDITOR WORKSPACE */}
+      <div className="card">
+        <div className="card__header-row">
+          <div>
+            <h3 className="card__title">
+              {activeArticle.heading ? `Editing: ${activeArticle.heading}` : 'Article Workspace'}
+            </h3>
+            <p className="card__description">Review generated content and edit live columns before publishing</p>
+          </div>
+
+          <span className="badge badge--purple">{activeArticle.category || 'Draft'}</span>
+        </div>
+
+        <div className="card__content stack-4">
+          {/* Title & Slug */}
+          <div className="grid-2">
+            <div className="field">
+              <label className="field__label">Article Heading (`heading` / H1) *</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.heading}
+                onChange={(e) => setActiveArticle({ ...activeArticle, heading: e.target.value })}
+                placeholder="Article Headline"
+                required
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">URL Slug (`slug`) *</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.slug}
+                onChange={(e) => setActiveArticle({ ...activeArticle, slug: e.target.value })}
+                placeholder="url-safe-kebab-case"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Meta Title & Meta Description */}
+          <div className="grid-2">
+            <div className="field">
+              <label className="field__label">SEO Meta Title (`meta_heading`)</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.meta_heading || ''}
+                onChange={(e) => setActiveArticle({ ...activeArticle, meta_heading: e.target.value })}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Meta Description (`meta_data`)</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.meta_data || ''}
+                onChange={(e) => setActiveArticle({ ...activeArticle, meta_data: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Category, Author, Date */}
+          <div className="grid-3">
+            <div className="field">
+              <label className="field__label">Category</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.category || ''}
+                onChange={(e) => setActiveArticle({ ...activeArticle, category: e.target.value })}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Author</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.author || ''}
+                onChange={(e) => setActiveArticle({ ...activeArticle, author: e.target.value })}
+              />
+            </div>
+
+            <div className="field">
+              <label className="field__label">Date (YYYY-MM-DD)</label>
+              <input
+                type="text"
+                className="input"
+                value={activeArticle.date || ''}
+                onChange={(e) => setActiveArticle({ ...activeArticle, date: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Featured Image URL */}
+          <div className="field">
+            <label className="field__label">Featured Image URL (`image_url`)</label>
+            <input
+              type="text"
+              className="input"
+              value={activeArticle.image_url || ''}
+              onChange={(e) => setActiveArticle({ ...activeArticle, image_url: e.target.value })}
+            />
+          </div>
+
+          {/* Executive Summary */}
+          <div className="field">
+            <label className="field__label">Executive Summary (`description`)</label>
+            <textarea
+              className="textarea"
+              value={activeArticle.description || ''}
+              onChange={(e) => setActiveArticle({ ...activeArticle, description: e.target.value })}
+            />
+          </div>
+
+          {/* Narrative Paragraph */}
+          <div className="field">
+            <label className="field__label">Intro Narrative Paragraph (`paragraph`)</label>
+            <textarea
+              className="textarea"
+              value={activeArticle.paragraph || ''}
+              onChange={(e) => setActiveArticle({ ...activeArticle, paragraph: e.target.value })}
+            />
+          </div>
+
+          {/* Highlight Quote */}
+          <div className="field">
+            <label className="field__label">Highlight Quote (`useful_quote`)</label>
+            <input
+              type="text"
+              className="input"
+              value={activeArticle.useful_quote || ''}
+              onChange={(e) => setActiveArticle({ ...activeArticle, useful_quote: e.target.value })}
+            />
+          </div>
+
+          {/* H2 Sections */}
+          <div className="field">
+            <label className="field__label">H2 Sections (`sections_h2_para` JSON Array)</label>
+            <textarea
+              className="textarea textarea--mono"
+              value={rawSectionsJson}
+              onChange={(e) => setRawSectionsJson(e.target.value)}
+              style={{ minHeight: '120px' }}
+            />
+          </div>
+
+          {/* Tags */}
+          <div className="field">
+            <label className="field__label">Tags (`tags` JSON Array)</label>
+            <input
+              type="text"
+              className="input input--mono"
+              value={rawTagsJson}
+              onChange={(e) => setRawTagsJson(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="card__footer">
+          <div className="row row-gap-2">
+            {canContinue && (
+              <button
+                type="button"
+                className="btn btn--outline-indigo btn--sm"
+                onClick={() => handleGenerateBlog(true)}
+                disabled={isGenerating}
+              >
+                <RefreshCw size={13} />
+                <span>Continue AI Writing</span>
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="btn btn--primary btn--sm"
+            onClick={handleSaveArticle}
+            disabled={isSaving}
+          >
+            {isSaving ? <span className="btn__spinner" /> : <CheckCircle2 size={13} />}
+            <span>Publish to Cloudflare D1</span>
+          </button>
+        </div>
+      </div>
 
       {/* Articles Table Card */}
       <div className="card">
@@ -346,10 +700,7 @@ export const BlogDashboard: React.FC = () => {
             <div className="empty-state">
               <BookOpen size={32} />
               <p className="empty-state__title">No articles found</p>
-              <p className="empty-state__hint">Generate your first travel article with Groq AI in seconds.</p>
-              <button className="btn btn--primary btn--sm" onClick={() => setIsAiModalOpen(true)}>
-                <Sparkles size={13} /> Generate with Groq AI
-              </button>
+              <p className="empty-state__hint">Type a prompt in the top box to generate your first article with Groq AI.</p>
             </div>
           ) : (
             <table className="table">
@@ -399,10 +750,10 @@ export const BlogDashboard: React.FC = () => {
                           <Eye size={12} /> View
                         </a>
                         <button
-                          onClick={() => handleEditArticle(art)}
+                          onClick={() => handleSelectArticle(art)}
                           className="table-action"
                         >
-                          <Edit size={12} /> Edit
+                          <Edit size={12} /> Load in Editor
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(art.slug)}
@@ -419,327 +770,6 @@ export const BlogDashboard: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Groq AI Blog Generator Modal */}
-      {isAiModalOpen && (
-        <div className="dialog-overlay" onClick={() => setIsAiModalOpen(false)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog__header">
-              <div>
-                <h3 className="dialog__title">✨ Generate SEO Travel Article with Groq AI</h3>
-                <p className="dialog__description">
-                  Select your preferred LLM model and generate comprehensive structured articles.
-                </p>
-              </div>
-              <button
-                className="dialog__close"
-                onClick={() => setIsAiModalOpen(false)}
-                aria-label="Close dialog"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="dialog__body">
-              <form onSubmit={handleGenerateBlog} className="stack-4">
-                <div className="field">
-                  <label className="field__label">Article Topic / Focus Subject *</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={aiTopic}
-                    onChange={(e) => setAiTopic(e.target.value)}
-                    placeholder="e.g. How Luxury Eco-Resorts Triple Direct Bookings with Frictionless Mobile UX"
-                    required
-                  />
-                </div>
-
-                <div className="grid-2">
-                  <div className="field">
-                    <label className="field__label">Editorial Tone</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={aiTone}
-                      onChange={(e) => setAiTone(e.target.value)}
-                      placeholder="Luxury & Authoritative"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label">Target Audience</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={aiAudience}
-                      onChange={(e) => setAiAudience(e.target.value)}
-                      placeholder="Luxury Resort Directors"
-                    />
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label className="field__label">SEO Keywords to Target (Comma separated)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={aiKeywords}
-                    onChange={(e) => setAiKeywords(e.target.value)}
-                    placeholder="direct bookings, boutique resort, hospitality UX, CRS integration"
-                  />
-                </div>
-
-                <div className="field">
-                  <div className="field__label-row">
-                    <label className="field__label">
-                      <Cpu size={14} color="var(--color-purple-text)" /> Groq LLM Model
-                    </label>
-                    <span className="text-mono" style={{ fontSize: '11px', color: 'var(--color-purple-text)' }}>
-                      {selectedModel}
-                    </span>
-                  </div>
-                  <select
-                    className="select"
-                    value={selectedModel}
-                    onChange={(e) => {
-                      setSelectedModel(e.target.value);
-                      setStoredGroqModel(e.target.value);
-                    }}
-                  >
-                    <optgroup label="Meta Llama">
-                      <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended - 128k)</option>
-                      <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
-                      <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Ultra Fast)</option>
-                      <option value="llama-3.2-11b-vision-preview">llama-3.2-11b-vision-preview</option>
-                    </optgroup>
-                    <optgroup label="OpenAI">
-                      <option value="openai/gpt-oss-120b">openai/gpt-oss-120b</option>
-                      <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
-                    </optgroup>
-                    <optgroup label="Alibaba Cloud (Qwen)">
-                      <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
-                      <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b</option>
-                    </optgroup>
-                    <optgroup label="DeepSeek & Mistral">
-                      <option value="deepseek-r1-distill-llama-70b">deepseek-r1-distill-llama-70b</option>
-                      <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-                      <option value="gemma2-9b-it">gemma2-9b-it</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn btn--outline"
-                    onClick={() => setIsAiModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn--primary"
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? <span className="btn__spinner" /> : <Sparkles size={14} />}
-                    <span>{isGenerating ? 'Generating...' : 'Generate Article Now'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit / Review Article Modal */}
-      {isEditorOpen && (
-        <div className="dialog-overlay" onClick={() => setIsEditorOpen(false)}>
-          <div className="dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="dialog__header">
-              <div>
-                <h3 className="dialog__title">
-                  {editingArticle.heading ? `Edit Article: ${editingArticle.heading}` : 'Create New Article'}
-                </h3>
-                <p className="dialog__description">Review, modify, and publish this article to Cloudflare D1.</p>
-              </div>
-              <button
-                className="dialog__close"
-                onClick={() => setIsEditorOpen(false)}
-                aria-label="Close dialog"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="dialog__body">
-              <div className="stack-4">
-                {/* Title & Slug */}
-                <div className="grid-2">
-                  <div className="field">
-                    <label className="field__label">Article Heading (`heading` / H1) *</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.heading}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, heading: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label">URL Slug (`slug`) *</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.slug}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })}
-                      placeholder="url-safe-kebab-case"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Meta Title & Meta Description */}
-                <div className="grid-2">
-                  <div className="field">
-                    <label className="field__label">SEO Meta Title (`meta_heading`)</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.meta_heading || ''}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, meta_heading: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label">Meta Description (`meta_data`)</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.meta_data || ''}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, meta_data: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Category, Author, Date */}
-                <div className="grid-3">
-                  <div className="field">
-                    <label className="field__label">Category</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.category || ''}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label">Author</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.author || ''}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, author: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label className="field__label">Date (YYYY-MM-DD)</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={editingArticle.date || ''}
-                      onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Featured Image URL */}
-                <div className="field">
-                  <label className="field__label">Featured Image URL (`image_url`)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={editingArticle.image_url || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, image_url: e.target.value })}
-                  />
-                </div>
-
-                {/* Executive Summary */}
-                <div className="field">
-                  <label className="field__label">Executive Summary (`description`)</label>
-                  <textarea
-                    className="textarea"
-                    value={editingArticle.description || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
-                  />
-                </div>
-
-                {/* Narrative Paragraph */}
-                <div className="field">
-                  <label className="field__label">Intro Narrative Paragraph (`paragraph`)</label>
-                  <textarea
-                    className="textarea"
-                    value={editingArticle.paragraph || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
-                  />
-                </div>
-
-                {/* Highlight Quote */}
-                <div className="field">
-                  <label className="field__label">Highlight Quote (`useful_quote`)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={editingArticle.useful_quote || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, useful_quote: e.target.value })}
-                  />
-                </div>
-
-                {/* H2 Sections */}
-                <div className="field">
-                  <label className="field__label">H2 Sections (`sections_h2_para` JSON Array)</label>
-                  <textarea
-                    className="textarea textarea--mono"
-                    value={rawSectionsJson}
-                    onChange={(e) => setRawSectionsJson(e.target.value)}
-                    style={{ minHeight: '120px' }}
-                  />
-                </div>
-
-                {/* Tags */}
-                <div className="field">
-                  <label className="field__label">Tags (`tags` JSON Array)</label>
-                  <input
-                    type="text"
-                    className="input input--mono"
-                    value={rawTagsJson}
-                    onChange={(e) => setRawTagsJson(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn btn--outline"
-                    onClick={() => setIsEditorOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--primary"
-                    onClick={handleSaveArticle}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? <span className="btn__spinner" /> : <CheckCircle2 size={14} />}
-                    <span>{isSaving ? 'Publishing...' : 'Publish to Cloudflare D1'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

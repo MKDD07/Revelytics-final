@@ -764,8 +764,44 @@ async function getGroqKey(env: Env): Promise<string> {
   return '';
 }
 
-async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: string, model?: string): Promise<any> {
-  const chosenModel = model || 'llama-3.3-70b-versatile';
+async function callGroqChat(
+  apiKey: string,
+  prompt: string,
+  systemPrompt?: string,
+  model?: string,
+  continueContext?: any
+): Promise<any> {
+  const chosenModel = model && model.trim() ? model.trim() : 'llama-3.3-70b-versatile';
+
+  const messages: any[] = [
+    {
+      role: 'system',
+      content:
+        systemPrompt ||
+        'You are an expert travel and hospitality digital marketing AI for Revlytics. Always respond with valid JSON.',
+    },
+  ];
+
+  if (continueContext) {
+    messages.push({
+      role: 'user',
+      content: prompt,
+    });
+    messages.push({
+      role: 'assistant',
+      content: typeof continueContext === 'string' ? continueContext : JSON.stringify(continueContext),
+    });
+    messages.push({
+      role: 'user',
+      content: 'Please continue generating and complete all remaining sections of the JSON object from where it was left off. Respond ONLY with the complete, valid JSON object.',
+    });
+  } else {
+    messages.push({
+      role: 'user',
+      content: prompt,
+    });
+  }
+
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -774,15 +810,7 @@ async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: strin
     },
     body: JSON.stringify({
       model: chosenModel,
-      messages: [
-        {
-          role: 'system',
-          content:
-            systemPrompt ||
-            'You are an expert travel and hospitality digital marketing AI for Revlytics. Always respond with valid JSON.',
-        },
-        { role: 'user', content: prompt },
-      ],
+      messages,
       response_format: { type: 'json_object' },
       temperature: 0.7,
       max_tokens: 4096,
@@ -791,15 +819,53 @@ async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: strin
 
   if (!res.ok) {
     const errorText = await res.text();
+    if (res.status === 400 && errorText.includes('response_format')) {
+      const retryRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: chosenModel,
+          messages,
+          temperature: 0.7,
+          max_tokens: 4096,
+        }),
+      });
+      if (retryRes.ok) {
+        const retryData: any = await retryRes.json();
+        const content = retryData.choices?.[0]?.message?.content || '{}';
+        return parseJsonSafely(content);
+      }
+    }
     throw new Error(`Groq API returned error (${res.status}): ${errorText}`);
   }
 
   const data = (await res.json()) as any;
   const content = data.choices?.[0]?.message?.content || '{}';
+  return parseJsonSafely(content);
+}
+
+function parseJsonSafely(str: string): any {
+  if (!str) return {};
   try {
-    return JSON.parse(content);
+    return JSON.parse(str);
   } catch {
-    return { raw: content };
+    const jsonMatch = str.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch {}
+    }
+    const firstBrace = str.indexOf('{');
+    const lastBrace = str.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        return JSON.parse(str.substring(firstBrace, lastBrace + 1));
+      } catch {}
+    }
+    return { raw: str };
   }
 }
 
@@ -2212,9 +2278,10 @@ export default {
             INSERT INTO rev_db (
               page_name, section_name, slug, heading, subheading, meta_heading, meta_data,
               category, author, date, image_url, description, paragraph, useful_quote,
-              pexels_featured_query, sections_h2_para, tags
+              pexels_featured_query, pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5,
+              sections_h2_para, tags
             )
-            VALUES ('blog', 'article', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES ('blog', 'article', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
               heading = excluded.heading,
               subheading = excluded.subheading,
@@ -2227,6 +2294,11 @@ export default {
               description = excluded.description,
               paragraph = excluded.paragraph,
               useful_quote = excluded.useful_quote,
+              pexels_featured_query = excluded.pexels_featured_query,
+              pexels_query_2 = excluded.pexels_query_2,
+              pexels_query_3 = excluded.pexels_query_3,
+              pexels_query_4 = excluded.pexels_query_4,
+              pexels_query_5 = excluded.pexels_query_5,
               sections_h2_para = excluded.sections_h2_para,
               tags = excluded.tags,
               updated_at = CURRENT_TIMESTAMP
@@ -2245,6 +2317,10 @@ export default {
               body.paragraph || '',
               body.useful_quote || '',
               body.pexels_featured_query || 'luxury travel',
+              body.pexels_query_2 || '',
+              body.pexels_query_3 || '',
+              body.pexels_query_4 || '',
+              body.pexels_query_5 || '',
               sectionsJson,
               tagsJson
             )
@@ -2270,15 +2346,25 @@ export default {
       // -----------------------------------------------------------------------
       // 13. GROQ AI GENERATION ENDPOINTS
       // -----------------------------------------------------------------------
-      if (path === '/api/ai/generate-blog') {
+      if (path === '/api/ai/generate-blog' || path === '/api/ai/continue-blog') {
         if (method === 'POST') {
           const admin = await getAdminUser(request, env);
           if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
 
           const body = (await request.json()) as any;
-          const { topic, tone = 'Luxury & Authoritative', keywords = '', targetAudience = 'Luxury Hotel Owners & Resort Directors', model } = body || {};
+          const {
+            topic,
+            prompt: rawPrompt,
+            tone = 'Luxury & Authoritative',
+            keywords = '',
+            targetAudience = 'Luxury Hotel Owners & Resort Directors',
+            model,
+            isContinue,
+            currentDraft,
+          } = body || {};
 
-          if (!topic) {
+          const activePrompt = (rawPrompt || topic || '').trim();
+          if (!activePrompt && !currentDraft?.heading) {
             return jsonResponse({ error: 'Topic or prompt is required for AI generation.' }, 400);
           }
 
@@ -2287,38 +2373,45 @@ export default {
             return jsonResponse({ error: 'Groq API Key is not configured. Please add your Groq API key in Settings.' }, 400);
           }
 
-          const prompt = `Write a comprehensive, high-converting, authoritative travel industry blog article for Revlytics (a travel digital acceleration agency).
-Topic: ${topic}
+          const promptText = `Write a comprehensive, high-converting, authoritative travel industry blog article for Revlytics (a travel digital acceleration agency).
+Topic/Prompt: ${activePrompt || currentDraft?.heading}
 Tone: ${tone}
 Target Audience: ${targetAudience}
 Keywords to integrate: ${keywords}
 
-Respond with a valid JSON object matching exactly this schema:
+Respond strictly with a valid JSON object matching exactly this schema:
 {
   "heading": "Catchy, SEO-optimized H1 title (50-65 chars)",
   "slug": "url-safe-lowercase-slug-kebab-case",
+  "subheading": "Engaging subtitle expanding on the headline",
   "meta_heading": "SEO Meta Title (50-60 chars)",
   "meta_data": "Compelling Meta Description for Google Search (140-160 chars)",
-  "category": "e.g. Direct Bookings, Hospitality Tech, Luxury Branding, Destination Marketing",
+  "category": "Direct Bookings",
   "author": "Elena Rostova",
   "date": "${new Date().toISOString().split('T')[0]}",
   "image_url": "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200",
   "description": "2-3 sentence executive summary of the article.",
   "paragraph": "Introductory narrative paragraph capturing the reader's attention.",
   "useful_quote": "A memorable, tweetable industry quote or insight.",
+  "pexels_featured_query": "luxury resort hotel pool",
+  "pexels_query_2": "hotel boutique architecture",
+  "pexels_query_3": "guest booking mobile room",
+  "pexels_query_4": "resort sunset tropical",
+  "pexels_query_5": "travel hospitality suite",
   "sections_h2_para": [
-    { "title": "Subheading 1", "para": "Detailed, actionable insights..." },
-    { "title": "Subheading 2", "para": "Tactical strategies and examples..." },
-    { "title": "Subheading 3", "para": "Implementation steps for hotels and resorts..." }
+    { "h2": "Subheading 1", "paragraph": "Detailed, actionable insights..." },
+    { "h2": "Subheading 2", "paragraph": "Tactical strategies and examples..." },
+    { "h2": "Subheading 3", "paragraph": "Implementation steps for hotels and resorts..." }
   ],
   "tags": ["DirectBookings", "HospitalityTech", "TravelMarketing", "LuxuryResorts"]
 }`;
 
           const result = await callGroqChat(
             groqKey,
-            prompt,
+            promptText,
             'You are the Chief Strategy Officer and Lead Travel Marketing Writer for Revlytics. Generate high-value, factual, conversion-oriented travel hospitality insights in valid JSON format.',
-            model
+            model,
+            isContinue ? currentDraft : undefined
           );
 
           return jsonResponse({ success: true, data: result });
