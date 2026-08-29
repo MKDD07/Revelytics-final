@@ -6,6 +6,7 @@ import {
   SEO,
 } from '../components';
 import { fetchFaqPage, type FaqItem } from '../services/api';
+import { CORE_PAGES_SEO } from '../utils/seoData';
 
 const Faq: React.FC = () => {
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -28,7 +29,7 @@ const Faq: React.FC = () => {
     };
   }, []);
 
-  const faqSchema = faqs.length > 0
+  const dynamicFaqSchema = faqs.length > 0
     ? {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
@@ -41,16 +42,18 @@ const Faq: React.FC = () => {
           },
         })),
       }
-    : undefined;
+    : CORE_PAGES_SEO.faq.schema;
 
   return (
     <>
       <SEO
-        title="Frequently Asked Questions | Revlytics Travel Digital Agency"
-        description="Get answers to common questions about Revlytics travel digital transformation services, direct booking optimization, CRS/PMS integrations, and retainers."
-        keywords="hospitality faq, hotel digital agency questions, direct booking engine faq, hotel website design faq"
+        title={CORE_PAGES_SEO.faq.title}
+        description={CORE_PAGES_SEO.faq.description}
+        keywords={CORE_PAGES_SEO.faq.keywords}
+        canonical={CORE_PAGES_SEO.faq.canonical}
         ogType="website"
-        schema={faqSchema}
+        ogImage={CORE_PAGES_SEO.faq.ogImage}
+        schema={dynamicFaqSchema}
       />
 
       {/* FAQ Header */}

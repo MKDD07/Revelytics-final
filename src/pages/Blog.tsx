@@ -6,6 +6,7 @@ import {
   SEO,
 } from '../components';
 import { fetchRevDbHeading, type RevDbItem } from '../services/api';
+import { CORE_PAGES_SEO } from '../utils/seoData';
 
 const Blog: React.FC = () => {
   const [metaItem, setMetaItem] = useState<RevDbItem | null>(null);
@@ -32,20 +33,23 @@ const Blog: React.FC = () => {
   }, []);
 
   const pageTitle = metaItem?.meta_heading
-    ? `${metaItem.meta_heading} | Revlytics`
-    : 'Travel Insights & Destination Growth Trends | Revlytics Journal';
+    ? (metaItem.meta_heading.includes('Revlytics') ? metaItem.meta_heading : `${metaItem.meta_heading} | Revlytics`)
+    : CORE_PAGES_SEO.blog.title;
   const pageDescription =
     metaItem?.meta_data ||
     metaItem?.description ||
-    'Read the latest articles, strategies, and case studies on hotel direct bookings, hospitality technology, travel UX design, and luxury destination brand strategy.';
+    CORE_PAGES_SEO.blog.description;
 
   return (
     <>
       <SEO
         title={pageTitle}
         description={pageDescription}
-        keywords="travel marketing insights, hospitality tech trends, hotel direct bookings blog, resort marketing strategy"
+        keywords={CORE_PAGES_SEO.blog.keywords}
+        canonical={CORE_PAGES_SEO.blog.canonical}
         ogType="website"
+        ogImage={CORE_PAGES_SEO.blog.ogImage}
+        schema={CORE_PAGES_SEO.blog.schema}
       />
 
       {/* Blog Page Hero */}

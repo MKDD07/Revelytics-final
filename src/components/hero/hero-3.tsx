@@ -104,7 +104,7 @@ const Hero3: React.FC = () => {
             </div>
             <div className="col-xl-5 col-lg-7 col-md-7">
               <div className="ca-hero-title-wrap pt-50 pb-105">
-                <h2 className="ca-hero-title cd-headline clip tp_title_anim mb-55">
+                <h1 className="ca-hero-title cd-headline clip tp_title_anim mb-55">
                   We
                   <br /> Build
                   <br />
@@ -115,7 +115,7 @@ const Hero3: React.FC = () => {
                   </span>
                   <br />
                   Ideas
-                </h2>
+                </h1>
                 <a className="tp-btn tp-btn-norotate ca-hero-btn tp-ff-inter" href="#portfolio">
                   <span>
                     <span className="text-1">Explore All Work</span>

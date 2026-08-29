@@ -101,7 +101,7 @@ const Hero: React.FC<ServiceDetailsHeroProps> = ({ slug: propSlug }) => {
             </div>
             <div className="col-xl-6 col-lg-8">
               <div className="tp-service-details-hero-title ml-115 tp_fade_anim" data-delay=".5">
-                <h2 className="tp-ff-sequel-bold-head">{serviceName}</h2>
+                <h1 className="tp-ff-sequel-bold-head">{serviceName}</h1>
               </div>
             </div>
             {capabilitiesList.length > 0 && (

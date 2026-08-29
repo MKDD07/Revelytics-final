@@ -21,6 +21,7 @@ import {
   SEO,
 } from '../components';
 import { fetchRevDbHeading, type RevDbItem } from '../services/api';
+import { CORE_PAGES_SEO } from '../utils/seoData';
 
 const Home: React.FC = () => {
   const [metaItem, setMetaItem] = useState<RevDbItem | null>(null);
@@ -46,33 +47,23 @@ const Home: React.FC = () => {
   }, []);
 
   const pageTitle = metaItem?.meta_heading
-    ? `${metaItem.meta_heading} | Revlytics`
-    : 'Revlytics | High-Performance Travel Digital Agency & Direct Booking UX';
+    ? (metaItem.meta_heading.includes('Revlytics') ? metaItem.meta_heading : `${metaItem.meta_heading} | Revlytics`)
+    : CORE_PAGES_SEO.home.title;
   const pageDescription =
     metaItem?.meta_data ||
     metaItem?.description ||
-    'Revlytics is a full-service travel digital acceleration agency helping luxury resorts, boutique hotels, and global destination brands scale direct bookings through high-performance design, custom engineering, and growth strategy.';
+    CORE_PAGES_SEO.home.description;
 
   return (
     <>
       <SEO
         title={pageTitle}
         description={pageDescription}
-        keywords="travel digital agency, luxury resort branding, direct booking UX, hotel website design, destination marketing, hospitality digital transformation"
+        keywords={CORE_PAGES_SEO.home.keywords}
+        canonical={CORE_PAGES_SEO.home.canonical}
         ogType="website"
-        schema={{
-          '@context': 'https://schema.org',
-          '@type': 'Organization',
-          name: 'Revlytics',
-          url: 'https://revelytics-final.mkmkataria07.workers.dev/',
-          logo: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800',
-          description: pageDescription,
-          sameAs: [
-            'https://twitter.com/revlytics',
-            'https://linkedin.com/company/revlytics',
-            'https://instagram.com/revlytics',
-          ],
-        }}
+        ogImage={CORE_PAGES_SEO.home.ogImage}
+        schema={CORE_PAGES_SEO.home.schema}
       />
 
       {/* 1. Hero Section 3 */}

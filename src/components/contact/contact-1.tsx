@@ -89,9 +89,15 @@ const Contact1: React.FC<Contact1Props> = ({ showMap = true }) => {
                   <span><a href="#">Travel Digital Transformation</a></span>
                   <span>Direct Booking Growth</span>
                 </div>
-                <h3 className="tp-section-title fs-92 tp-ff-sequel-semi-bold tp_fade_anim" data-delay=".5">
-                  Let&rsquo;s Build Your Next Destination Experience
-                </h3>
+                {showMap ? (
+                  <h1 className="tp-section-title fs-92 tp-ff-sequel-semi-bold tp_fade_anim" data-delay=".5">
+                    Let&rsquo;s Build Your Next Destination Experience
+                  </h1>
+                ) : (
+                  <h2 className="tp-section-title fs-92 tp-ff-sequel-semi-bold tp_fade_anim" data-delay=".5">
+                    Let&rsquo;s Build Your Next Destination Experience
+                  </h2>
+                )}
               </div>
             </div>
           </div>

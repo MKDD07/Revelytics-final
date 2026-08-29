@@ -41,6 +41,8 @@
  */
 
 // Cloudflare D1 Type Definitions
+import { getMetadataForPath } from './utils/seoData';
+
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
@@ -571,6 +573,99 @@ ${urls}
   });
 }
 
+declare const HTMLRewriter: any;
+
+// Server-Side Dynamic Metadata & JSON-LD Injection for Crawlers & Scrapers
+async function injectHtmlMetadata(response: Response, pathname: string, env: Env): Promise<Response> {
+  const meta = getMetadataForPath(pathname);
+  
+  if (typeof HTMLRewriter !== 'undefined') {
+    const rewriter = new HTMLRewriter()
+      .on('title', {
+        element(el: any) {
+          el.setInnerContent(meta.title);
+        },
+      })
+      .on('meta[name="description"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.description);
+        },
+      })
+      .on('meta[name="keywords"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.keywords);
+        },
+      })
+      .on('link[rel="canonical"]', {
+        element(el: any) {
+          el.setAttribute('href', meta.canonical);
+        },
+      })
+      .on('meta[property="og:title"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.title);
+        },
+      })
+      .on('meta[property="og:description"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.description);
+        },
+      })
+      .on('meta[property="og:url"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.canonical);
+        },
+      })
+      .on('meta[property="og:image"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.ogImage);
+        },
+      })
+      .on('meta[property="og:type"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.ogType);
+        },
+      })
+      .on('meta[name="twitter:title"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.title);
+        },
+      })
+      .on('meta[name="twitter:description"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.description);
+        },
+      })
+      .on('meta[name="twitter:image"]', {
+        element(el: any) {
+          el.setAttribute('content', meta.ogImage);
+        },
+      })
+      .on('head', {
+        element(el: any) {
+          el.append(`\n  <script type="application/ld+json">\n${JSON.stringify(meta.schema, null, 2)}\n  </script>\n`, { html: true });
+        },
+      });
+
+    return rewriter.transform(response);
+  }
+
+  // Fallback string replacement (e.g. during local tests)
+  let html = await response.text();
+  html = html.replace(/<title>.*?<\/title>/i, `<title>${meta.title}</title>`);
+  html = html.replace(/<meta\s+name="description"\s+content=".*?"\s*\/?>/i, `<meta name="description" content="${meta.description}" />`);
+  html = html.replace(/<link\s+rel="canonical"\s+href=".*?"\s*\/?>/i, `<link rel="canonical" href="${meta.canonical}" />`);
+  html = html.replace(/<\/head>/i, `  <script type="application/ld+json">\n${JSON.stringify(meta.schema, null, 2)}\n  </script>\n</head>`);
+
+  return new Response(html, {
+    status: response.status,
+    headers: {
+      ...Object.fromEntries(response.headers.entries()),
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -605,16 +700,25 @@ export default {
       return await handleSitemapBlogs(request, env);
     }
 
-    // 3. Serve Static Frontend Assets (SPA-aware)
+    // 3. Serve Static Frontend Assets (SPA & Pre-rendered Metadata)
     if (!path.startsWith('/api') && env.ASSETS) {
+      const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(path);
+      
+      // If it's a page route navigation (e.g. /, /services, /services/luxury-resort-branding, /blog/...)
+      if (method === 'GET' && !hasFileExtension) {
+        const indexResponse = await env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+        if (indexResponse.status === 200) {
+          return await injectHtmlMetadata(indexResponse, path, env);
+        }
+      }
+
       const response = await env.ASSETS.fetch(request);
       if (response.status !== 404) {
         return response;
       }
-      // SPA fallback: only serve index.html for client route navigations (no file extension in path)
-      const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(path);
       if (method === 'GET' && !hasFileExtension) {
-        return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+        const indexResponse = await env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+        return await injectHtmlMetadata(indexResponse, path, env);
       }
       return response;
     }

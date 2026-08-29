@@ -12,6 +12,7 @@ import {
   Contact1,
   SEO,
 } from '../components';
+import { getMetadataForPath } from '../utils/seoData';
 
 export interface ServiceDetailsProps {
   slug?: string;
@@ -59,24 +60,24 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({ slug: propSlug }) => {
     };
   }, [currentSlug]);
 
-  const serviceTitle = detail?.meta_title
-    ? detail.meta_title
-    : detail?.service_name
-    ? `${detail.service_name} | Revlytics`
-    : 'Travel Digital Service | Revlytics';
-  const serviceDescription =
-    detail?.meta_description ||
-    'Transform your travel brand with Revlytics high-performance digital acceleration, direct booking UX, and custom hospitality solutions.';
+  const defaultMeta = useMemo(() => getMetadataForPath(`/services/${currentSlug}`), [currentSlug]);
+
+  const serviceTitle = detail?.meta_title || (detail?.service_name ? `${detail.service_name} | Revlytics` : defaultMeta.title);
+  const serviceDescription = detail?.meta_description || defaultMeta.description;
+  const serviceKeywords = detail?.meta_keywords || defaultMeta.keywords;
+  const serviceOgImage = detail?.og_image || detail?.image_url || defaultMeta.ogImage;
+  const serviceSchema = detail?.schema_markup || defaultMeta.schema;
 
   return (
     <>
       <SEO
         title={serviceTitle}
         description={serviceDescription}
-        keywords={detail?.meta_keywords || 'hospitality service, travel digital transformation, resort direct booking'}
+        keywords={serviceKeywords}
+        canonical={`https://www.revlytics.in/services/${currentSlug}`}
         ogType="service"
-        ogImage={detail?.og_image || detail?.image_url}
-        schema={detail?.schema_markup}
+        ogImage={serviceOgImage}
+        schema={serviceSchema}
       />
 
       {/* Service Details Header */}

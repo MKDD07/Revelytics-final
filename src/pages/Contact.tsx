@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Contact1, SEO } from '../components';
 import { fetchRevDbHeading, type RevDbItem } from '../services/api';
+import { CORE_PAGES_SEO } from '../utils/seoData';
 
 const Contact: React.FC = () => {
   const [metaItem, setMetaItem] = useState<RevDbItem | null>(null);
@@ -26,27 +27,23 @@ const Contact: React.FC = () => {
   }, []);
 
   const pageTitle = metaItem?.meta_heading
-    ? `${metaItem.meta_heading} | Revlytics`
-    : 'Contact Revlytics | Accelerate Your Travel Brand Growth';
+    ? (metaItem.meta_heading.includes('Revlytics') ? metaItem.meta_heading : `${metaItem.meta_heading} | Revlytics`)
+    : CORE_PAGES_SEO.contact.title;
   const pageDescription =
     metaItem?.meta_data ||
     metaItem?.description ||
-    'Ready to elevate your resort, boutique hotel, or destination brand? Contact the Revlytics team for a discovery session and direct booking audit.';
+    CORE_PAGES_SEO.contact.description;
 
   return (
     <>
       <SEO
         title={pageTitle}
         description={pageDescription}
-        keywords="contact Revlytics, travel agency contact, direct booking audit, resort digital acceleration inquiry"
+        keywords={CORE_PAGES_SEO.contact.keywords}
+        canonical={CORE_PAGES_SEO.contact.canonical}
         ogType="website"
-        schema={{
-          '@context': 'https://schema.org',
-          '@type': 'ContactPage',
-          name: pageTitle,
-          description: pageDescription,
-          url: 'https://revelytics-final.mkmkataria07.workers.dev/contact',
-        }}
+        ogImage={CORE_PAGES_SEO.contact.ogImage}
+        schema={CORE_PAGES_SEO.contact.schema}
       />
       <Contact1 />
     </>

@@ -12,8 +12,8 @@ const Hero = () => {
           <div className="row">
              <div className="col-xxl-8 offset-xxl-2 col-xl-10">
                 <div className="inner-service-banner-title-wrap tp_fade_anim" data-delay=".3">
-                   <h2 className="about-us-title tp-ff-sequel-medium">Delivering creative visuals that<br />
-                      stand out make your vision.</h2>
+                   <h1 className="about-us-title tp-ff-sequel-medium">Delivering creative visuals that<br />
+                      stand out make your vision.</h1>
                 </div>
              </div>
           </div>

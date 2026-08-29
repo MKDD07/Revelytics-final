@@ -14,7 +14,7 @@ const Hero = () => {
                 <div className="col-lg-9">
                    <div className="tp-tp-breadcrumb-main mb-30">
                       <span className="tp-breadcrumb-subtitle fw-600 text-uppercase mb-10 tp_fade_anim" data-delay=".3">Our Faq</span>
-                      <h2 className="tp-breadcrumb-title tp-ff-sequel-bold-head tp_fade_anim" data-delay=".5">Multiplied<br /> By One Hundred</h2>
+                      <h1 className="tp-breadcrumb-title tp-ff-sequel-bold-head tp_fade_anim" data-delay=".5">Frequently Asked Questions</h1>
                    </div>
                 </div>
                 <div className="col-lg-3">

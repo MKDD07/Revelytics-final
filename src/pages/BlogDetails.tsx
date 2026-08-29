@@ -7,19 +7,22 @@ import {
   SEO,
 } from '../components';
 import { fetchRevDbBySlug, fetchBlogBySlug, type RevDbItem, type BlogItem } from '../services/api';
+import { getMetadataForPath } from '../utils/seoData';
 
 interface BlogDetailsProps {
   slug?: string;
 }
 
 const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
+  const currentSlug = slug || 'mastering-travel-digital-marketing-growth-guide';
+  const defaultMeta = getMetadataForPath(`/blog/${currentSlug}`);
+
   const [revItem, setRevItem] = useState<RevDbItem | null>(null);
   const [blogItem, setBlogItem] = useState<BlogItem | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadArticleMeta() {
-      const currentSlug = slug || 'mastering-travel-digital-marketing-growth-guide';
       try {
         const revData = await fetchRevDbBySlug(currentSlug);
         if (isMounted && revData) {
@@ -39,44 +42,45 @@ const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [currentSlug]);
 
   const articleTitle =
     revItem?.meta_heading ||
     revItem?.heading ||
     blogItem?.title ||
-    'Mastering Travel Digital Marketing: Strategies to Drive Bookings in 2026';
+    defaultMeta.title.replace(' | Revlytics Guide', '').replace(' | Revlytics Playbook', '').replace(' | Revlytics', '');
   const articleDescription =
     revItem?.meta_data ||
     revItem?.description ||
     blogItem?.summary ||
-    'Discover proven travel digital marketing strategies covering SEO, short-form video, user-generated content, automated funnels, and retention tactics.';
-  const authorName = revItem?.author || blogItem?.author || 'Elena Rostova';
-  const publishDate = revItem?.date || blogItem?.created_at || '2026-08-25';
+    defaultMeta.description;
+  const authorName = revItem?.author || blogItem?.author || defaultMeta.author || 'Elena Rostova';
+  const publishDate = revItem?.date || blogItem?.created_at || defaultMeta.publishedTime || '2026-08-25';
   const articleImage =
     revItem?.image_url ||
     blogItem?.image_url ||
-    'https://images.pexels.com/photos/2108845/pexels-photo-2108845.jpeg?auto=compress&cs=tinysrgb&w=1200';
+    defaultMeta.ogImage;
 
   const tags = Array.isArray(revItem?.tags)
     ? revItem.tags.join(', ')
     : typeof revItem?.tags === 'string'
     ? revItem.tags
-    : 'TravelMarketing, SEOStrategy, DigitalMarketing';
+    : defaultMeta.keywords;
 
   return (
     <>
       <SEO
-        title={`${articleTitle} | Revlytics`}
+        title={articleTitle.includes('Revlytics') ? articleTitle : `${articleTitle} | Revlytics`}
         description={articleDescription}
         keywords={tags}
+        canonical={`https://www.revlytics.in/blog/${currentSlug}`}
         ogType="article"
         ogImage={articleImage}
         author={authorName}
         publishedTime={publishDate}
         schema={{
           '@context': 'https://schema.org',
-          '@type': 'Article',
+          '@type': 'BlogPosting',
           headline: articleTitle,
           description: articleDescription,
           image: articleImage,
@@ -93,6 +97,10 @@ const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
             },
           },
           datePublished: publishDate,
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://www.revlytics.in/blog/${currentSlug}`,
+          },
         }}
       />
 

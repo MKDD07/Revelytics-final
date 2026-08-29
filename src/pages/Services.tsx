@@ -9,6 +9,7 @@ import {
   SEO,
 } from '../components';
 import { fetchRevDbHeading, type RevDbItem } from '../services/api';
+import { CORE_PAGES_SEO } from '../utils/seoData';
 
 const Services: React.FC = () => {
   const [metaItem, setMetaItem] = useState<RevDbItem | null>(null);
@@ -34,20 +35,23 @@ const Services: React.FC = () => {
   }, []);
 
   const pageTitle = metaItem?.meta_heading
-    ? `${metaItem.meta_heading} | Revlytics`
-    : 'Our Services | Revlytics Travel Digital Solutions & Engineering';
+    ? (metaItem.meta_heading.includes('Revlytics') ? metaItem.meta_heading : `${metaItem.meta_heading} | Revlytics`)
+    : CORE_PAGES_SEO.services.title;
   const pageDescription =
     metaItem?.meta_data ||
     metaItem?.description ||
-    'Explore Revlytics full suite of hospitality digital services: Luxury Resort Branding, Direct Booking Engine UX, Destination Marketing & SEO, 3D Virtual Experiences, and Mobile Apps.';
+    CORE_PAGES_SEO.services.description;
 
   return (
     <>
       <SEO
         title={pageTitle}
         description={pageDescription}
-        keywords="travel services, luxury resort branding, direct booking engine UX, hospitality SEO, hotel web development"
+        keywords={CORE_PAGES_SEO.services.keywords}
+        canonical={CORE_PAGES_SEO.services.canonical}
         ogType="website"
+        ogImage={CORE_PAGES_SEO.services.ogImage}
+        schema={CORE_PAGES_SEO.services.schema}
       />
 
       {/* Services Header & Intro */}

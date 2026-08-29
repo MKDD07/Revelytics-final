@@ -12,7 +12,7 @@ const Hero = () => {
           <div className="row">
              <div className="col-12">
                 <div className="tp-pd-2-top tp-breadcrumb-border pb-15">
-                   <h3 className="tp-section-title fs-72 tp_fade_anim mb-20" data-delay=".5">Inside Story Report</h3>
+                   <h1 className="tp-section-title fs-72 tp_fade_anim mb-20" data-delay=".5">Inside Story Report</h1>
                    <div className="tp-pd-2-categories mb-10 tp_fade_anim" data-delay=".3">
                       <span><a href="/">Website</a></span>
                       <span>Blog</span>
