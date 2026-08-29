@@ -214,7 +214,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
                     size="sm"
                     variant="fill-red"
                     showIcon={false}
-                    onClick={(e) => handleNav('contact', e)}
+                    onClick={(e: any) => handleNav('contact', e)}
                   />
                 </div>
                 <button

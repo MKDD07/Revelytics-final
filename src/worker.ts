@@ -42,6 +42,14 @@
 
 // Cloudflare D1 Type Definitions
 import { getMetadataForPath } from './utils/seoData';
+import {
+  hashPassword,
+  verifyPassword,
+  generateSessionToken,
+  verifySessionToken,
+  encodeApiKey,
+  decodeApiKey,
+} from './utils/adminAuth';
 
 export interface D1Result<T = unknown> {
   results: T[];
@@ -664,6 +672,131 @@ async function injectHtmlMetadata(response: Response, pathname: string, env: Env
       'Content-Type': 'text/html; charset=utf-8',
     },
   });
+}
+
+// -----------------------------------------------------------------------
+// Admin Database & Security Helpers
+// -----------------------------------------------------------------------
+async function ensureAdminTables(env: Env) {
+  if (!env?.DB) return;
+  try {
+    await env.DB.batch([
+      env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS credentials (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL UNIQUE,
+          password_hash BLOB NOT NULL,
+          groq_apikey_encrypted BLOB NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `),
+      env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS service_details (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          slug TEXT NOT NULL UNIQUE,
+          service_name TEXT NOT NULL DEFAULT '',
+          category TEXT,
+          features TEXT,
+          approach_steps TEXT,
+          summary TEXT,
+          approach_title TEXT,
+          process_title TEXT,
+          process_steps TEXT,
+          process_cta_text TEXT,
+          process_cta_link TEXT,
+          "pexels_query_2" TEXT,
+          why_choose_subtitle TEXT,
+          why_choose_title TEXT,
+          why_choose_items TEXT,
+          faqs TEXT,
+          meta_title TEXT,
+          meta_description TEXT,
+          meta_keywords TEXT,
+          schema_markup TEXT,
+          og_image TEXT
+        );
+      `),
+    ]);
+
+    const existing = await env.DB.prepare('SELECT id FROM credentials LIMIT 1').first();
+    if (!existing) {
+      const defaultHash = await hashPassword('revlytics2026!');
+      await env.DB.prepare(`
+        INSERT INTO credentials (username, password_hash, groq_apikey_encrypted)
+        VALUES (?, ?, ?)
+      `)
+        .bind('admin', defaultHash, '')
+        .run();
+    }
+  } catch (err) {
+    console.warn('ensureAdminTables warning:', err);
+  }
+}
+
+async function getAdminUser(request: Request, env: Env): Promise<{ valid: boolean; username?: string }> {
+  const authHeader = request.headers.get('Authorization') || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '').trim();
+    return await verifySessionToken(token);
+  }
+  const apiKeyAuth = await verifyApiKey(request, env);
+  if (apiKeyAuth.valid) {
+    return { valid: true, username: 'admin' };
+  }
+  return { valid: false };
+}
+
+async function getGroqKey(env: Env): Promise<string> {
+  if (!env?.DB) return '';
+  try {
+    const row = (await env.DB.prepare(
+      'SELECT groq_apikey_encrypted FROM credentials WHERE groq_apikey_encrypted IS NOT NULL AND groq_apikey_encrypted != "" LIMIT 1'
+    ).first()) as any;
+    if (row?.groq_apikey_encrypted) {
+      return decodeApiKey(row.groq_apikey_encrypted);
+    }
+  } catch (err) {
+    console.warn('getGroqKey error:', err);
+  }
+  return '';
+}
+
+async function callGroqChat(apiKey: string, prompt: string, systemPrompt?: string): Promise<any> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content:
+            systemPrompt ||
+            'You are an expert travel and hospitality digital marketing AI for Revlytics. Always respond with valid JSON.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Groq API returned error (${res.status}): ${errorText}`);
+  }
+
+  const data = (await res.json()) as any;
+  const content = data.choices?.[0]?.message?.content || '{}';
+  try {
+    return JSON.parse(content);
+  } catch {
+    return { raw: content };
+  }
 }
 
 export default {
@@ -1756,6 +1889,471 @@ export default {
             },
             201
           );
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 9. ADMIN AUTHENTICATION & CREDENTIALS API
+      // Table: credentials (id, username, password_hash, groq_apikey_encrypted, created_at)
+      // -----------------------------------------------------------------------
+      if (path.startsWith('/api/auth/') || path.startsWith('/api/admin/') || path.startsWith('/api/ai/')) {
+        await ensureAdminTables(env);
+      }
+
+      if (path === '/api/auth/login') {
+        if (method === 'POST') {
+          const body = (await request.json()) as any;
+          const { username, password } = body || {};
+
+          if (!username || !password) {
+            return jsonResponse({ error: 'Username and password are required.' }, 400);
+          }
+
+          const user = (await env.DB.prepare(
+            'SELECT id, username, password_hash, groq_apikey_encrypted FROM credentials WHERE username = ?'
+          )
+            .bind(username)
+            .first()) as any;
+
+          if (!user) {
+            return jsonResponse({ error: 'Invalid username or password.' }, 401);
+          }
+
+          const passwordValid = await verifyPassword(password, user.password_hash);
+          if (!passwordValid) {
+            return jsonResponse({ error: 'Invalid username or password.' }, 401);
+          }
+
+          const token = await generateSessionToken(user.username);
+          return jsonResponse({
+            success: true,
+            token,
+            username: user.username,
+            hasGroqKey: !!user.groq_apikey_encrypted,
+          });
+        }
+      }
+
+      if (path === '/api/auth/me') {
+        if (method === 'GET') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) {
+            return jsonResponse({ authenticated: false, error: 'Unauthorized.' }, 401);
+          }
+
+          const user = (await env.DB.prepare(
+            'SELECT username, groq_apikey_encrypted, created_at FROM credentials WHERE username = ?'
+          )
+            .bind(admin.username)
+            .first()) as any;
+
+          return jsonResponse({
+            authenticated: true,
+            username: admin.username,
+            hasGroqKey: !!user?.groq_apikey_encrypted,
+            createdAt: user?.created_at,
+          });
+        }
+      }
+
+      if (path === '/api/auth/setup') {
+        if (method === 'POST') {
+          const body = (await request.json()) as any;
+          const { username, password, groqApiKey } = body || {};
+
+          if (!username || !password) {
+            return jsonResponse({ error: 'Username and password are required.' }, 400);
+          }
+
+          const hash = await hashPassword(password);
+          const encryptedGroq = groqApiKey ? encodeApiKey(groqApiKey) : '';
+
+          await env.DB.prepare(`
+            INSERT INTO credentials (username, password_hash, groq_apikey_encrypted)
+            VALUES (?, ?, ?)
+            ON CONFLICT(username) DO UPDATE SET
+              password_hash = excluded.password_hash,
+              groq_apikey_encrypted = CASE WHEN excluded.groq_apikey_encrypted != '' THEN excluded.groq_apikey_encrypted ELSE credentials.groq_apikey_encrypted END
+          `)
+            .bind(username, hash, encryptedGroq)
+            .run();
+
+          const token = await generateSessionToken(username);
+          return jsonResponse({
+            success: true,
+            message: 'Admin credentials configured successfully.',
+            token,
+            username,
+            hasGroqKey: !!encryptedGroq,
+          });
+        }
+      }
+
+      if (path === '/api/auth/update-groq-key') {
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          const { groqApiKey } = body || {};
+
+          const encoded = groqApiKey ? encodeApiKey(groqApiKey.trim()) : '';
+          await env.DB.prepare(`
+            UPDATE credentials SET groq_apikey_encrypted = ? WHERE username = ?
+          `)
+            .bind(encoded, admin.username)
+            .run();
+
+          return jsonResponse({
+            success: true,
+            message: 'Groq API Key updated successfully in Cloudflare D1.',
+            hasGroqKey: !!encoded,
+          });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 10. ADMIN SERVICE DETAILS MANAGEMENT (Table: service_details)
+      // -----------------------------------------------------------------------
+      if (path === '/api/admin/service-details') {
+        if (method === 'GET') {
+          const { results } = await env.DB.prepare(
+            'SELECT * FROM service_details ORDER BY id ASC'
+          ).all();
+          return jsonResponse({ success: true, count: results.length, data: results });
+        }
+
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          if (!body.slug) {
+            return jsonResponse({ error: 'Service slug is required.' }, 400);
+          }
+
+          const featuresStr = typeof body.features === 'object' ? JSON.stringify(body.features) : body.features || '';
+          const approachStr = typeof body.approach_steps === 'object' ? JSON.stringify(body.approach_steps) : body.approach_steps || '';
+          const processStr = typeof body.process_steps === 'object' ? JSON.stringify(body.process_steps) : body.process_steps || '';
+          const whyChooseStr = typeof body.why_choose_items === 'object' ? JSON.stringify(body.why_choose_items) : body.why_choose_items || '';
+          const faqsStr = typeof body.faqs === 'object' ? JSON.stringify(body.faqs) : body.faqs || '';
+
+          await env.DB.prepare(`
+            INSERT INTO service_details (
+              slug, service_name, category, features, approach_steps, summary,
+              approach_title, process_title, process_steps, process_cta_text,
+              process_cta_link, "pexels_query_2", why_choose_subtitle,
+              why_choose_title, why_choose_items, faqs, meta_title,
+              meta_description, meta_keywords, schema_markup, og_image
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(slug) DO UPDATE SET
+              service_name = excluded.service_name,
+              category = excluded.category,
+              features = excluded.features,
+              approach_steps = excluded.approach_steps,
+              summary = excluded.summary,
+              approach_title = excluded.approach_title,
+              process_title = excluded.process_title,
+              process_steps = excluded.process_steps,
+              process_cta_text = excluded.process_cta_text,
+              process_cta_link = excluded.process_cta_link,
+              "pexels_query_2" = excluded."pexels_query_2",
+              why_choose_subtitle = excluded.why_choose_subtitle,
+              why_choose_title = excluded.why_choose_title,
+              why_choose_items = excluded.why_choose_items,
+              faqs = excluded.faqs,
+              meta_title = excluded.meta_title,
+              meta_description = excluded.meta_description,
+              meta_keywords = excluded.meta_keywords,
+              schema_markup = excluded.schema_markup,
+              og_image = excluded.og_image
+          `)
+            .bind(
+              body.slug,
+              body.service_name || '',
+              body.category || 'Services',
+              featuresStr,
+              approachStr,
+              body.summary || '',
+              body.approach_title || '',
+              body.process_title || '',
+              processStr,
+              body.process_cta_text || '',
+              body.process_cta_link || '',
+              body.pexels_query_2 || '',
+              body.why_choose_subtitle || '',
+              body.why_choose_title || '',
+              whyChooseStr,
+              faqsStr,
+              body.meta_title || '',
+              body.meta_description || '',
+              body.meta_keywords || '',
+              body.schema_markup || '',
+              body.og_image || ''
+            )
+            .run();
+
+          return jsonResponse({ success: true, message: 'Service detail saved successfully.', slug: body.slug });
+        }
+      }
+
+      if (path.startsWith('/api/admin/service-details/')) {
+        const slug = path.split('/api/admin/service-details/')[1];
+
+        if (method === 'DELETE') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          await env.DB.prepare('DELETE FROM service_details WHERE slug = ?').bind(slug).run();
+          return jsonResponse({ success: true, message: `Service ${slug} deleted successfully.` });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 11. ADMIN PAGES META MANAGEMENT
+      // -----------------------------------------------------------------------
+      if (path === '/api/admin/pages-meta') {
+        if (method === 'GET') {
+          const corePages = ['home', 'services', 'blog', 'faq', 'contact'];
+          const { results: revMeta } = await env.DB.prepare(
+            'SELECT page_name, slug, meta_heading, meta_data, description FROM rev_db'
+          ).all();
+
+          const { results: serviceMeta } = await env.DB.prepare(
+            'SELECT slug, service_name, meta_title, meta_description, meta_keywords, og_image FROM service_details'
+          ).all();
+
+          return jsonResponse({
+            success: true,
+            corePages,
+            revMeta,
+            serviceMeta,
+          });
+        }
+
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          const { pageName, slug, meta_title, meta_description, meta_keywords, og_image } = body || {};
+
+          if (!pageName && !slug) {
+            return jsonResponse({ error: 'pageName or slug is required.' }, 400);
+          }
+
+          if (slug && (await env.DB.prepare('SELECT id FROM service_details WHERE slug = ?').bind(slug).first())) {
+            await env.DB.prepare(`
+              UPDATE service_details SET
+                meta_title = COALESCE(?, meta_title),
+                meta_description = COALESCE(?, meta_description),
+                meta_keywords = COALESCE(?, meta_keywords),
+                og_image = COALESCE(?, og_image)
+              WHERE slug = ?
+            `)
+              .bind(meta_title, meta_description, meta_keywords, og_image, slug)
+              .run();
+          } else {
+            await env.DB.prepare(`
+              INSERT INTO rev_db (page_name, slug, heading, meta_heading, meta_data, description)
+              VALUES (?, ?, ?, ?, ?, ?)
+              ON CONFLICT(slug) DO UPDATE SET
+                meta_heading = excluded.meta_heading,
+                meta_data = excluded.meta_data,
+                description = excluded.description,
+                updated_at = CURRENT_TIMESTAMP
+            `)
+              .bind(
+                pageName || 'page',
+                slug || pageName,
+                meta_title || 'Revlytics',
+                meta_title || '',
+                meta_description || '',
+                meta_description || ''
+              )
+              .run();
+          }
+
+          return jsonResponse({ success: true, message: 'Page metadata updated in Cloudflare D1.' });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 12. ADMIN BLOGS MANAGEMENT API
+      // -----------------------------------------------------------------------
+      if (path === '/api/admin/blogs') {
+        if (method === 'GET') {
+          const { results } = await env.DB.prepare(
+            'SELECT * FROM rev_db WHERE slug IS NOT NULL AND slug != "" ORDER BY id DESC'
+          ).all();
+          return jsonResponse({ success: true, count: results.length, data: results });
+        }
+
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          if (!body.title && !body.heading) {
+            return jsonResponse({ error: 'Blog title is required.' }, 400);
+          }
+
+          const heading = body.heading || body.title;
+          const slug = body.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          const sectionsJson = typeof body.sections_h2_para === 'object' ? JSON.stringify(body.sections_h2_para) : body.sections_h2_para || '[]';
+          const tagsJson = typeof body.tags === 'object' ? JSON.stringify(body.tags) : body.tags || '[]';
+
+          await env.DB.prepare(`
+            INSERT INTO rev_db (
+              page_name, section_name, slug, heading, subheading, meta_heading, meta_data,
+              category, author, date, image_url, description, paragraph, useful_quote,
+              pexels_featured_query, sections_h2_para, tags
+            )
+            VALUES ('blog', 'article', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(slug) DO UPDATE SET
+              heading = excluded.heading,
+              subheading = excluded.subheading,
+              meta_heading = excluded.meta_heading,
+              meta_data = excluded.meta_data,
+              category = excluded.category,
+              author = excluded.author,
+              date = excluded.date,
+              image_url = excluded.image_url,
+              description = excluded.description,
+              paragraph = excluded.paragraph,
+              useful_quote = excluded.useful_quote,
+              sections_h2_para = excluded.sections_h2_para,
+              tags = excluded.tags,
+              updated_at = CURRENT_TIMESTAMP
+          `)
+            .bind(
+              slug,
+              heading,
+              body.subheading || '',
+              body.meta_heading || heading,
+              body.meta_data || body.description || '',
+              body.category || 'Travel Insights',
+              body.author || 'Elena Rostova',
+              body.date || new Date().toISOString().split('T')[0],
+              body.image_url || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              body.description || '',
+              body.paragraph || '',
+              body.useful_quote || '',
+              body.pexels_featured_query || 'luxury travel',
+              sectionsJson,
+              tagsJson
+            )
+            .run();
+
+          return jsonResponse({ success: true, message: 'Blog published successfully to D1.', slug });
+        }
+      }
+
+      if (path.startsWith('/api/admin/blogs/')) {
+        const slug = path.split('/api/admin/blogs/')[1];
+
+        if (method === 'DELETE') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          await env.DB.prepare('DELETE FROM rev_db WHERE slug = ?').bind(slug).run();
+          await env.DB.prepare('DELETE FROM blogs WHERE slug = ?').bind(slug).run();
+          return jsonResponse({ success: true, message: `Blog ${slug} deleted successfully.` });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 13. GROQ AI GENERATION ENDPOINTS
+      // -----------------------------------------------------------------------
+      if (path === '/api/ai/generate-blog') {
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          const { topic, tone = 'Luxury & Authoritative', keywords = '', targetAudience = 'Luxury Hotel Owners & Resort Directors' } = body || {};
+
+          if (!topic) {
+            return jsonResponse({ error: 'Topic or prompt is required for AI generation.' }, 400);
+          }
+
+          let groqKey = body.groqApiKey || (await getGroqKey(env));
+          if (!groqKey) {
+            return jsonResponse({ error: 'Groq API Key is not configured. Please add your Groq API key in Settings.' }, 400);
+          }
+
+          const prompt = `Write a comprehensive, high-converting, authoritative travel industry blog article for Revlytics (a travel digital acceleration agency).
+Topic: ${topic}
+Tone: ${tone}
+Target Audience: ${targetAudience}
+Keywords to integrate: ${keywords}
+
+Respond with a valid JSON object matching exactly this schema:
+{
+  "heading": "Catchy, SEO-optimized H1 title (50-65 chars)",
+  "slug": "url-safe-lowercase-slug-kebab-case",
+  "meta_heading": "SEO Meta Title (50-60 chars)",
+  "meta_data": "Compelling Meta Description for Google Search (140-160 chars)",
+  "category": "e.g. Direct Bookings, Hospitality Tech, Luxury Branding, Destination Marketing",
+  "author": "Elena Rostova",
+  "date": "${new Date().toISOString().split('T')[0]}",
+  "image_url": "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  "description": "2-3 sentence executive summary of the article.",
+  "paragraph": "Introductory narrative paragraph capturing the reader's attention.",
+  "useful_quote": "A memorable, tweetable industry quote or insight.",
+  "sections_h2_para": [
+    { "title": "Subheading 1", "para": "Detailed, actionable insights..." },
+    { "title": "Subheading 2", "para": "Tactical strategies and examples..." },
+    { "title": "Subheading 3", "para": "Implementation steps for hotels and resorts..." }
+  ],
+  "tags": ["DirectBookings", "HospitalityTech", "TravelMarketing", "LuxuryResorts"]
+}`;
+
+          const result = await callGroqChat(
+            groqKey,
+            prompt,
+            'You are the Chief Strategy Officer and Lead Travel Marketing Writer for Revlytics. Generate high-value, factual, conversion-oriented travel hospitality insights in valid JSON format.'
+          );
+
+          return jsonResponse({ success: true, data: result });
+        }
+      }
+
+      if (path === '/api/ai/generate-meta') {
+        if (method === 'POST') {
+          const admin = await getAdminUser(request, env);
+          if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
+
+          const body = (await request.json()) as any;
+          const { pageType = 'service', name, description = '', keywords = '' } = body || {};
+
+          let groqKey = body.groqApiKey || (await getGroqKey(env));
+          if (!groqKey) {
+            return jsonResponse({ error: 'Groq API Key is not configured. Please add your Groq API key in Settings.' }, 400);
+          }
+
+          const prompt = `Generate perfect SEO metadata for a ${pageType} page on Revlytics website.
+Name / Subject: ${name}
+Current Description: ${description}
+Keywords: ${keywords}
+
+Respond with a valid JSON object matching this schema:
+{
+  "meta_title": "Optimized Title Tag under 60 chars ending with | Revlytics",
+  "meta_description": "Compelling Meta Description between 140-160 chars driving clicks",
+  "meta_keywords": "comma separated relevant high-intent travel SEO keywords",
+  "h1_heading": "Clear, powerful H1 headline for the page hero",
+  "schema_type": "${pageType === 'service' ? 'Service' : pageType === 'faq' ? 'FAQPage' : 'WebPage'}"
+}`;
+
+          const result = await callGroqChat(
+            groqKey,
+            prompt,
+            'You are an elite Technical SEO Director specializing in luxury travel, hotel booking conversions, and Schema.org structured data. Respond strictly with valid JSON.'
+          );
+
+          return jsonResponse({ success: true, data: result });
         }
       }
 

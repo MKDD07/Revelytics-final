@@ -13,6 +13,8 @@ import {
   BlogDetails,
   Faq,
   Contact,
+  Login,
+  AdminLayout,
 } from './pages';
 
 export type RouteType =
@@ -22,7 +24,9 @@ export type RouteType =
   | 'blog'
   | 'blog-details'
   | 'faq'
-  | 'contact';
+  | 'contact'
+  | 'login'
+  | 'admin';
 
 interface RouteState {
   route: RouteType;
@@ -37,13 +41,26 @@ const validRoutes: RouteType[] = [
   'blog-details',
   'faq',
   'contact',
+  'login',
+  'admin',
 ];
 
 const getRouteFromLocation = (): RouteState => {
-  // 1. Check HTML5 Pathname (e.g. /services/ui-ux-design, /service-details/ui-ux-design, /services)
+  // 1. Check HTML5 Pathname (e.g. /login, /admin, /admin/blogs, /services/ui-ux-design)
   const path = window.location.pathname.replace(/^\/|\/$/g, '');
   const pathParts = path.split('/');
   const firstSegment = pathParts[0]?.toLowerCase();
+
+  // Support /login & /admin
+  if (firstSegment === 'login') {
+    return { route: 'login' };
+  }
+  if (firstSegment === 'admin') {
+    return {
+      route: 'admin',
+      slug: pathParts[1] || 'meta',
+    };
+  }
 
   // Support /services/:slug as service-details
   if (firstSegment === 'services' && pathParts[1]) {
@@ -60,11 +77,21 @@ const getRouteFromLocation = (): RouteState => {
     };
   }
 
-  // 2. Check Hash Routing Fallback (e.g. #services/ui-ux-design or #service-details?service=ui-ux-design)
+  // 2. Check Hash Routing Fallback (e.g. #login, #admin, #services/ui-ux-design)
   const rawHash = window.location.hash.replace('#', '').toLowerCase();
   if (rawHash) {
     const hashParts = rawHash.split('?')[0].split('/');
     const hashBase = hashParts[0] as RouteType;
+
+    if (hashBase === 'login') {
+      return { route: 'login' };
+    }
+    if (hashBase === 'admin') {
+      return {
+        route: 'admin',
+        slug: hashParts[1] || 'meta',
+      };
+    }
 
     if (hashBase === 'services' && hashParts[1]) {
       return {
@@ -95,16 +122,26 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const isTransitioningRef = useRef<boolean>(false);
 
-  // Guarantee loading state finishes within 2.2s
+  // Guarantee loading state finishes within 2.2s (skip for admin routes)
   useEffect(() => {
+    if (routeState.route === 'login' || routeState.route === 'admin') {
+      setIsLoading(false);
+      return;
+    }
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2200);
     return () => clearTimeout(timer);
-  }, []);
+  }, [routeState.route]);
 
   // Barba.js Curtain Transition Effect for all route changes
   const triggerBarbaTransition = (nextState: RouteState) => {
+    if (nextState.route === 'login' || nextState.route === 'admin' || routeState.route === 'login' || routeState.route === 'admin') {
+      setRouteState(nextState);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     if (isTransitioningRef.current) {
       setRouteState(nextState);
       window.scrollTo(0, 0);
@@ -167,6 +204,10 @@ function App() {
 
   // Re-run theme initializations whenever the route or page component changes
   useEffect(() => {
+    if (routeState.route === 'login' || routeState.route === 'admin') {
+      return;
+    }
+
     const timer = setTimeout(() => {
       const w = window as unknown as {
         initMainTheme?: () => void;
@@ -277,6 +318,16 @@ function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // If Admin or Login route, render standalone Admin / Login view
+  if (routeState.route === 'login') {
+    return <Login onLoginSuccess={() => handleNavigate('admin')} onNavigate={handleNavigate} />;
+  }
+
+  if (routeState.route === 'admin') {
+    const initialTab = (routeState.slug === 'blogs' || routeState.slug === 'settings') ? routeState.slug : 'meta';
+    return <AdminLayout initialTab={initialTab} onNavigate={handleNavigate} />;
+  }
 
   const renderCurrentPage = () => {
     switch (routeState.route) {
