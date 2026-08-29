@@ -270,28 +270,28 @@ export const BlogDashboard: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="stack-6">
       {/* Top Header */}
-      <div className="admin-page-header">
+      <div className="page-header">
         <div>
-          <h2 className="admin-page-title">
+          <h2 className="page-header__title">
             Blog CMS & Groq AI Studio
           </h2>
-          <p className="admin-page-desc">
+          <p className="page-header__subtitle">
             Generate, edit, and publish high-converting travel hospitality articles directly to Cloudflare D1 (`rev_db`).
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="page-header__actions">
           <button
-            className="admin-btn admin-btn-gradient"
+            className="btn btn--primary"
             onClick={() => setIsAiModalOpen(true)}
           >
             <Sparkles size={14} /> New AI Blog with Groq
           </button>
 
           <button
-            className="admin-btn admin-btn-secondary"
+            className="btn btn--outline"
             onClick={handleNewArticle}
           >
             <Plus size={14} /> New Blank Article
@@ -300,113 +300,113 @@ export const BlogDashboard: React.FC = () => {
       </div>
 
       {successMsg && (
-        <div className="admin-alert-success">
+        <div className="alert alert--success">
           <CheckCircle2 size={16} />
           <span>{successMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="admin-alert-error">
+        <div className="alert alert--error">
           <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Articles Table Card */}
-      <div className="admin-card">
-        <div className="admin-card-header">
+      <div className="card">
+        <div className="card__header-row">
           <div>
-            <h3 className="admin-card-title">Published Articles in Cloudflare D1</h3>
-            <div className="admin-card-subtitle">
+            <h3 className="card__title">Published Articles in Cloudflare D1</h3>
+            <p className="card__description">
               Live CMS articles queryable via `/api/rev_db` and `/blog/:slug`
-            </div>
+            </p>
           </div>
 
           {/* Search Input */}
-          <div style={{ position: 'relative', width: '240px' }}>
+          <div className="search-field" style={{ width: '220px' }}>
+            <Search size={13} />
             <input
               type="text"
-              className="admin-input"
+              className="input input--sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search articles..."
-              style={{ paddingLeft: '32px', height: '34px', fontSize: '12px' }}
             />
-            <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '10px' }} />
           </div>
         </div>
 
-        <div className="admin-table-wrap">
+        <div className="card__content card__content--flush">
           {loading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
-              <p style={{ fontSize: '13px' }}>Loading articles from Cloudflare D1...</p>
+            <div className="empty-state">
+              <div className="spinner" />
+              <p className="empty-state__title">Loading articles from Cloudflare D1...</p>
             </div>
           ) : filteredArticles.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
-              <BookOpen size={32} color="#94a3b8" style={{ margin: '0 auto 8px auto', display: 'block' }} />
-              <p style={{ fontSize: '14px', fontWeight: 600, color: '#334155', margin: '0 0 4px 0' }}>No articles found</p>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px 0' }}>Generate your first travel article with Groq AI in seconds.</p>
-              <button className="admin-btn admin-btn-gradient admin-btn-sm" onClick={() => setIsAiModalOpen(true)}>
+            <div className="empty-state">
+              <BookOpen size={32} />
+              <p className="empty-state__title">No articles found</p>
+              <p className="empty-state__hint">Generate your first travel article with Groq AI in seconds.</p>
+              <button className="btn btn--primary btn--sm" onClick={() => setIsAiModalOpen(true)}>
                 <Sparkles size={13} /> Generate with Groq AI
               </button>
             </div>
           ) : (
-            <table className="admin-table">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Article Title & Slug</th>
                   <th>Category</th>
                   <th>Author</th>
                   <th>Published Date</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="align-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredArticles.map((art) => (
                   <tr key={art.slug || art.id}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                      <div className="table-primary-text">
                         {art.heading}
                       </div>
-                      <div className="admin-code-font" style={{ color: '#6366f1', marginTop: '2px' }}>
+                      <div className="table-sub-text">
                         /blog/{art.slug}
                       </div>
                     </td>
                     <td>
-                      <span className="admin-badge admin-badge-purple">{art.category || 'Travel Insights'}</span>
+                      <span className="badge badge--purple">{art.category || 'Travel Insights'}</span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569' }}>
-                        <User size={13} color="#94a3b8" />
-                        {art.author || 'Elena Rostova'}
+                      <div className="row row-gap-1 text-soft" style={{ fontSize: '12px' }}>
+                        <User size={13} color="var(--color-text-faint)" />
+                        <span>{art.author || 'Elena Rostova'}</span>
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b' }}>
-                        <Calendar size={13} color="#94a3b8" />
-                        {art.date || art.created_at?.split('T')[0] || '2026-08-29'}
+                      <div className="row row-gap-1 text-faint" style={{ fontSize: '12px' }}>
+                        <Calendar size={13} />
+                        <span>{art.date || art.created_at?.split('T')[0] || '2026-08-29'}</span>
                       </div>
                     </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                    <td className="align-right">
+                      <div className="table-actions">
                         <a
                           href={`/blog/${art.slug}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          className="table-action"
                         >
                           <Eye size={12} /> View
                         </a>
                         <button
                           onClick={() => handleEditArticle(art)}
-                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          className="table-action"
                         >
                           <Edit size={12} /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteArticle(art.slug)}
-                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          className="table-action table-action--danger"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -422,31 +422,30 @@ export const BlogDashboard: React.FC = () => {
 
       {/* Groq AI Blog Generator Modal */}
       {isAiModalOpen && (
-        <div className="admin-dialog-overlay" onClick={() => setIsAiModalOpen(false)}>
-          <div className="admin-dialog-container" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-dialog-header">
+        <div className="dialog-overlay" onClick={() => setIsAiModalOpen(false)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog__header">
               <div>
-                <h3 className="admin-card-title">✨ Generate SEO Travel Article with Groq AI</h3>
-                <div className="admin-card-subtitle">
+                <h3 className="dialog__title">✨ Generate SEO Travel Article with Groq AI</h3>
+                <p className="dialog__description">
                   Select your preferred LLM model and generate comprehensive structured articles.
-                </div>
+                </p>
               </div>
               <button
+                className="dialog__close"
                 onClick={() => setIsAiModalOpen(false)}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+                aria-label="Close dialog"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
-            <div className="admin-dialog-body">
-              <form onSubmit={handleGenerateBlog} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Article Topic / Focus Subject *</span>
-                  </div>
+            <div className="dialog__body">
+              <form onSubmit={handleGenerateBlog} className="stack-4">
+                <div className="field">
+                  <label className="field__label">Article Topic / Focus Subject *</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className="input"
                     value={aiTopic}
                     onChange={(e) => setAiTopic(e.target.value)}
                     placeholder="e.g. How Luxury Eco-Resorts Triple Direct Bookings with Frictionless Mobile UX"
@@ -454,27 +453,23 @@ export const BlogDashboard: React.FC = () => {
                   />
                 </div>
 
-                <div className="admin-grid-2">
-                  <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                    <div className="admin-form-label">
-                      <span>Editorial Tone</span>
-                    </div>
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">Editorial Tone</label>
                     <input
                       type="text"
-                      className="admin-input"
+                      className="input"
                       value={aiTone}
                       onChange={(e) => setAiTone(e.target.value)}
                       placeholder="Luxury & Authoritative"
                     />
                   </div>
 
-                  <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                    <div className="admin-form-label">
-                      <span>Target Audience</span>
-                    </div>
+                  <div className="field">
+                    <label className="field__label">Target Audience</label>
                     <input
                       type="text"
-                      className="admin-input"
+                      className="input"
                       value={aiAudience}
                       onChange={(e) => setAiAudience(e.target.value)}
                       placeholder="Luxury Resort Directors"
@@ -482,30 +477,28 @@ export const BlogDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>SEO Keywords to Target (Comma separated)</span>
-                  </div>
+                <div className="field">
+                  <label className="field__label">SEO Keywords to Target (Comma separated)</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className="input"
                     value={aiKeywords}
                     onChange={(e) => setAiKeywords(e.target.value)}
                     placeholder="direct bookings, boutique resort, hospitality UX, CRS integration"
                   />
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Cpu size={14} color="#7e22ce" /> Groq LLM Model
-                    </span>
-                    <span className="admin-code-font" style={{ color: '#7e22ce' }}>
+                <div className="field">
+                  <div className="field__label-row">
+                    <label className="field__label">
+                      <Cpu size={14} color="var(--color-purple-text)" /> Groq LLM Model
+                    </label>
+                    <span className="text-mono" style={{ fontSize: '11px', color: 'var(--color-purple-text)' }}>
                       {selectedModel}
                     </span>
                   </div>
                   <select
-                    className="admin-select"
+                    className="select"
                     value={selectedModel}
                     onChange={(e) => {
                       setSelectedModel(e.target.value);
@@ -534,20 +527,21 @@ export const BlogDashboard: React.FC = () => {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '8px' }}>
+                <div className="form-actions">
                   <button
                     type="button"
-                    className="admin-btn admin-btn-outline"
+                    className="btn btn--outline"
                     onClick={() => setIsAiModalOpen(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="admin-btn admin-btn-gradient"
+                    className="btn btn--primary"
                     disabled={isGenerating}
                   >
-                    <Sparkles size={14} /> {isGenerating ? 'Generating...' : 'Generate Article Now'}
+                    {isGenerating ? <span className="btn__spinner" /> : <Sparkles size={14} />}
+                    <span>{isGenerating ? 'Generating...' : 'Generate Article Now'}</span>
                   </button>
                 </div>
               </form>
@@ -558,213 +552,189 @@ export const BlogDashboard: React.FC = () => {
 
       {/* Edit / Review Article Modal */}
       {isEditorOpen && (
-        <div className="admin-dialog-overlay" onClick={() => setIsEditorOpen(false)}>
-          <div className="admin-dialog-container" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-dialog-header">
+        <div className="dialog-overlay" onClick={() => setIsEditorOpen(false)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog__header">
               <div>
-                <h3 className="admin-card-title">
+                <h3 className="dialog__title">
                   {editingArticle.heading ? `Edit Article: ${editingArticle.heading}` : 'Create New Article'}
                 </h3>
-                <div className="admin-card-subtitle">Review, modify, and publish this article to Cloudflare D1.</div>
+                <p className="dialog__description">Review, modify, and publish this article to Cloudflare D1.</p>
               </div>
               <button
+                className="dialog__close"
                 onClick={() => setIsEditorOpen(false)}
-                style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#64748b' }}
+                aria-label="Close dialog"
               >
-                <X size={18} />
+                <X size={15} />
               </button>
             </div>
-            <div className="admin-dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Title & Slug */}
-              <div className="admin-grid-2">
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Article Heading (`heading` / H1) *</span>
+            <div className="dialog__body">
+              <div className="stack-4">
+                {/* Title & Slug */}
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">Article Heading (`heading` / H1) *</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.heading}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, heading: e.target.value })}
+                      required
+                    />
                   </div>
+
+                  <div className="field">
+                    <label className="field__label">URL Slug (`slug`) *</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.slug}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })}
+                      placeholder="url-safe-kebab-case"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Meta Title & Meta Description */}
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">SEO Meta Title (`meta_heading`)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.meta_heading || ''}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, meta_heading: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="field__label">Meta Description (`meta_data`)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.meta_data || ''}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, meta_data: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Category, Author, Date */}
+                <div className="grid-3">
+                  <div className="field">
+                    <label className="field__label">Category</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.category || ''}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="field__label">Author</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.author || ''}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, author: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="field__label">Date (YYYY-MM-DD)</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={editingArticle.date || ''}
+                      onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Featured Image URL */}
+                <div className="field">
+                  <label className="field__label">Featured Image URL (`image_url`)</label>
                   <input
                     type="text"
-                    className="admin-input"
-                    value={editingArticle.heading}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, heading: e.target.value })}
-                    required
+                    className="input"
+                    value={editingArticle.image_url || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, image_url: e.target.value })}
                   />
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>URL Slug (`slug`) *</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    value={editingArticle.slug}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, slug: e.target.value })}
-                    placeholder="url-safe-kebab-case"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Meta Title & Meta Description */}
-              <div className="admin-grid-2">
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>SEO Meta Title (`meta_heading`)</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    value={editingArticle.meta_heading || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, meta_heading: e.target.value })}
+                {/* Executive Summary */}
+                <div className="field">
+                  <label className="field__label">Executive Summary (`description`)</label>
+                  <textarea
+                    className="textarea"
+                    value={editingArticle.description || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
                   />
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Meta Description (`meta_data`)</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    value={editingArticle.meta_data || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, meta_data: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Category, Author, Date */}
-              <div className="admin-grid-3">
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Category</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    value={editingArticle.category || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
+                {/* Narrative Paragraph */}
+                <div className="field">
+                  <label className="field__label">Intro Narrative Paragraph (`paragraph`)</label>
+                  <textarea
+                    className="textarea"
+                    value={editingArticle.paragraph || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
                   />
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Author</span>
-                  </div>
+                {/* Highlight Quote */}
+                <div className="field">
+                  <label className="field__label">Highlight Quote (`useful_quote`)</label>
                   <input
                     type="text"
-                    className="admin-input"
-                    value={editingArticle.author || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, author: e.target.value })}
+                    className="input"
+                    value={editingArticle.useful_quote || ''}
+                    onChange={(e) => setEditingArticle({ ...editingArticle, useful_quote: e.target.value })}
                   />
                 </div>
 
-                <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                  <div className="admin-form-label">
-                    <span>Date (YYYY-MM-DD)</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="admin-input"
-                    value={editingArticle.date || ''}
-                    onChange={(e) => setEditingArticle({ ...editingArticle, date: e.target.value })}
+                {/* H2 Sections */}
+                <div className="field">
+                  <label className="field__label">H2 Sections (`sections_h2_para` JSON Array)</label>
+                  <textarea
+                    className="textarea textarea--mono"
+                    value={rawSectionsJson}
+                    onChange={(e) => setRawSectionsJson(e.target.value)}
+                    style={{ minHeight: '120px' }}
                   />
                 </div>
-              </div>
 
-              {/* Featured Image URL */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Featured Image URL (`image_url`)</span>
+                {/* Tags */}
+                <div className="field">
+                  <label className="field__label">Tags (`tags` JSON Array)</label>
+                  <input
+                    type="text"
+                    className="input input--mono"
+                    value={rawTagsJson}
+                    onChange={(e) => setRawTagsJson(e.target.value)}
+                  />
                 </div>
-                <input
-                  type="text"
-                  className="admin-input"
-                  value={editingArticle.image_url || ''}
-                  onChange={(e) => setEditingArticle({ ...editingArticle, image_url: e.target.value })}
-                />
-              </div>
 
-              {/* Executive Summary */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Executive Summary (`description`)</span>
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn btn--outline"
+                    onClick={() => setIsEditorOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={handleSaveArticle}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <span className="btn__spinner" /> : <CheckCircle2 size={14} />}
+                    <span>{isSaving ? 'Publishing...' : 'Publish to Cloudflare D1'}</span>
+                  </button>
                 </div>
-                <textarea
-                  className="admin-textarea"
-                  value={editingArticle.description || ''}
-                  onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
-                  style={{ minHeight: '60px' }}
-                />
-              </div>
-
-              {/* Narrative Paragraph */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Intro Narrative Paragraph (`paragraph`)</span>
-                </div>
-                <textarea
-                  className="admin-textarea"
-                  value={editingArticle.paragraph || ''}
-                  onChange={(e) => setEditingArticle({ ...editingArticle, paragraph: e.target.value })}
-                  style={{ minHeight: '70px' }}
-                />
-              </div>
-
-              {/* Highlight Quote */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Highlight Quote (`useful_quote`)</span>
-                </div>
-                <input
-                  type="text"
-                  className="admin-input"
-                  value={editingArticle.useful_quote || ''}
-                  onChange={(e) => setEditingArticle({ ...editingArticle, useful_quote: e.target.value })}
-                />
-              </div>
-
-              {/* H2 Sections */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>H2 Sections (`sections_h2_para` JSON Array)</span>
-                </div>
-                <textarea
-                  className="admin-textarea admin-code-font"
-                  value={rawSectionsJson}
-                  onChange={(e) => setRawSectionsJson(e.target.value)}
-                  style={{ minHeight: '120px' }}
-                />
-              </div>
-
-              {/* Tags */}
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Tags (`tags` JSON Array)</span>
-                </div>
-                <input
-                  type="text"
-                  className="admin-input admin-code-font"
-                  value={rawTagsJson}
-                  onChange={(e) => setRawTagsJson(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '8px' }}>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn-outline"
-                  onClick={() => setIsEditorOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn-gradient"
-                  onClick={handleSaveArticle}
-                  disabled={isSaving}
-                >
-                  <CheckCircle2 size={14} /> {isSaving ? 'Publishing...' : 'Publish to Cloudflare D1'}
-                </button>
               </div>
             </div>
           </div>

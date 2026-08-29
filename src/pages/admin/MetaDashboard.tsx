@@ -243,29 +243,29 @@ export const MetaDashboard: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="stack-6">
       {/* Top Action Header */}
-      <div className="admin-page-header">
+      <div className="page-header">
         <div>
-          <h2 className="admin-page-title">
+          <h2 className="page-header__title">
             Page Metadata & Service Details
           </h2>
-          <p className="admin-page-desc">
+          <p className="page-header__subtitle">
             Manage live SEO meta tags, Google SERP snippet previews, and Cloudflare D1 `service_details`.
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+        <div className="page-header__actions">
           {/* Model Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 8px' }}>
-            <Cpu size={14} color="#7e22ce" />
+          <div className="model-select-wrap">
+            <Cpu size={14} />
             <select
+              className="select--bare"
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value);
                 setStoredGroqModel(e.target.value);
               }}
-              style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#0f172a', outline: 'none', cursor: 'pointer' }}
             >
               <optgroup label="Meta Llama">
                 <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
@@ -290,58 +290,55 @@ export const MetaDashboard: React.FC = () => {
           </div>
 
           <button
-            className="admin-btn admin-btn-outline"
+            className="btn btn--outline-indigo"
             onClick={handleAIGenerate}
             disabled={aiGenerating}
           >
-            <Sparkles size={14} color="#6366f1" /> {aiGenerating ? 'Generating...' : 'Generate with Groq AI'}
+            {aiGenerating ? <span className="btn__spinner" /> : <Sparkles size={14} />}
+            <span>{aiGenerating ? 'Generating...' : 'Generate with Groq AI'}</span>
           </button>
 
           <button
-            className="admin-btn admin-btn-gradient"
+            className="btn btn--primary"
             onClick={handleSave}
             disabled={saveStatus === 'saving'}
           >
-            {saveStatus === 'saved' ? (
-              <>
-                <CheckCircle2 size={14} /> Saved to D1
-              </>
+            {saveStatus === 'saving' ? (
+              <span className="btn__spinner" />
+            ) : saveStatus === 'saved' ? (
+              <CheckCircle2 size={14} />
             ) : (
-              <>
-                <Save size={14} /> Save Changes
-              </>
+              <Save size={14} />
             )}
+            <span>{saveStatus === 'saved' ? 'Saved to D1' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="admin-alert-error">
+        <div className="alert alert--error">
           <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Main Grid */}
-      <div className="admin-layout-sidebar">
+      <div className="grid-sidebar">
         {/* Page Selector Sidebar */}
-        <div className="admin-card" style={{ height: 'fit-content' }}>
-          <div className="admin-card-header">
-            <div>
-              <h3 className="admin-card-title">Select Page</h3>
-              <div className="admin-card-subtitle">Choose route to edit</div>
-            </div>
+        <div className="card">
+          <div className="card__header">
+            <h3 className="card__title">Select Page</h3>
+            <p className="card__description">Choose route to edit</p>
           </div>
-          <div className="admin-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="card__content stack-3">
             {/* Category Toggle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div className="segmented">
               <button
                 onClick={() => {
                   setSelectedCategory('services');
                   setSelectedSlug(serviceSlugs[0].slug);
                 }}
-                className={`admin-tab-btn ${selectedCategory === 'services' ? 'active' : ''}`}
-                style={{ justifyContent: 'center' }}
+                className={`segmented__btn ${selectedCategory === 'services' ? 'is-active' : ''}`}
               >
                 Services (10)
               </button>
@@ -350,25 +347,24 @@ export const MetaDashboard: React.FC = () => {
                   setSelectedCategory('core');
                   setSelectedSlug(corePageSlugs[0].slug);
                 }}
-                className={`admin-tab-btn ${selectedCategory === 'core' ? 'active' : ''}`}
-                style={{ justifyContent: 'center' }}
+                className={`segmented__btn ${selectedCategory === 'core' ? 'is-active' : ''}`}
               >
                 Core Pages (5)
               </button>
             </div>
 
             {/* List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '480px', overflowY: 'auto' }}>
+            <div className="nav-list">
               {(selectedCategory === 'services' ? serviceSlugs : corePageSlugs).map((p) => {
                 const isActive = selectedSlug === p.slug;
                 return (
                   <button
                     key={p.slug}
                     onClick={() => setSelectedSlug(p.slug)}
-                    className={`admin-page-item ${isActive ? 'active' : ''}`}
+                    className={`nav-item ${isActive ? 'is-active' : ''}`}
                   >
-                    <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{p.name}</span>
-                    {isActive && <div className="admin-status-dot" style={{ backgroundColor: '#6366f1' }} />}
+                    <span>{p.name}</span>
+                    {isActive && <span className="nav-item__dot" />}
                   </button>
                 );
               })}
@@ -377,25 +373,25 @@ export const MetaDashboard: React.FC = () => {
         </div>
 
         {/* Editor Area */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="stack-5">
           {/* SERP Google Preview Card */}
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Search size={16} color="#6366f1" />
-                <h3 className="admin-card-title">Google Search SERP Snippet Preview</h3>
+          <div className="card">
+            <div className="card__header-row">
+              <div className="row row-gap-2">
+                <Search size={16} color="var(--color-indigo)" />
+                <h3 className="card__title">Google Search SERP Snippet Preview</h3>
               </div>
-              <span className="admin-badge admin-badge-outline">SERP Preview</span>
+              <span className="badge badge--outline">SERP Preview</span>
             </div>
-            <div className="admin-card-body">
-              <div className="admin-serp-box">
-                <div className="admin-serp-url">
+            <div className="card__content">
+              <div className="serp-preview">
+                <div className="serp-preview__url">
                   https://www.revlytics.in › {selectedCategory === 'services' ? `services › ${selectedSlug}` : selectedSlug}
                 </div>
-                <div className="admin-serp-title">
+                <div className="serp-preview__title">
                   {formData.meta_title || 'Revlytics | High-Performance Travel Digital Agency'}
                 </div>
-                <div className="admin-serp-snippet">
+                <div className="serp-preview__desc">
                   {formData.meta_description || 'Revlytics is a travel digital acceleration agency helping luxury resorts scale direct bookings.'}
                 </div>
               </div>
@@ -403,25 +399,23 @@ export const MetaDashboard: React.FC = () => {
           </div>
 
           {/* Form Fields: Meta Title, Description, Keywords */}
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <div>
-                <h3 className="admin-card-title">Core SEO & OpenGraph Meta Tags</h3>
-                <div className="admin-card-subtitle">Target character counts ensure ideal search engine display.</div>
-              </div>
+          <div className="card">
+            <div className="card__header">
+              <h3 className="card__title">Core SEO & OpenGraph Meta Tags</h3>
+              <p className="card__description">Target character counts ensure ideal search engine display.</p>
             </div>
-            <div className="admin-card-body">
+            <div className="card__content stack-4">
               {/* Meta Title */}
-              <div className="admin-form-group">
-                <div className="admin-form-label">
-                  <span>{'SEO Meta Title Tag (<title>)'}</span>
-                  <span className="admin-code-font" style={{ color: formData.meta_title.length > 60 ? '#dc2626' : '#16a34a' }}>
+              <div className="field">
+                <div className="field__label-row">
+                  <label className="field__label">{'SEO Meta Title Tag (<title>)'}</label>
+                  <span className={`field__counter ${formData.meta_title.length > 60 ? 'field__counter--bad' : 'field__counter--ok'}`}>
                     {formData.meta_title.length} / 60 chars (Ideal: 50-60)
                   </span>
                 </div>
                 <input
                   type="text"
-                  className="admin-input"
+                  className="input"
                   value={formData.meta_title}
                   onChange={(e) => setFormData({ ...formData, meta_title: e.target.value })}
                   placeholder="Service Name | Revlytics"
@@ -429,44 +423,39 @@ export const MetaDashboard: React.FC = () => {
               </div>
 
               {/* Meta Description */}
-              <div className="admin-form-group">
-                <div className="admin-form-label">
-                  <span>{'Meta Description (<meta name="description">)'}</span>
-                  <span className="admin-code-font" style={{ color: formData.meta_description.length > 165 || formData.meta_description.length < 120 ? '#d97706' : '#16a34a' }}>
+              <div className="field">
+                <div className="field__label-row">
+                  <label className="field__label">{'Meta Description (<meta name="description">)'}</label>
+                  <span className={`field__counter ${formData.meta_description.length > 165 || formData.meta_description.length < 120 ? 'field__counter--warn' : 'field__counter--ok'}`}>
                     {formData.meta_description.length} / 160 chars (Ideal: 140-160)
                   </span>
                 </div>
                 <textarea
-                  className="admin-textarea"
+                  className="textarea"
                   value={formData.meta_description}
                   onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
                   placeholder="Compelling description summarizing the offering and encouraging direct booking inquiries..."
-                  style={{ minHeight: '70px' }}
                 />
               </div>
 
               {/* Keywords & OG Image */}
-              <div className="admin-grid-2">
-                <div className="admin-form-group">
-                  <div className="admin-form-label">
-                    <span>Keywords</span>
-                  </div>
+              <div className="grid-2">
+                <div className="field">
+                  <label className="field__label">Keywords</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className="input"
                     value={formData.meta_keywords}
                     onChange={(e) => setFormData({ ...formData, meta_keywords: e.target.value })}
                     placeholder="hospitality, direct bookings, resort branding"
                   />
                 </div>
 
-                <div className="admin-form-group">
-                  <div className="admin-form-label">
-                    <span>OpenGraph Image URL (Absolute HTTPS)</span>
-                  </div>
+                <div className="field">
+                  <label className="field__label">OpenGraph Image URL (Absolute HTTPS)</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className="input"
                     value={formData.og_image}
                     onChange={(e) => setFormData({ ...formData, og_image: e.target.value })}
                     placeholder="https://images.pexels.com/..."
@@ -478,37 +467,33 @@ export const MetaDashboard: React.FC = () => {
 
           {/* D1 `service_details` Specific Columns (If category is service) */}
           {selectedCategory === 'services' && (
-            <div className="admin-card">
-              <div className="admin-card-header">
+            <div className="card">
+              <div className="card__header-row">
                 <div>
-                  <h3 className="admin-card-title">Cloudflare D1 `service_details` Schema Columns</h3>
-                  <div className="admin-card-subtitle">
+                  <h3 className="card__title">Cloudflare D1 `service_details` Schema Columns</h3>
+                  <p className="card__description">
                     Full 21-column database mapping for `{formData.slug}`
-                  </div>
+                  </p>
                 </div>
-                <span className="admin-badge admin-badge-purple">service_details</span>
+                <span className="badge badge--purple">service_details</span>
               </div>
-              <div className="admin-card-body">
+              <div className="card__content stack-4">
                 {/* Service Name & Category */}
-                <div className="admin-grid-2">
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Service Name (`service_name`)</span>
-                    </div>
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">Service Name (`service_name`)</label>
                     <input
                       type="text"
-                      className="admin-input"
+                      className="input"
                       value={formData.service_name}
                       onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
                     />
                   </div>
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Category (`category`)</span>
-                    </div>
+                  <div className="field">
+                    <label className="field__label">Category (`category`)</label>
                     <input
                       type="text"
-                      className="admin-input"
+                      className="input"
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     />
@@ -516,12 +501,10 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Summary */}
-                <div className="admin-form-group">
-                  <div className="admin-form-label">
-                    <span>Executive Summary (`summary`)</span>
-                  </div>
+                <div className="field">
+                  <label className="field__label">Executive Summary (`summary`)</label>
                   <textarea
-                    className="admin-textarea"
+                    className="textarea"
                     value={formData.summary}
                     onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
                     placeholder="Summary paragraph displayed in hero and overview..."
@@ -529,24 +512,20 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Features & Approach Title */}
-                <div className="admin-grid-2">
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Features (`features` JSON)</span>
-                    </div>
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">Features (`features` JSON)</label>
                     <textarea
-                      className="admin-textarea admin-code-font"
+                      className="textarea textarea--mono"
                       value={formData.features}
                       onChange={(e) => setFormData({ ...formData, features: e.target.value })}
                     />
                   </div>
 
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Approach Steps (`approach_steps` JSON)</span>
-                    </div>
+                  <div className="field">
+                    <label className="field__label">Approach Steps (`approach_steps` JSON)</label>
                     <textarea
-                      className="admin-textarea admin-code-font"
+                      className="textarea textarea--mono"
                       value={formData.approach_steps}
                       onChange={(e) => setFormData({ ...formData, approach_steps: e.target.value })}
                     />
@@ -554,24 +533,20 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Process Steps & Why Choose */}
-                <div className="admin-grid-2">
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Process Steps (`process_steps` JSON)</span>
-                    </div>
+                <div className="grid-2">
+                  <div className="field">
+                    <label className="field__label">Process Steps (`process_steps` JSON)</label>
                     <textarea
-                      className="admin-textarea admin-code-font"
+                      className="textarea textarea--mono"
                       value={formData.process_steps}
                       onChange={(e) => setFormData({ ...formData, process_steps: e.target.value })}
                     />
                   </div>
 
-                  <div className="admin-form-group">
-                    <div className="admin-form-label">
-                      <span>Why Choose Items (`why_choose_items` JSON)</span>
-                    </div>
+                  <div className="field">
+                    <label className="field__label">Why Choose Items (`why_choose_items` JSON)</label>
                     <textarea
-                      className="admin-textarea admin-code-font"
+                      className="textarea textarea--mono"
                       value={formData.why_choose_items}
                       onChange={(e) => setFormData({ ...formData, why_choose_items: e.target.value })}
                     />
@@ -579,25 +554,21 @@ export const MetaDashboard: React.FC = () => {
                 </div>
 
                 {/* Service Specific FAQs */}
-                <div className="admin-form-group">
-                  <div className="admin-form-label">
-                    <span>Service Specific FAQs (`faqs` JSON)</span>
-                  </div>
+                <div className="field">
+                  <label className="field__label">Service Specific FAQs (`faqs` JSON)</label>
                   <textarea
-                    className="admin-textarea admin-code-font"
+                    className="textarea textarea--mono"
                     value={formData.faqs}
                     onChange={(e) => setFormData({ ...formData, faqs: e.target.value })}
                   />
                 </div>
 
                 {/* Pexels Query 2 */}
-                <div className="admin-form-group">
-                  <div className="admin-form-label">
-                    <span>Pexels Visual Stream Query (`pexels_query_2`)</span>
-                  </div>
+                <div className="field">
+                  <label className="field__label">Pexels Visual Stream Query (`pexels_query_2`)</label>
                   <input
                     type="text"
-                    className="admin-input"
+                    className="input"
                     value={formData.pexels_query_2}
                     onChange={(e) => setFormData({ ...formData, pexels_query_2: e.target.value })}
                     placeholder="e.g. luxury resort hotel pool tropical"
@@ -608,17 +579,17 @@ export const MetaDashboard: React.FC = () => {
           )}
 
           {/* Schema.org JSON-LD Editor */}
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Code2 size={16} color="#6366f1" />
-                <h3 className="admin-card-title">Schema.org JSON-LD Structured Data</h3>
-              </div>
-              <div className="admin-card-subtitle">{'Injected directly into page <head> for rich Google search result badges.'}</div>
+          <div className="card">
+            <div className="card__header">
+              <h3 className="card__title">
+                <Code2 size={16} color="var(--color-indigo)" />
+                <span>Schema.org JSON-LD Structured Data</span>
+              </h3>
+              <p className="card__description">{'Injected directly into page <head> for rich Google search result badges.'}</p>
             </div>
-            <div className="admin-card-body">
+            <div className="card__content">
               <textarea
-                className="admin-textarea admin-code-font"
+                className="textarea textarea--mono"
                 value={formData.schema_markup}
                 onChange={(e) => setFormData({ ...formData, schema_markup: e.target.value })}
                 style={{ minHeight: '100px' }}

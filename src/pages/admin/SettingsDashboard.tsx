@@ -160,81 +160,78 @@ export const SettingsDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '896px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div>
-        <h2 className="admin-page-title">
-          Settings & Integrations
-        </h2>
-        <p className="admin-page-desc">
-          Manage your Groq AI API keys, default model selector, administrator credentials, and Cloudflare D1 database.
-        </p>
+    <div className="stack-6 max-w-form" style={{ margin: '0 auto' }}>
+      <div className="page-header">
+        <div>
+          <h2 className="page-header__title">
+            Settings & Integrations
+          </h2>
+          <p className="page-header__subtitle">
+            Manage your Groq AI API keys, default model selector, administrator credentials, and Cloudflare D1 database.
+          </p>
+        </div>
       </div>
 
       {statusMsg && (
-        <div className="admin-alert-success">
+        <div className="alert alert--success">
           <CheckCircle2 size={16} />
           <span>{statusMsg}</span>
         </div>
       )}
 
       {errorMsg && (
-        <div className="admin-alert-error">
+        <div className="alert alert--error">
           <AlertCircle size={16} />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Groq API Integration Card */}
-      <div className="admin-card">
-        <div className="admin-card-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#eef2ff', color: '#6366f1', border: '1px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={16} />
-            </div>
-            <div>
-              <h3 className="admin-card-title">Groq AI API Integration</h3>
-              <div className="admin-card-subtitle">Configure your Groq API key and select your preferred LLM model</div>
-            </div>
+      <div className="card">
+        <div className="card__eyebrow-row">
+          <div className="icon-tile icon-tile--indigo">
+            <Sparkles size={16} />
           </div>
-
+          <div style={{ flex: 1 }}>
+            <h3 className="card__title">Groq AI API Integration</h3>
+            <p className="card__description">Configure your Groq API key and select your preferred LLM model</p>
+          </div>
           {hasGroqKey ? (
-            <span className="admin-badge admin-badge-success">Connected</span>
+            <span className="badge badge--success">Connected</span>
           ) : (
-            <span className="admin-badge admin-badge-warning">Setup Required</span>
+            <span className="badge badge--warning">Setup Required</span>
           )}
         </div>
 
         <form onSubmit={handleSaveGroqKey}>
-          <div className="admin-card-body">
-            <div className="admin-form-group">
-              <div className="admin-form-label">
-                <span>Groq API Key (`gsk_...`)</span>
-              </div>
+          <div className="card__content stack-4">
+            <div className="field">
+              <label className="field__label">Groq API Key (`gsk_...`)</label>
               <input
                 type="password"
-                className="admin-input admin-code-font"
+                className="input input--mono"
                 value={groqKey}
                 onChange={(e) => setGroqKey(e.target.value)}
                 placeholder={hasGroqKey ? '•••••••••••••••••••• (Configured in D1 credentials)' : 'gsk_xxxxxxxxxxxxxxxxxxxx'}
               />
-              <p style={{ fontSize: '11px', color: '#64748b', margin: '6px 0 0 0' }}>
-                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ color: '#6366f1' }}>console.groq.com/keys</a>.
-              </p>
+              <span className="field__hint">
+                Get your key at <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" className="link">console.groq.com/keys</a>.
+              </span>
             </div>
 
             {/* Groq Model Selector Option */}
-            <div style={{ paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-              <div className="admin-form-label">
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Cpu size={14} color="#7e22ce" /> Default AI Model Selection
-                </span>
-                <span className="admin-code-font" style={{ color: '#7e22ce' }}>
+            <div className="field" style={{ paddingTop: '12px', borderTop: '1px solid var(--color-border)' }}>
+              <div className="field__label-row">
+                <label className="field__label">
+                  <Cpu size={14} color="var(--color-purple-text)" /> Default AI Model Selection
+                </label>
+                <span className="text-mono" style={{ fontSize: '11px', color: 'var(--color-purple-text)' }}>
                   Active: {selectedModel}
                 </span>
               </div>
 
               <select
-                className="admin-select"
+                className="select"
                 value={isCustomModel ? 'custom' : selectedModel}
                 onChange={(e) => handleModelChange(e.target.value)}
               >
@@ -277,17 +274,17 @@ export const SettingsDashboard: React.FC = () => {
               </select>
 
               {isCustomModel && (
-                <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
+                <div className="row row-gap-2" style={{ paddingTop: '8px' }}>
                   <input
                     type="text"
-                    className="admin-input admin-code-font"
+                    className="input input--mono"
                     value={customModel}
                     onChange={(e) => setCustomModel(e.target.value)}
                     placeholder="e.g. openai/gpt-oss-120b"
                   />
                   <button
                     type="button"
-                    className="admin-btn admin-btn-secondary"
+                    className="btn btn--outline btn--sm"
                     onClick={handleCustomModelSave}
                   >
                     Apply
@@ -297,68 +294,64 @@ export const SettingsDashboard: React.FC = () => {
             </div>
 
             {testResult && (
-              <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '6px', background: '#eef2ff', border: '1px solid #c7d2fe', fontSize: '12px', color: '#4338ca' }}>
+              <div className="callout callout--indigo">
                 ✓ {testResult}
               </div>
             )}
           </div>
 
-          <div className="admin-card-footer">
+          <div className="card__footer">
             <button
               type="button"
-              className="admin-btn admin-btn-outline admin-btn-sm"
+              className="btn btn--outline btn--sm"
               onClick={handleTestGroq}
               disabled={testingKey}
             >
-              <RefreshCw size={13} /> {testingKey ? 'Testing...' : 'Test AI Connection'}
+              {testingKey ? <span className="btn__spinner" /> : <RefreshCw size={13} />}
+              <span>{testingKey ? 'Testing...' : 'Test AI Connection'}</span>
             </button>
 
             <button
               type="submit"
-              className="admin-btn admin-btn-gradient admin-btn-sm"
+              className="btn btn--primary btn--sm"
               disabled={savingKey}
             >
-              <Key size={13} /> {savingKey ? 'Saving...' : 'Save Groq API Key'}
+              {savingKey ? <span className="btn__spinner" /> : <Key size={13} />}
+              <span>{savingKey ? 'Saving...' : 'Save Groq API Key'}</span>
             </button>
           </div>
         </form>
       </div>
 
       {/* Admin Password Card */}
-      <div className="admin-card">
-        <div className="admin-card-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Shield size={16} />
-            </div>
-            <div>
-              <h3 className="admin-card-title">Admin Credentials</h3>
-              <div className="admin-card-subtitle">Update administrator password in Cloudflare D1 `credentials` table</div>
-            </div>
+      <div className="card">
+        <div className="card__eyebrow-row">
+          <div className="icon-tile icon-tile--amber">
+            <Shield size={16} />
+          </div>
+          <div>
+            <h3 className="card__title">Admin Credentials</h3>
+            <p className="card__description">Update administrator password in Cloudflare D1 `credentials` table</p>
           </div>
         </div>
 
         <form onSubmit={handleChangePassword}>
-          <div className="admin-card-body">
-            <div className="admin-grid-2">
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>Username</span>
-                </div>
+          <div className="card__content">
+            <div className="grid-2">
+              <div className="field">
+                <label className="field__label">Username</label>
                 <input
                   type="text"
-                  className="admin-input"
+                  className="input"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
-              <div className="admin-form-group" style={{ marginBottom: 0 }}>
-                <div className="admin-form-label">
-                  <span>New Password</span>
-                </div>
+              <div className="field">
+                <label className="field__label">New Password</label>
                 <input
                   type="password"
-                  className="admin-input"
+                  className="input"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="New strong password"
@@ -367,50 +360,51 @@ export const SettingsDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="admin-card-footer" style={{ justifyContent: 'flex-end' }}>
+          <div className="card__footer card__footer--end">
             <button
               type="submit"
-              className="admin-btn admin-btn-secondary admin-btn-sm"
+              className="btn btn--secondary btn--sm"
               disabled={savingPassword}
             >
-              {savingPassword ? 'Updating...' : 'Update Admin Password'}
+              {savingPassword ? <span className="btn__spinner" /> : null}
+              <span>{savingPassword ? 'Updating...' : 'Update Admin Password'}</span>
             </button>
           </div>
         </form>
       </div>
 
       {/* Cloudflare D1 Status Card */}
-      <div className="admin-card">
-        <div className="admin-card-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="card">
+        <div className="card__header-row">
+          <div className="row row-gap-3">
+            <div className="icon-tile icon-tile--emerald">
               <Database size={16} />
             </div>
             <div>
-              <h3 className="admin-card-title">Cloudflare D1 Database</h3>
-              <div className="admin-card-subtitle">Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</div>
+              <h3 className="card__title">Cloudflare D1 Database</h3>
+              <p className="card__description">Database ID: 939a2da3-3705-413d-a89f-dd10e1e08335 (revlytics-db)</p>
             </div>
           </div>
-          <span className="admin-badge admin-badge-success">Connected</span>
+          <span className="badge badge--success">Connected</span>
         </div>
-        <div className="admin-card-body">
-          <div className="admin-grid-3">
-            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Credentials Table</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`credentials`</div>
-              <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '2px' }}>Active & Hashed</div>
+        <div className="card__content">
+          <div className="grid-3">
+            <div className="stat-tile">
+              <div className="stat-tile__label">Credentials Table</div>
+              <div className="stat-tile__value">`credentials`</div>
+              <div className="stat-tile__meta stat-tile__meta--emerald">Active & Hashed</div>
             </div>
 
-            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Service Details</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`service_details`</div>
-              <div style={{ fontSize: '12px', color: '#6366f1', marginTop: '2px' }}>21 Schema Columns</div>
+            <div className="stat-tile">
+              <div className="stat-tile__label">Service Details</div>
+              <div className="stat-tile__value">`service_details`</div>
+              <div className="stat-tile__meta stat-tile__meta--indigo">21 Schema Columns</div>
             </div>
 
-            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Article CMS</div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '4px' }}>`rev_db` & `blogs`</div>
-              <div style={{ fontSize: '12px', color: '#7e22ce', marginTop: '2px' }}>Live Structured Data</div>
+            <div className="stat-tile">
+              <div className="stat-tile__label">Article CMS</div>
+              <div className="stat-tile__value">`rev_db` & `blogs`</div>
+              <div className="stat-tile__meta stat-tile__meta--purple">Live Structured Data</div>
             </div>
           </div>
         </div>

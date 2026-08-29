@@ -4,7 +4,6 @@ import { MetaDashboard } from './MetaDashboard';
 import { BlogDashboard } from './BlogDashboard';
 import { SettingsDashboard } from './SettingsDashboard';
 import {
-  Layers,
   Sparkles,
   BookOpen,
   Settings,
@@ -58,61 +57,59 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ initialTab = 'meta', o
   };
 
   return (
-    <div className="admin-shell">
+    <div className="admin-root">
       {/* Top Navigation Bar */}
       <header className="admin-header">
         {/* Brand */}
         <div className="admin-brand">
-          <div className="admin-brand-icon">
+          <div className="admin-brand__mark">
             R
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="admin-brand-title">Revlytics</span>
-            <span className="admin-badge admin-badge-purple">Admin D1</span>
-          </div>
+          <span className="admin-brand__name">Revlytics</span>
+          <span className="badge badge--purple">Admin D1</span>
         </div>
 
         {/* Center Tabs */}
-        <div className="admin-tabs">
+        <nav className="tabs" aria-label="Admin Sections">
           <button
-            className={`admin-tab-btn ${activeTab === 'meta' ? 'active' : ''}`}
+            className={`tab-trigger ${activeTab === 'meta' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('meta')}
           >
             <Search size={14} /> Page Meta & Services
           </button>
           <button
-            className={`admin-tab-btn ${activeTab === 'blogs' ? 'active' : ''}`}
+            className={`tab-trigger ${activeTab === 'blogs' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('blogs')}
           >
             <BookOpen size={14} /> Blogs & AI Studio
           </button>
           <button
-            className={`admin-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            className={`tab-trigger ${activeTab === 'settings' ? 'is-active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
             <Settings size={14} /> Settings
           </button>
-        </div>
+        </nav>
 
         {/* Right Actions */}
-        <div className="admin-header-actions">
+        <div className="admin-header__actions">
           <a
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="admin-pill-link"
+            className="admin-pill"
           >
             <ExternalLink size={13} /> View Website
           </a>
 
-          <div className="admin-user-tag">
-            <div className="admin-status-dot" />
+          <div className="admin-pill">
+            <span className="admin-status-dot" />
             <span>{username}</span>
           </div>
 
           <button
             onClick={handleLogout}
-            className="admin-logout-btn"
+            className="admin-logout"
           >
             <LogOut size={13} /> Logout
           </button>
