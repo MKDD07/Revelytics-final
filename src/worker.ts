@@ -1229,18 +1229,178 @@ export default {
         }
       }
 
+      // -----------------------------------------------------------------------
+      // 1b. PEXELS PROXY API
+      // -----------------------------------------------------------------------
+      if (path === '/api/pexels') {
+        if (method === 'GET') {
+          const query = (url.searchParams.get('query') || 'luxury travel').toLowerCase();
+          const perPage = parseInt(url.searchParams.get('per_page') || '1', 10);
+
+          // Curated luxury travel & hospitality fallback photos with actual high-res Pexels CDN URLs
+          const fallbackPool: Record<string, string[]> = {
+            resort: [
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            hotel: [
+              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            room: [
+              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            booking: [
+              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            suite: [
+              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            pool: [
+              'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/221457/pexels-photo-221457.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            architecture: [
+              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/2474690/pexels-photo-2474690.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            boutique: [
+              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            sunset: [
+              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            tropical: [
+              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            expedition: [
+              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/869258/pexels-photo-869258.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            mountain: [
+              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            travel: [
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ],
+            hospitality: [
+              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+            ]
+          };
+
+          const matchedKey = Object.keys(fallbackPool).find(k => query.includes(k)) || 'travel';
+          const pool = fallbackPool[matchedKey] || fallbackPool['travel'];
+          const fallbackPhotos = pool.slice(0, perPage).map((src, i) => ({
+            id: i + 1,
+            src: {
+              original: src,
+              large: src,
+              medium: src,
+              small: src,
+            },
+          }));
+
+          const pexelsKey = env.PEXELS_API_KEY;
+          if (pexelsKey) {
+            try {
+              const pexelsRes = await fetch(
+                `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
+                {
+                  headers: {
+                    Authorization: pexelsKey,
+                  },
+                }
+              );
+              if (pexelsRes.ok) {
+                const data = (await pexelsRes.json()) as any;
+                if (data?.photos && data.photos.length > 0) {
+                  return jsonResponse(data);
+                }
+              }
+            } catch (err) {
+              console.warn('Pexels API fetch error:', err);
+            }
+          }
+
+          return jsonResponse({
+            page: 1,
+            per_page: perPage,
+            photos: fallbackPhotos,
+            total_results: fallbackPhotos.length,
+          });
+        }
+      }
+
       if (path.startsWith('/api/blogs/')) {
         const idOrSlug = decodeURIComponent(path.split('/api/blogs/')[1]);
 
         if (method === 'GET') {
-          const isNum = !isNaN(Number(idOrSlug));
-          const query = isNum
-            ? 'SELECT * FROM blogs WHERE id = ?'
-            : 'SELECT * FROM blogs WHERE slug = ?';
-          const blog = await env.DB.prepare(query).bind(idOrSlug).first();
+          try {
+            const isNum = !isNaN(Number(idOrSlug));
+            const query = isNum
+              ? 'SELECT * FROM blogs WHERE id = ?'
+              : 'SELECT * FROM blogs WHERE slug = ?';
+            let blog = (await env.DB.prepare(query).bind(idOrSlug).first()) as any;
 
-          if (!blog) return jsonResponse({ error: 'Blog not found' }, 404);
-          return jsonResponse({ success: true, data: blog });
+            if (!blog) {
+              const revRow = (await env.DB.prepare('SELECT * FROM rev_db WHERE slug = ? OR id = ?').bind(idOrSlug, idOrSlug).first()) as any;
+              if (revRow) {
+                let sectionsParsed = [];
+                let tagsParsed = [];
+                try { sectionsParsed = JSON.parse(revRow.sections_h2_para || '[]'); } catch { sectionsParsed = []; }
+                try { tagsParsed = JSON.parse(revRow.tags || '[]'); } catch { tagsParsed = []; }
+
+                blog = {
+                  id: revRow.id,
+                  slug: revRow.slug,
+                  title: revRow.heading,
+                  heading: revRow.heading,
+                  subheading: revRow.subheading,
+                  tag: revRow.category || 'Travel Insights',
+                  category: revRow.category || 'Travel Insights',
+                  summary: revRow.description || revRow.meta_data || '',
+                  description: revRow.description || revRow.meta_data || '',
+                  content: revRow.paragraph || '',
+                  paragraph: revRow.paragraph || '',
+                  image_url: revRow.image_url,
+                  author: revRow.author || 'Elena Rostova',
+                  date: revRow.date,
+                  useful_quote: revRow.useful_quote,
+                  sections_h2_para: sectionsParsed,
+                  tags: tagsParsed,
+                  pexels_featured_query: revRow.pexels_featured_query,
+                  pexels_query_2: revRow.pexels_query_2,
+                  pexels_query_3: revRow.pexels_query_3,
+                  pexels_query_4: revRow.pexels_query_4,
+                  pexels_query_5: revRow.pexels_query_5,
+                  created_at: revRow.created_at,
+                  updated_at: revRow.updated_at,
+                };
+              }
+            }
+
+            if (!blog) return jsonResponse({ error: 'Blog not found' }, 404);
+            return jsonResponse({ success: true, data: blog });
+          } catch (err: any) {
+            console.warn('Error fetching blog:', err);
+            return jsonResponse({ error: 'Blog not found' }, 404);
+          }
         }
 
         if (method === 'PUT') {

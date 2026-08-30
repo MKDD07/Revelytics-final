@@ -514,10 +514,29 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+const FALLBACK_PEXELS_IMAGES: Record<string, string> = {
+  resort: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  hotel: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  room: 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  suite: 'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  pool: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  architecture: 'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  sunset: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  tropical: 'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  mountain: 'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  expedition: 'https://images.pexels.com/photos/869258/pexels-photo-869258.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  travel: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
+};
+
+function getFallbackPexelsPhoto(query: string): string {
+  const q = (query || '').toLowerCase();
+  const key = Object.keys(FALLBACK_PEXELS_IMAGES).find((k) => q.includes(k)) || 'travel';
+  return FALLBACK_PEXELS_IMAGES[key] || FALLBACK_PEXELS_IMAGES['travel'];
+}
+
 /**
  * Fetch the first landscape photo URL from Pexels for a given query (4s timeout).
- * Routes through the Cloudflare Worker proxy at /api/pexels.
- * Returns null immediately if the API key isn't configured or the request times out.
+ * Routes through the Cloudflare Worker proxy at /api/pexels with automatic high-res fallback.
  */
 export async function fetchPexelsPhoto(query: string): Promise<string | null> {
   if (!query) return null;
@@ -526,13 +545,16 @@ export async function fetchPexelsPhoto(query: string): Promise<string | null> {
       fetch(`${API_BASE_URL}/api/pexels?query=${encodeURIComponent(query)}&per_page=1`),
       PEXELS_TIMEOUT_MS
     );
-    if (!res.ok) return null;
-    const json = await res.json();
-    const photos: any[] = json?.photos ?? [];
-    return photos[0]?.src?.large ?? photos[0]?.src?.medium ?? null;
+    if (res.ok) {
+      const json = await res.json();
+      const photos: any[] = json?.photos ?? [];
+      const src = photos[0]?.src?.large ?? photos[0]?.src?.medium ?? photos[0]?.src?.original;
+      if (src) return src;
+    }
+    return getFallbackPexelsPhoto(query);
   } catch (err) {
-    console.warn(`fetchPexelsPhoto failed/timed-out for query "${query}":`, err);
-    return null;
+    console.warn(`fetchPexelsPhoto fallback applied for query "${query}":`, err);
+    return getFallbackPexelsPhoto(query);
   }
 }
 

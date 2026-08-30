@@ -548,7 +548,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
                 {/* Author Widget */}
                 <div className="sidebar-widget mb-40">
                   <div className="sidebar-author text-center">
-                    <div className="sidebar-author-thumb mb-25">
+                    <div className="sidebar-author-thumb mb-25" style={{float: 'left'}}>
                       <img
                         className="rounded-circle"
                         src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop"
