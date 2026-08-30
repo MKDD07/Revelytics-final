@@ -563,10 +563,7 @@ const ResumeSpecialties: React.FC<ResumeSpecialtiesProps> = ({
   }, [categorySections, services, showCategoryBanner, showServicesList]);
 
   const handleNavigate = (path: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new Event('popstate'));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Global click listener in App.tsx intercepts internal hrefs and manages Barba transition
   };
 
   return (

@@ -85,7 +85,11 @@
 
 	////////////////////////////////////////////////////
 	// 03. Nice Select Js
-	$('.tp-select').niceSelect();
+	if (typeof $.fn.niceSelect === 'function') {
+		$('select.tp-select:not(.nice-select-initialized)').each(function() {
+			$(this).addClass('nice-select-initialized').niceSelect();
+		});
+	}
 
 
 	////////////////////////////////////////////////////
@@ -149,6 +153,9 @@
 	let tl = gsap.timeline();
 	gsap.registerPlugin(ScrollTrigger, ScrollSmoother, ScrollToPlugin);
 	if ($('#smooth-wrapper').length && $('#smooth-content').length) {
+		if (typeof ScrollSmoother !== 'undefined' && typeof ScrollSmoother.get === 'function' && ScrollSmoother.get()) {
+			try { ScrollSmoother.get().kill(); } catch (e) {}
+		}
 		ScrollSmoother.create({
 			smooth: 1.35,
 			effects: true,
@@ -158,26 +165,7 @@
 	}
 
 	////////////////////////////////////////////////////
-	// 09. mobile menu Js
-	var tpSideMenu = $('.tp-offcanvas-menu nav');
-	if (tpSideMenu.length && tpSideMenu.children().length === 0) {
-		var tpMenuWrap = $('.tp-mobile-menu-active > ul').clone();
-		tpSideMenu.append(tpMenuWrap);
-		if ($(tpSideMenu).find('.tp-submenu').length != 0) {
-			$(tpSideMenu).find('.tp-submenu').parent().append('<button class="tp-menu-close"><i class="fa-solid fa-plus"></i></button>');
-		}
-	}
-	var sideMenuList = $('.tp-offcanvas-menu nav > ul > li button.tp-menu-close, .tp-offcanvas-menu nav > ul li.has-dropdown > a, .tp-offcanvas-menu nav > ul li.has-dropdown > ul > li.menu-item-has-children > a');
-	$(sideMenuList).off('click').on('click', function (e) {
-		e.preventDefault();
-		if (!($(this).parent().hasClass('active'))) {
-			$(this).parent().addClass('active');
-			$(this).siblings('.tp-submenu').slideDown();
-		} else {
-			$(this).siblings('.tp-submenu').slideUp();
-			$(this).parent().removeClass('active');
-		}
-	});
+	// 09. mobile menu Js (Managed natively by React Offcanvas1)
 
 	// px-offcanvas-2-area
 	const $main_wrap = $('.tp-offcanvas-2-area');

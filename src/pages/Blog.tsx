@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import {
   BlogHero,
   BlogGrid,
+  PartnersSection,
+  Testimonial1,
+  Contact1,
   Cta1,
   SEO,
 } from '../components';
@@ -58,8 +61,14 @@ const Blog: React.FC = () => {
       {/* Travel Industry Insights Grid */}
       <BlogGrid />
 
-      {/* Subscribe & Contact CTA */}
-      <Cta1 />
+      {/* Brand Partners Showcase & Marquee */}
+      <PartnersSection />
+
+      {/* Testimonials from Luxury Hospitality Leaders */}
+      <Testimonial1 />
+
+      {/* Direct Inquiries & Consultation */}
+      <Contact1 showMap={false} />
     </>
   );
 };

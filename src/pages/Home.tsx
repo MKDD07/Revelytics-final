@@ -18,6 +18,7 @@ import {
   Blog1,
   SplitImageScroll,
   VideoScrollShowcase,
+  PartnersSection,
   SEO,
 } from '../components';
 import { fetchRevDbHeading, type RevDbItem } from '../services/api';
@@ -117,6 +118,10 @@ const Home: React.FC = () => {
 />
       {/* 13. Travel Insights & Destination Trends */}
       <Blog1 />
+
+      {/* 14. Brand Partners Showcase & Marquee Ticker */}
+      <PartnersSection />
+
       {/* 11. Travel Discovery & Direct Inquiries */}
       <Contact1 showMap={false} />
     </>

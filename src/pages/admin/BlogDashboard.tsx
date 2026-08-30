@@ -21,6 +21,8 @@ import { getStoredGroqModel, setStoredGroqModel } from '../../utils/groqModels';
 
 interface ArticleItem {
   id?: number;
+  page_name?: string;
+  section_name?: string;
   slug: string;
   heading: string;
   subheading?: string;
@@ -33,9 +35,15 @@ interface ArticleItem {
   description?: string;
   paragraph?: string;
   useful_quote?: string;
+  pexels_featured_query?: string;
+  pexels_query_2?: string;
+  pexels_query_3?: string;
+  pexels_query_4?: string;
+  pexels_query_5?: string;
   sections_h2_para?: any;
   tags?: any;
   created_at?: string;
+  updated_at?: string;
 }
 
 export const BlogDashboard: React.FC = () => {
@@ -193,17 +201,25 @@ export const BlogDashboard: React.FC = () => {
 
       const generated = data.data;
       const merged: ArticleItem = {
+        page_name: generated.page_name || activeArticle.page_name || 'blog',
+        section_name: generated.section_name || activeArticle.section_name || 'hero',
         slug: generated.slug || activeArticle.slug || (generated.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         heading: generated.heading || activeArticle.heading,
+        subheading: generated.subheading || activeArticle.subheading || '',
         meta_heading: generated.meta_heading || activeArticle.meta_heading || generated.heading,
         meta_data: generated.meta_data || activeArticle.meta_data || generated.description,
-        category: generated.category || activeArticle.category || 'Travel Insights',
+        category: generated.category || activeArticle.category || 'Performance Marketing',
         author: generated.author || activeArticle.author || 'Elena Rostova',
         date: generated.date || activeArticle.date || new Date().toISOString().split('T')[0],
-        image_url: generated.image_url || activeArticle.image_url,
+        image_url: generated.image_url || activeArticle.image_url || 'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg',
         description: generated.description || activeArticle.description,
         paragraph: generated.paragraph || activeArticle.paragraph,
         useful_quote: generated.useful_quote || activeArticle.useful_quote,
+        pexels_featured_query: generated.pexels_featured_query || activeArticle.pexels_featured_query || '',
+        pexels_query_2: generated.pexels_query_2 || activeArticle.pexels_query_2 || '',
+        pexels_query_3: generated.pexels_query_3 || activeArticle.pexels_query_3 || '',
+        pexels_query_4: generated.pexels_query_4 || activeArticle.pexels_query_4 || '',
+        pexels_query_5: generated.pexels_query_5 || activeArticle.pexels_query_5 || '',
         sections_h2_para: generated.sections_h2_para && generated.sections_h2_para.length > 0 ? generated.sections_h2_para : activeArticle.sections_h2_para,
         tags: generated.tags || activeArticle.tags,
       };

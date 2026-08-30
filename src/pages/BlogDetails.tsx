@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   BlogDetailsHero,
   BlogDetailsPostbox,
@@ -13,8 +13,23 @@ interface BlogDetailsProps {
   slug?: string;
 }
 
-const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
-  const currentSlug = slug || 'mastering-travel-digital-marketing-growth-guide';
+const BlogDetails: React.FC<BlogDetailsProps> = ({ slug: propSlug }) => {
+  const currentSlug = useMemo(() => {
+    if (propSlug) return propSlug;
+    const path = window.location.pathname.replace(/^\/|\/$/g, '');
+    const parts = path.split('/');
+    if ((parts[0] === 'blog' || parts[0] === 'blog-details') && parts[1]) {
+      return parts[1];
+    }
+    const hash = window.location.hash.replace(/^#\/?/, '');
+    const hashParts = hash.split('?')[0].split('/');
+    if ((hashParts[0] === 'blog' || hashParts[0] === 'blog-details') && hashParts[1]) {
+      return hashParts[1];
+    }
+    const param = new URLSearchParams(window.location.search || hash.split('?')[1] || '').get('slug');
+    return param || 'mastering-travel-digital-marketing-growth-guide';
+  }, [propSlug]);
+
   const defaultMeta = getMetadataForPath(`/blog/${currentSlug}`);
 
   const [revItem, setRevItem] = useState<RevDbItem | null>(null);
@@ -105,10 +120,10 @@ const BlogDetails: React.FC<BlogDetailsProps> = ({ slug }) => {
       />
 
       {/* Blog Details Header */}
-      <BlogDetailsHero slug={slug} />
+      <BlogDetailsHero slug={currentSlug} />
 
       {/* Full Article Content, Comments & Author Bio */}
-      <BlogDetailsPostbox slug={slug} />
+      <BlogDetailsPostbox slug={currentSlug} />
 
       {/* Featured Destination Banner */}
       <BlogDetailsBanner />

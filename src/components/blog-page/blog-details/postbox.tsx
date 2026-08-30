@@ -281,7 +281,7 @@ const Postbox: React.FC<PostboxProps> = ({ slug }) => {
       {/* Postbox Article Area */}
       <div className="postbox-area tp-blog-details-ptb pt-10 pb-120">
         <div className="container">
-          <div className="row">
+          <div className="row align-items-start">
             {/* Left Column: Full Article Content */}
             <div className="col-xl-8">
               <div className="postbox-left-sidebar mb-40">

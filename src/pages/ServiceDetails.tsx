@@ -19,20 +19,22 @@ export interface ServiceDetailsProps {
 }
 
 const ServiceDetails: React.FC<ServiceDetailsProps> = ({ slug: propSlug }) => {
-  // Extract slug from prop, pathname (/service-details/ui-ux-design), or hash
+  // Extract slug from prop, pathname (/services/ui-ux-design or /service-details/ui-ux-design), or hash
   const currentSlug = useMemo(() => {
     if (propSlug) return propSlug;
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
     const parts = path.split('/');
-    if (parts[0] === 'service-details' && parts[1]) {
+    if ((parts[0] === 'service-details' || parts[0] === 'services') && parts[1]) {
       return parts[1];
     }
-    const hash = window.location.hash.replace('#', '');
+    const hash = window.location.hash.replace(/^#\/?/, '');
     const hashParts = hash.split('?')[0].split('/');
-    if (hashParts[0] === 'service-details' && hashParts[1]) {
+    if ((hashParts[0] === 'service-details' || hashParts[0] === 'services') && hashParts[1]) {
       return hashParts[1];
     }
-    const param = new URLSearchParams(window.location.search || hash.split('?')[1] || '').get('service');
+    const param =
+      new URLSearchParams(window.location.search || hash.split('?')[1] || '').get('service') ||
+      new URLSearchParams(window.location.search || hash.split('?')[1] || '').get('slug');
     return param || 'ui-ux-design';
   }, [propSlug]);
 

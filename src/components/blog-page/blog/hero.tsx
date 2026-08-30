@@ -7,7 +7,7 @@ import React from 'react';
 const Hero = () => {
   return (
     <>{ /* Blog Hero / Top Area (from blog-light.html) */ }
-    <div className="tp-blog-grid-area tp-pd-2-ptb pt-40 pb-40">
+    <div className="tp-blog-grid-area tp-pd-2-ptb pt-200 pb-40">
        <div className="container">
           <div className="row">
              <div className="col-12">

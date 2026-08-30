@@ -719,6 +719,34 @@ async function ensureAdminTables(env: Env) {
           og_image TEXT
         );
       `),
+      env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS rev_db (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          page_name TEXT NOT NULL,
+          section_name TEXT NOT NULL DEFAULT 'hero',
+          slug TEXT UNIQUE NOT NULL,
+          heading TEXT NOT NULL,
+          subheading TEXT,
+          meta_heading TEXT,
+          meta_data TEXT,
+          category TEXT,
+          author TEXT,
+          date TEXT,
+          image_url TEXT,
+          description TEXT,
+          paragraph TEXT,
+          useful_quote TEXT,
+          pexels_featured_query TEXT,
+          pexels_query_2 TEXT,
+          pexels_query_3 TEXT,
+          pexels_query_4 TEXT,
+          pexels_query_5 TEXT,
+          sections_h2_para TEXT,
+          tags TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+      `),
     ]);
 
     const existing = await env.DB.prepare('SELECT id FROM credentials LIMIT 1').first();
@@ -2270,9 +2298,12 @@ export default {
           }
 
           const heading = body.heading || body.title;
-          const slug = body.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-          const sectionsJson = typeof body.sections_h2_para === 'object' ? JSON.stringify(body.sections_h2_para) : body.sections_h2_para || '[]';
-          const tagsJson = typeof body.tags === 'object' ? JSON.stringify(body.tags) : body.tags || '[]';
+          const slug = (body.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')).trim();
+          const pageName = (body.page_name || 'blog').trim();
+          const sectionName = (body.section_name || 'hero').trim();
+
+          const sectionsJson = typeof body.sections_h2_para === 'object' ? JSON.stringify(body.sections_h2_para) : (body.sections_h2_para || '[]');
+          const tagsJson = typeof body.tags === 'object' ? JSON.stringify(body.tags) : (body.tags || '[]');
 
           await env.DB.prepare(`
             INSERT INTO rev_db (
@@ -2281,8 +2312,10 @@ export default {
               pexels_featured_query, pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5,
               sections_h2_para, tags
             )
-            VALUES ('blog', 'article', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
+              page_name = excluded.page_name,
+              section_name = excluded.section_name,
               heading = excluded.heading,
               subheading = excluded.subheading,
               meta_heading = excluded.meta_heading,
@@ -2304,6 +2337,8 @@ export default {
               updated_at = CURRENT_TIMESTAMP
           `)
             .bind(
+              pageName,
+              sectionName,
               slug,
               heading,
               body.subheading || '',
@@ -2326,7 +2361,7 @@ export default {
             )
             .run();
 
-          return jsonResponse({ success: true, message: 'Blog published successfully to D1.', slug });
+          return jsonResponse({ success: true, message: 'Article published successfully to rev_db D1.', slug, page_name: pageName });
         }
       }
 
@@ -2339,14 +2374,14 @@ export default {
 
           await env.DB.prepare('DELETE FROM rev_db WHERE slug = ?').bind(slug).run();
           await env.DB.prepare('DELETE FROM blogs WHERE slug = ?').bind(slug).run();
-          return jsonResponse({ success: true, message: `Blog ${slug} deleted successfully.` });
+          return jsonResponse({ success: true, message: `Article ${slug} deleted successfully.` });
         }
       }
 
       // -----------------------------------------------------------------------
-      // 13. GROQ AI GENERATION ENDPOINTS
+      // 13. GROQ AI GENERATION & REV_DB FEED ENDPOINTS
       // -----------------------------------------------------------------------
-      if (path === '/api/ai/generate-blog' || path === '/api/ai/continue-blog') {
+      if (path === '/api/ai/generate-blog' || path === '/api/ai/continue-blog' || path === '/api/ai/feed-revdb') {
         if (method === 'POST') {
           const admin = await getAdminUser(request, env);
           if (!admin.valid) return jsonResponse({ error: 'Unauthorized.' }, 401);
@@ -2355,11 +2390,14 @@ export default {
           const {
             topic,
             prompt: rawPrompt,
+            page_name: customPageName,
+            section_name: customSectionName,
             tone = 'Luxury & Authoritative',
             keywords = '',
-            targetAudience = 'Luxury Hotel Owners & Resort Directors',
+            targetAudience = 'Luxury Hotel Owners, Resort Directors & Travel Operators',
             model,
             isContinue,
+            autoSave,
             currentDraft,
           } = body || {};
 
@@ -2373,46 +2411,124 @@ export default {
             return jsonResponse({ error: 'Groq API Key is not configured. Please add your Groq API key in Settings.' }, 400);
           }
 
-          const promptText = `Write a comprehensive, high-converting, authoritative travel industry blog article for Revlytics (a travel digital acceleration agency).
+          const promptText = `Generate a high-converting, deeply researched, luxury travel industry article/content piece to feed the rev_db table.
 Topic/Prompt: ${activePrompt || currentDraft?.heading}
 Tone: ${tone}
 Target Audience: ${targetAudience}
-Keywords to integrate: ${keywords}
+Keywords: ${keywords}
 
-Respond strictly with a valid JSON object matching exactly this schema:
+Respond strictly with a valid JSON object matching exactly this schema and column types for table rev_db:
 {
-  "heading": "Catchy, SEO-optimized H1 title (50-65 chars)",
-  "slug": "url-safe-lowercase-slug-kebab-case",
-  "subheading": "Engaging subtitle expanding on the headline",
-  "meta_heading": "SEO Meta Title (50-60 chars)",
-  "meta_data": "Compelling Meta Description for Google Search (140-160 chars)",
-  "category": "Direct Bookings",
+  "page_name": "${customPageName || (activePrompt ? activePrompt.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').substring(0, 40) : 'travel-insights')}",
+  "section_name": "${customSectionName || 'hero'}",
+  "slug": "${activePrompt ? activePrompt.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'travel-marketing-playbook'}",
+  "heading": "Authoritative H1 Article Headline (55-80 chars)",
+  "subheading": "Engaging, practical subtitle explaining the core thesis",
+  "meta_heading": "SEO Meta Title (50-60 chars) | Revlytics",
+  "meta_data": "Actionable, click-driving Meta Description for Google Search (140-160 chars)",
+  "category": "Performance Marketing",
   "author": "Elena Rostova",
   "date": "${new Date().toISOString().split('T')[0]}",
-  "image_url": "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "description": "2-3 sentence executive summary of the article.",
-  "paragraph": "Introductory narrative paragraph capturing the reader's attention.",
-  "useful_quote": "A memorable, tweetable industry quote or insight.",
-  "pexels_featured_query": "luxury resort hotel pool",
-  "pexels_query_2": "hotel boutique architecture",
-  "pexels_query_3": "guest booking mobile room",
-  "pexels_query_4": "resort sunset tropical",
-  "pexels_query_5": "travel hospitality suite",
+  "image_url": "https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg",
+  "description": "2-3 sentence executive summary of the business strategy.",
+  "paragraph": "Compelling narrative opening paragraph capturing high-intent travel decision-makers.",
+  "useful_quote": "A memorable, punchy quote highlighting the human & financial transformation of luxury travel.",
+  "pexels_featured_query": "specific descriptive photo search query for hero featured image",
+  "pexels_query_2": "specific descriptive photo search query for section 1",
+  "pexels_query_3": "specific descriptive photo search query for section 2",
+  "pexels_query_4": "specific descriptive photo search query for section 3",
+  "pexels_query_5": "specific descriptive photo search query for section 4",
   "sections_h2_para": [
-    { "h2": "Subheading 1", "paragraph": "Detailed, actionable insights..." },
-    { "h2": "Subheading 2", "paragraph": "Tactical strategies and examples..." },
-    { "h2": "Subheading 3", "paragraph": "Implementation steps for hotels and resorts..." }
+    { "h2": "1. Strategic Step or Heading", "paragraph": "In-depth, actionable strategy breakdown explaining exactly how to execute..." },
+    { "h2": "2. Strategic Step or Heading", "paragraph": "Detailed implementation mechanics and conversion optimization techniques..." },
+    { "h2": "3. Strategic Step or Heading", "paragraph": "Technology frameworks, automation, and guest experience benchmarks..." },
+    { "h2": "4. Strategic Step or Heading", "paragraph": "Revenue management, pricing psychology, and direct booking tactics..." },
+    { "h2": "5. Strategic Step or Heading", "paragraph": "Long-term scaling models and customer retention plays..." }
   ],
-  "tags": ["DirectBookings", "HospitalityTech", "TravelMarketing", "LuxuryResorts"]
+  "tags": ["Tag1", "Tag2", "Tag3", "Tag4", "Tag5", "Tag6"]
 }`;
 
           const result = await callGroqChat(
             groqKey,
             promptText,
-            'You are the Chief Strategy Officer and Lead Travel Marketing Writer for Revlytics. Generate high-value, factual, conversion-oriented travel hospitality insights in valid JSON format.',
+            'You are the Chief Strategy Officer and Lead Hospitality Growth Architect for Revlytics. Generate exceptionally high-value, factual, conversion-oriented travel insights in valid JSON format matching table rev_db.',
             model,
             isContinue ? currentDraft : undefined
           );
+
+          // If autoSave or path is /api/ai/feed-revdb, automatically insert into rev_db
+          if (autoSave || path === '/api/ai/feed-revdb') {
+            const heading = result.heading || activePrompt;
+            const slug = (result.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')).trim();
+            const pageName = (result.page_name || customPageName || 'travel-insights').trim();
+            const sectionName = (result.section_name || customSectionName || 'hero').trim();
+
+            const sectionsJson = typeof result.sections_h2_para === 'object' ? JSON.stringify(result.sections_h2_para) : (result.sections_h2_para || '[]');
+            const tagsJson = typeof result.tags === 'object' ? JSON.stringify(result.tags) : (result.tags || '[]');
+
+            await env.DB.prepare(`
+              INSERT INTO rev_db (
+                page_name, section_name, slug, heading, subheading, meta_heading, meta_data,
+                category, author, date, image_url, description, paragraph, useful_quote,
+                pexels_featured_query, pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5,
+                sections_h2_para, tags
+              )
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(slug) DO UPDATE SET
+                page_name = excluded.page_name,
+                section_name = excluded.section_name,
+                heading = excluded.heading,
+                subheading = excluded.subheading,
+                meta_heading = excluded.meta_heading,
+                meta_data = excluded.meta_data,
+                category = excluded.category,
+                author = excluded.author,
+                date = excluded.date,
+                image_url = excluded.image_url,
+                description = excluded.description,
+                paragraph = excluded.paragraph,
+                useful_quote = excluded.useful_quote,
+                pexels_featured_query = excluded.pexels_featured_query,
+                pexels_query_2 = excluded.pexels_query_2,
+                pexels_query_3 = excluded.pexels_query_3,
+                pexels_query_4 = excluded.pexels_query_4,
+                pexels_query_5 = excluded.pexels_query_5,
+                sections_h2_para = excluded.sections_h2_para,
+                tags = excluded.tags,
+                updated_at = CURRENT_TIMESTAMP
+            `)
+              .bind(
+                pageName,
+                sectionName,
+                slug,
+                heading,
+                result.subheading || '',
+                result.meta_heading || heading,
+                result.meta_data || result.description || '',
+                result.category || 'Performance Marketing',
+                result.author || 'Elena Rostova',
+                result.date || new Date().toISOString().split('T')[0],
+                result.image_url || 'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg',
+                result.description || '',
+                result.paragraph || '',
+                result.useful_quote || '',
+                result.pexels_featured_query || 'luxury travel',
+                result.pexels_query_2 || '',
+                result.pexels_query_3 || '',
+                result.pexels_query_4 || '',
+                result.pexels_query_5 || '',
+                sectionsJson,
+                tagsJson
+              )
+              .run();
+
+            return jsonResponse({
+              success: true,
+              message: 'Successfully generated and inserted into rev_db!',
+              slug,
+              data: result,
+            });
+          }
 
           return jsonResponse({ success: true, data: result });
         }
