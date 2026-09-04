@@ -1230,92 +1230,14 @@ export default {
       }
 
       // -----------------------------------------------------------------------
-      // 1b. PEXELS PROXY API
+      // 1b. PEXELS PROXY & LIVE SEARCH API
       // -----------------------------------------------------------------------
       if (path === '/api/pexels') {
         if (method === 'GET') {
-          const query = (url.searchParams.get('query') || 'luxury travel').toLowerCase();
+          const query = (url.searchParams.get('query') || 'luxury travel').trim();
           const perPage = parseInt(url.searchParams.get('per_page') || '1', 10);
 
-          // Curated luxury travel & hospitality fallback photos with actual high-res Pexels CDN URLs
-          const fallbackPool: Record<string, string[]> = {
-            resort: [
-              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            hotel: [
-              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            room: [
-              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            booking: [
-              'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            suite: [
-              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            pool: [
-              'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/221457/pexels-photo-221457.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            architecture: [
-              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/2474690/pexels-photo-2474690.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            boutique: [
-              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            sunset: [
-              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            tropical: [
-              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            expedition: [
-              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/869258/pexels-photo-869258.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            mountain: [
-              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            travel: [
-              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/1365425/pexels-photo-1365425.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ],
-            hospitality: [
-              'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
-              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
-            ]
-          };
-
-          const matchedKey = Object.keys(fallbackPool).find(k => query.includes(k)) || 'travel';
-          const pool = fallbackPool[matchedKey] || fallbackPool['travel'];
-          const fallbackPhotos = pool.slice(0, perPage).map((src, i) => ({
-            id: i + 1,
-            src: {
-              original: src,
-              large: src,
-              medium: src,
-              small: src,
-            },
-          }));
-
+          // 1. Try Pexels API if key is available
           const pexelsKey = env.PEXELS_API_KEY;
           if (pexelsKey) {
             try {
@@ -1338,11 +1260,158 @@ export default {
             }
           }
 
+          // 2. Fetch live search directly from Pexels HTML search matching the user's exact query
+          try {
+            const searchHtmlRes = await fetch(`https://www.pexels.com/search/${encodeURIComponent(query)}/`, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+              },
+            });
+            if (searchHtmlRes.ok) {
+              const html = await searchHtmlRes.text();
+              const imgMatches = html.match(/https:\/\/images\.pexels\.com\/photos\/\d+\/pexels-photo-\d+\.jpeg(?:\?[^"'\s<>]*)?/gi);
+              if (imgMatches && imgMatches.length > 0) {
+                const uniquePhotos = Array.from(new Set(imgMatches.map((u) => u.split('?')[0]))).slice(0, Math.max(perPage, 5));
+                const photos = uniquePhotos.map((rawUrl, idx) => ({
+                  id: idx + 1,
+                  src: {
+                    original: `${rawUrl}?auto=compress&cs=tinysrgb&w=1200`,
+                    large: `${rawUrl}?auto=compress&cs=tinysrgb&w=1200`,
+                    medium: `${rawUrl}?auto=compress&cs=tinysrgb&w=800`,
+                    small: `${rawUrl}?auto=compress&cs=tinysrgb&w=400`,
+                  },
+                }));
+                return jsonResponse({
+                  page: 1,
+                  per_page: perPage,
+                  photos: photos.slice(0, perPage),
+                  total_results: photos.length,
+                });
+              }
+            }
+          } catch (err) {
+            console.warn('Direct Pexels live search fetch error:', err);
+          }
+
           return jsonResponse({
             page: 1,
             per_page: perPage,
-            photos: fallbackPhotos,
-            total_results: fallbackPhotos.length,
+            photos: [],
+            total_results: 0,
+          });
+        }
+      }
+
+      // -----------------------------------------------------------------------
+      // 1. BLOGS & ARTICLES LISTING API (Cloudflare D1 rev_db + blogs)
+      // -----------------------------------------------------------------------
+      if (path === '/api/blogs' || path === '/api/articles') {
+        if (method === 'GET') {
+          try {
+            // Fetch rich articles from rev_db as primary source
+            const { results: revResults } = await env.DB.prepare(`
+              SELECT 
+                id, page_name, section_name, slug, heading, heading AS title,
+                subheading, meta_heading, meta_data, category, category AS tag,
+                author, date, image_url, description, description AS summary,
+                paragraph, paragraph AS content, useful_quote, pexels_featured_query,
+                pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5,
+                sections_h2_para, tags, created_at, updated_at
+              FROM rev_db 
+              WHERE slug IS NOT NULL AND slug != '' AND heading IS NOT NULL AND heading != ''
+              ORDER BY id DESC
+            `).all();
+
+            let blogs: any[] = revResults || [];
+
+            // Also check if blogs table has additional rows
+            try {
+              const { results: blogRows } = await env.DB.prepare('SELECT * FROM blogs ORDER BY id DESC').all();
+              if (blogRows && blogRows.length > 0) {
+                const existingSlugs = new Set(blogs.map((b) => b.slug));
+                for (const b of blogRows as any[]) {
+                  if (!existingSlugs.has(b.slug)) {
+                    blogs.push({
+                      id: b.id,
+                      slug: b.slug,
+                      title: b.title,
+                      heading: b.title,
+                      tag: b.tag || 'Travel',
+                      category: b.tag || 'Travel',
+                      summary: b.summary || '',
+                      description: b.summary || '',
+                      content: b.content || '',
+                      paragraph: b.content || '',
+                      image_url: b.image_url,
+                      author: b.author || 'Elena Rostova',
+                      created_at: b.created_at,
+                    });
+                  }
+                }
+              }
+            } catch {
+              // blogs table query fallback
+            }
+
+            return jsonResponse({ success: true, count: blogs.length, data: blogs });
+          } catch (err: any) {
+            console.error('Error fetching blogs from D1:', err);
+            return jsonResponse({ success: false, error: err?.message || 'Failed to fetch blogs' }, 500);
+          }
+        }
+
+        if (method === 'POST') {
+          const auth = await verifyApiKey(request, env);
+          if (!auth.valid) return jsonResponse({ error: 'Unauthorized. Valid API key required.' }, 401);
+
+          const body = (await request.json()) as any;
+          const heading = body.heading || body.title;
+          if (!heading) return jsonResponse({ error: 'Title or heading is required' }, 400);
+
+          const slug = (body.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')).trim();
+          const pageName = (body.page_name || 'blog').trim();
+          const sectionName = (body.section_name || 'hero').trim();
+
+          const result = await env.DB.prepare(`
+            INSERT INTO rev_db (
+              page_name, section_name, slug, heading, subheading, meta_heading, meta_data,
+              category, author, date, image_url, description, paragraph, useful_quote,
+              pexels_featured_query, pexels_query_2, pexels_query_3, pexels_query_4, pexels_query_5,
+              sections_h2_para, tags
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+            .bind(
+              pageName,
+              sectionName,
+              slug,
+              heading,
+              body.subheading || '',
+              body.meta_heading || heading,
+              body.meta_data || body.description || body.summary || '',
+              body.category || body.tag || 'Travel Insights',
+              body.author || 'Elena Rostova',
+              body.date || new Date().toISOString().split('T')[0],
+              body.image_url || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg',
+              body.description || body.summary || '',
+              body.paragraph || body.content || '',
+              body.useful_quote || '',
+              body.pexels_featured_query || 'luxury travel resort',
+              body.pexels_query_2 || '',
+              body.pexels_query_3 || '',
+              body.pexels_query_4 || '',
+              body.pexels_query_5 || '',
+              typeof body.sections_h2_para === 'object' ? JSON.stringify(body.sections_h2_para) : (body.sections_h2_para || '[]'),
+              typeof body.tags === 'object' ? JSON.stringify(body.tags) : (body.tags || '[]')
+            )
+            .run();
+
+          return jsonResponse({
+            success: true,
+            message: 'Blog created successfully',
+            id: result.meta.last_row_id,
+            slug,
           });
         }
       }
@@ -1821,48 +1890,58 @@ export default {
         }
       }
 
-      // -----------------------------------------------------------------------
-      // 6. PEXELS API PROXY (Using worker PEXELS_API_KEY)
-      // -----------------------------------------------------------------------
-      if (path === '/api/pexels/photos' || path === '/api/pexels') {
-        if (method === 'GET') {
-          const query = url.searchParams.get('query') || 'luxury resort travel';
-          const perPage = url.searchParams.get('per_page') || '15';
-          const apiKey = env.PEXELS_API_KEY;
-          if (!apiKey) {
-            return jsonResponse({ error: 'PEXELS_API_KEY is not configured on this worker.' }, 500);
-          }
+     // -----------------------------------------------------------------------
+// PEXELS API PROXY (single handler for /api/pexels and /api/pexels/photos)
+// -----------------------------------------------------------------------
+if (path === '/api/pexels' || path === '/api/pexels/photos') {
+  if (method === 'GET') {
+    const query = (url.searchParams.get('query') || 'luxury travel').trim();
+    const perPage = url.searchParams.get('per_page') || '15';
+    const apiKey = env.PEXELS_API_KEY;
 
-          const res = await fetch(
-            `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
-            {
-              headers: { Authorization: apiKey },
-            }
-          );
-          const data = await res.json();
-          return jsonResponse(data, res.status);
-        }
+    if (!apiKey) {
+      console.error('PEXELS_API_KEY is not set — falling back to no images');
+      return jsonResponse({ page: 1, per_page: Number(perPage), photos: [], total_results: 0 });
+    }
+
+    try {
+      const res = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
+        { headers: { Authorization: apiKey } }
+      );
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`Pexels API error ${res.status} for query "${query}":`, errText);
+        return jsonResponse({ page: 1, per_page: Number(perPage), photos: [], total_results: 0 });
       }
 
-      if (path === '/api/pexels/videos') {
-        if (method === 'GET') {
-          const query = url.searchParams.get('query') || 'tropical travel';
-          const perPage = url.searchParams.get('per_page') || '10';
-          const apiKey = env.PEXELS_API_KEY;
-          if (!apiKey) {
-            return jsonResponse({ error: 'PEXELS_API_KEY is not configured on this worker.' }, 500);
-          }
+      const data = (await res.json()) as any;
+      return jsonResponse(data);
+    } catch (err) {
+      console.error('Pexels API fetch failed:', err);
+      return jsonResponse({ page: 1, per_page: Number(perPage), photos: [], total_results: 0 });
+    }
+  }
+}
 
-          const res = await fetch(
-            `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
-            {
-              headers: { Authorization: apiKey },
-            }
-          );
-          const data = await res.json();
-          return jsonResponse(data, res.status);
-        }
-      }
+if (path === '/api/pexels/videos') {
+  if (method === 'GET') {
+    const query = url.searchParams.get('query') || 'tropical travel';
+    const perPage = url.searchParams.get('per_page') || '10';
+    const apiKey = env.PEXELS_API_KEY;
+    if (!apiKey) {
+      return jsonResponse({ error: 'PEXELS_API_KEY is not configured on this worker.' }, 500);
+    }
+
+    const res = await fetch(
+      `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`,
+      { headers: { Authorization: apiKey } }
+    );
+    const data = await res.json();
+    return jsonResponse(data, res.status);
+  }
+}
 
       // -----------------------------------------------------------------------
       // 7. REV_DB CMS API (Page Headings, Subheadings & Meta)

@@ -156,12 +156,28 @@
 		if (typeof ScrollSmoother !== 'undefined' && typeof ScrollSmoother.get === 'function' && ScrollSmoother.get()) {
 			try { ScrollSmoother.get().kill(); } catch (e) {}
 		}
-		ScrollSmoother.create({
-			smooth: 1.35,
-			effects: true,
-			smoothTouch: 0.15,
-			ignoreMobileResize: true,
-		});
+
+		// Disable smooth scroll for touch devices and screens < 768px
+		const isTouchOrMobile = window.innerWidth < 768 || (('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)) && window.innerWidth < 768);
+
+		if (!isTouchOrMobile) {
+			ScrollSmoother.create({
+				smooth: 1.35,
+				effects: true,
+				smoothTouch: false,
+				ignoreMobileResize: true,
+			});
+		} else {
+			if (typeof gsap !== 'undefined') {
+				gsap.set(['#smooth-wrapper', '#smooth-content'], {
+					clearProps: 'all',
+					overflow: 'visible',
+					position: 'relative',
+					height: 'auto',
+					width: '100%'
+				});
+			}
+		}
 	}
 
 	////////////////////////////////////////////////////

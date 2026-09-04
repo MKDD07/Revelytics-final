@@ -74,9 +74,85 @@ export function getPexelsImageQualityUrl(url: string, quality: ImageQuality = 'h
 }
 
 /**
+ * Strictly selects the best matching video file for the desired quality tier:
+ * - 'sd': 360p - 540p (max dimension <= 960), lowest bandwidth, strictly never UHD/4K.
+ * - 'hd': 720p - 1080p (dimensions between 720 and 1920), crisp standard HD, strictly never UHD/4K.
+ * - 'uhd': 4K / 2160p (dimensions >= 2160), fallback to highest available resolution.
+ */
+function selectVideoFile(files: PexelsVideoFile[], quality: VideoQuality): PexelsVideoFile | undefined {
+  if (!files || files.length === 0) return undefined;
+  const mp4Files = files.filter((f) => f.file_type === 'video/mp4' || !f.file_type);
+  const pool = mp4Files.length > 0 ? mp4Files : files;
+
+  if (quality === 'sd') {
+    // 1. Check for genuine SD files (quality === 'sd' or resolution <= 960x960 or 'sd_' in URL)
+    const sdFiles = pool.filter(
+      (f) =>
+        f.quality === 'sd' ||
+        (f.width > 0 && f.width <= 960 && f.height <= 960) ||
+        f.link.includes('sd_')
+    );
+    if (sdFiles.length > 0) {
+      // Return the best SD option (highest within SD, e.g. 540p or 480p)
+      return sdFiles.sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+    }
+
+    // 2. Fallback: find lowest resolution non-UHD file (e.g. 720p)
+    const nonUhd = pool.filter(
+      (f) => f.quality !== 'uhd' && f.width < 2160 && f.height < 2160 && !f.link.includes('uhd_') && !f.link.includes('3840')
+    );
+    if (nonUhd.length > 0) {
+      return nonUhd.sort((a, b) => (a.width * a.height) - (b.width * b.height))[0];
+    }
+
+    // 3. Ultimate fallback: lowest resolution file overall
+    return pool.slice().sort((a, b) => (a.width * a.height) - (b.width * b.height))[0];
+  }
+
+  if (quality === 'hd') {
+    // 1. Strict HD (720p - 1080p, strictly excluding UHD / 4K / 2160p)
+    const hdFiles = pool.filter(
+      (f) =>
+        f.quality !== 'uhd' &&
+        !f.link.includes('uhd_') &&
+        !f.link.includes('3840') &&
+        f.width < 2160 &&
+        f.height < 2160 &&
+        ((f.width >= 720 && f.width <= 1920) || (f.height >= 720 && f.height <= 1920) || f.quality === 'hd' || f.link.includes('hd_'))
+    );
+    if (hdFiles.length > 0) {
+      // Pick best HD (closest to 1080p)
+      return hdFiles.sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+    }
+
+    // 2. Fallback: Any non-UHD file
+    const nonUhd = pool.filter(
+      (f) => f.quality !== 'uhd' && f.width < 2160 && f.height < 2160 && !f.link.includes('uhd_') && !f.link.includes('3840')
+    );
+    if (nonUhd.length > 0) {
+      return nonUhd.sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+    }
+
+    // 3. Fallback: Lowest resolution available
+    return pool.slice().sort((a, b) => (a.width * a.height) - (b.width * b.height))[0];
+  }
+
+  // UHD / 4K request
+  const uhdFiles = pool.filter(
+    (f) => f.quality === 'uhd' || f.width >= 2160 || f.height >= 2160 || f.link.includes('uhd_') || f.link.includes('3840')
+  );
+  if (uhdFiles.length > 0) {
+    return uhdFiles.sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+  }
+
+  // Fallback to highest available resolution
+  return pool.slice().sort((a, b) => (b.width * b.height) - (a.width * a.height))[0];
+}
+
+/**
  * Searches and fetches video stream URLs from Pexels API with strict quality tiering.
  * @param query Search query
- * @param quality 'sd' (480p), 'hd' (720p/1080p), 'uhd' (4K/2160p)
+ * @param quality 'sd' (480p/540p), 'hd' (720p/1080p), 'uhd' (4K/2160p)
  * @param perPage Number of videos to fetch
  * @param orientation 'landscape' | 'portrait'
  */
@@ -86,7 +162,7 @@ export async function searchPexelsVideos(
   orientation: 'landscape' | 'portrait' = 'portrait',
   quality: VideoQuality = 'hd'
 ): Promise<string[]> {
-  const cacheKey = `pexels_videos_${query.toLowerCase().trim()}_${perPage}_${orientation}_${quality}`;
+  const cacheKey = `pexels_videos_v3_${query.toLowerCase().trim()}_${perPage}_${orientation}_${quality}`;
 
   if (memoryVideoCache.has(cacheKey)) {
     return memoryVideoCache.get(cacheKey)!;
@@ -125,31 +201,7 @@ export async function searchPexelsVideos(
 
     const videoUrls: string[] = videos
       .map((item) => {
-        let matchedFile: PexelsVideoFile | undefined;
-
-        if (quality === 'uhd') {
-          // UHD / 4K / 2160p search
-          matchedFile =
-            item.video_files.find((f) => (f.width >= 2160 || f.height >= 2160) && f.file_type === 'video/mp4') ||
-            item.video_files.find((f) => f.quality === 'uhd' && f.file_type === 'video/mp4') ||
-            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4' && (f.width >= 1920 || f.height >= 1920));
-        } else if (quality === 'sd') {
-          // SD / 480p search
-          matchedFile =
-            item.video_files.find((f) => f.quality === 'sd' && f.file_type === 'video/mp4') ||
-            item.video_files.find((f) => f.file_type === 'video/mp4' && (f.width <= 720 && f.height <= 720));
-        } else {
-          // HD / 720p / 1080p search (default)
-          matchedFile =
-            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4' && ((f.width >= 1280 && f.width <= 1920) || (f.height >= 1280 && f.height <= 1920))) ||
-            item.video_files.find((f) => f.quality === 'hd' && f.file_type === 'video/mp4') ||
-            item.video_files.find((f) => f.file_type === 'video/mp4');
-        }
-
-        if (!matchedFile) {
-          matchedFile = item.video_files.find((f) => f.file_type === 'video/mp4') || item.video_files[0];
-        }
-
+        const matchedFile = selectVideoFile(item.video_files || [], quality);
         return matchedFile ? matchedFile.link : '';
       })
       .filter((url) => Boolean(url));

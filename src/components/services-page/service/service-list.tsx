@@ -153,6 +153,8 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
       document.getElementById(`category-${catSlug}`) ||
       document.querySelector(`[data-slug="${catSlug}"]`);
 
+    const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+
     if (targetCard) {
       const headerOffset = 100;
       const elementPosition = targetCard.getBoundingClientRect().top;
@@ -160,7 +162,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth',
+        behavior: isTouchOrMobile ? 'auto' : 'smooth',
       });
       return;
     }
@@ -176,7 +178,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
 
         window.scrollTo({
           top: offsetPosition,
-          behavior: 'smooth',
+          behavior: isTouchOrMobile ? 'auto' : 'smooth',
         });
         return;
       }
@@ -185,7 +187,7 @@ const ServiceList: React.FC<ServiceListProps> = ({ id = 'about' }) => {
     // 3. Fallback to about section
     const aboutEl = document.getElementById('about');
     if (aboutEl) {
-      aboutEl.scrollIntoView({ behavior: 'smooth' });
+      aboutEl.scrollIntoView({ behavior: isTouchOrMobile ? 'auto' : 'smooth' });
     }
   };
 

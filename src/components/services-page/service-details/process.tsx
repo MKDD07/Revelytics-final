@@ -151,7 +151,8 @@ const Process: React.FC<ServiceDetailsProcessProps> = ({ slug: propSlug }) => {
       const cleanPath = ctaLink.replace('#', '').replace(/^\//, '');
       window.history.pushState({}, '', cleanPath ? `/${cleanPath}` : '/');
       window.dispatchEvent(new Event('popstate'));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+      window.scrollTo({ top: 0, behavior: isTouchOrMobile ? 'auto' : 'smooth' });
     }
   };
 

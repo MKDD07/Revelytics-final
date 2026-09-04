@@ -264,7 +264,8 @@ function App() {
     if (nextState.route !== routeState.route || nextState.slug !== routeState.slug) {
       triggerBarbaTransition(nextState);
     } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+      window.scrollTo({ top: 0, behavior: isTouchOrMobile ? 'auto' : 'smooth' });
     }
   };
 
@@ -301,7 +302,8 @@ function App() {
           const el = document.getElementById(hashTarget);
           if (el) {
             e.preventDefault();
-            el.scrollIntoView({ behavior: 'smooth' });
+            const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+            el.scrollIntoView({ behavior: isTouchOrMobile ? 'auto' : 'smooth' });
           }
           return;
         }

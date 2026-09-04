@@ -103,7 +103,8 @@ const Overview: React.FC<ServiceDetailsOverviewProps> = ({ slug: propSlug }) => 
     e.preventDefault();
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+    window.scrollTo({ top: 0, behavior: isTouchOrMobile ? 'auto' : 'smooth' });
   };
 
   return (

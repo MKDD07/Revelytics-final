@@ -7,6 +7,24 @@
   min-height: 100vh;
 }
 
+/* Disable smooth scroll on touch devices & viewports < 768px for native touch performance */
+@media (max-width: 767px), (hover: none) and (max-width: 767px) {
+  html,
+  body {
+    scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #smooth-wrapper,
+  #smooth-content {
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+    transform: none !important;
+    position: relative !important;
+  }
+}
+
 /* Ensure Header text is crisp pure white on blur background */
 .cs-header-wrap .tp-main-menu ul li a,
 .cs-header-wrap .tp-header-search-btn,

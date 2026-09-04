@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getPexelsImage } from '../../utils';
+import { fetchRevDbArticles, fetchBlogs } from '../../services/api';
 
 export interface BlogPost {
   id: string | number;
@@ -88,10 +89,66 @@ const Blog1: React.FC<Blog1Props> = ({
   title = 'Travel Insights & Articles',
   allArticlesLink = '#blog',
   allArticlesText = 'All Articles',
-  posts = DEFAULT_BLOG_POSTS,
+  posts: initialPosts,
 }) => {
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts || DEFAULT_BLOG_POSTS);
   const swiperContainerRef = useRef<HTMLDivElement>(null);
   const swiperInstanceRef = useRef<any>(null);
+
+  // Fetch live articles from Cloudflare D1 database (rev_db / blogs)
+  useEffect(() => {
+    if (initialPosts && initialPosts.length > 0) {
+      setPosts(initialPosts);
+      return;
+    }
+
+    let isMounted = true;
+    async function loadLiveBlogs() {
+      try {
+        const articles = await fetchRevDbArticles();
+        if (isMounted && articles && articles.length > 0) {
+          const mapped: BlogPost[] = articles.map((art, idx) => ({
+            id: art.id || art.slug || idx + 1,
+            tag: art.category || 'Travel Insights',
+            tagLink: '#blog',
+            title: art.heading || 'Travel Industry Insight',
+            link: `/blog-details/${art.slug}`,
+            image:
+              art.image_url ||
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+            alt: art.heading,
+            fadeFrom: idx % 3 === 0 ? 'left' : idx % 3 === 1 ? 'bottom' : 'right',
+          }));
+          setPosts(mapped);
+          return;
+        }
+
+        const blogs = await fetchBlogs();
+        if (isMounted && blogs && blogs.length > 0) {
+          const mapped: BlogPost[] = blogs.map((b, idx) => ({
+            id: b.id || b.slug || idx + 1,
+            tag: b.tag || 'Travel Insights',
+            tagLink: '#blog',
+            title: b.title || 'Travel Industry Insight',
+            link: `/blog-details/${b.slug || b.id}`,
+            image:
+              b.image_url ||
+              'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800&h=550&fit=crop',
+            alt: b.title,
+            fadeFrom: idx % 3 === 0 ? 'left' : idx % 3 === 1 ? 'bottom' : 'right',
+          }));
+          setPosts(mapped);
+        }
+      } catch (err) {
+        console.warn('Failed to load live blogs from Cloudflare D1:', err);
+      }
+    }
+
+    loadLiveBlogs();
+    return () => {
+      isMounted = false;
+    };
+  }, [initialPosts]);
 
   useEffect(() => {
     const initSwiper = () => {
@@ -246,24 +303,45 @@ const Blog1: React.FC<Blog1Props> = ({
                     style={{ height: '100%' }}
                   >
                     <div className="cs-blog-thumb fix p-relative mb-25" style={{ borderRadius: 24, overflow: 'hidden' }}>
-                      <img
-                        className="w-100"
-                        src={imgSrc}
-                        alt={post.alt || `${post.tag} Article`}
-                        style={{
-                          borderRadius: 24,
-                          height: 340,
-                          objectFit: 'cover',
-                          display: 'block',
-                          transition: 'transform 0.5s ease',
+                      <a
+                        href={post.link || '#blog-details'}
+                        onClick={(e) => {
+                          if (post.link && (post.link.startsWith('/blog') || post.link.startsWith('/blog-details'))) {
+                            e.preventDefault();
+                            window.history.pushState({}, '', post.link);
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }
                         }}
-                      />
+                        style={{ display: 'block' }}
+                      >
+                        <img
+                          className="w-100"
+                          src={imgSrc}
+                          alt={post.alt || `${post.tag} Article`}
+                          style={{
+                            borderRadius: 24,
+                            height: 340,
+                            objectFit: 'cover',
+                            display: 'block',
+                            transition: 'transform 0.5s ease',
+                          }}
+                        />
+                      </a>
                       <a href={post.tagLink || '#blog'} className="cs-blog-tag">
                         {post.tag}
                       </a>
                     </div>
                     <h4 className="cs-blog-title" style={{ color: 'var(--tp-common-white)' }}>
-                      <a href={post.link || '#blog-details'}>
+                      <a
+                        href={post.link || '#blog-details'}
+                        onClick={(e) => {
+                          if (post.link && (post.link.startsWith('/blog') || post.link.startsWith('/blog-details'))) {
+                            e.preventDefault();
+                            window.history.pushState({}, '', post.link);
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                          }
+                        }}
+                      >
                         {post.title}
                       </a>
                     </h4>

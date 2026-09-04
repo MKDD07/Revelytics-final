@@ -64,7 +64,8 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
     }
     const el = document.getElementById(route);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+      el.scrollIntoView({ behavior: isTouchOrMobile ? 'auto' : 'smooth' });
     }
   };
 
@@ -76,7 +77,8 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
     } else {
       window.location.hash = targetRoute;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const isTouchOrMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+    window.scrollTo({ top: 0, behavior: isTouchOrMobile ? 'auto' : 'smooth' });
   };
 
   return (
@@ -92,7 +94,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
           width: '100%',
           zIndex: 999,
           transition: 'all 0.35s ease',
-          backgroundColor: isSticky ? 'rgba(9, 9, 11, 0.92)' : 'transparent',
+          backgroundColor: isSticky ? 'rgb(255 255 255 / 92%)' : 'transparent',
           backdropFilter: isSticky ? 'blur(16px)' : 'none',
           boxShadow: isSticky ? '0 4px 30px rgba(0, 0, 0, 0.3)' : 'none',
           paddingTop: isSticky ? '14px' : '24px',
