@@ -25,19 +25,70 @@
   }
 }
 
-/* Ensure Header text is crisp pure white on blur background */
+/* ============================================================
+   HEADER & SUBMENU OVERFLOW CONTAINMENT
+   ============================================================ */
+.cs-header-wrap {
+  width: 100% !important;
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+  overflow-x: clip !important;
+}
+
+.cs-header-wrap .container {
+  max-width: 1440px !important;
+  width: 100% !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
 .cs-header-wrap .tp-main-menu ul li a,
 .cs-header-wrap .tp-header-search-btn,
 .cs-header-wrap .hamburger-open-btn {
-  color: #222;
+  color: #111827 !important;
+}
+
+.cs-header-wrap .hamburger-open-btn span {
+  background: #111827 !important;
+}
+
+/* Desktop Submenu overflow & scroll containment */
+.cs-header-wrap .tp-main-menu .tp-submenu,
+.cs-header-wrap .tp-main-menu .submenu {
+  min-width: 280px !important;
+  max-width: 360px !important;
+  max-height: calc(80vh - 60px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.cs-header-wrap .tp-main-menu .tp-submenu::-webkit-scrollbar,
+.cs-header-wrap .tp-main-menu .submenu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cs-header-wrap .tp-main-menu .tp-submenu::-webkit-scrollbar-thumb,
+.cs-header-wrap .tp-main-menu .submenu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
 }
 
 .cs-header-wrap .tp-submenu li a {
   color: #111827 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  line-height: 1.35 !important;
+  padding: 10px 16px !important;
 }
 
 .cs-header-wrap .tp-submenu li a:hover {
   color: #ef4444 !important;
+  background-color: #f3f4f6 !important;
 }
 
 /* ============================================================

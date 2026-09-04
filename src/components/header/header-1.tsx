@@ -82,7 +82,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
   };
 
   return (
-    <header>
+    <header style={{ width: '100%', maxWidth: '100vw', overflowX: 'clip' }}>
       <div
         className={`tp-header-area tp-header-spacing cs-header-wrap header-transparent ${
           isSticky ? 'header-sticky tp-header-pinned' : ''
@@ -92,24 +92,27 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
           top: 0,
           left: 0,
           width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          overflowX: 'clip',
           zIndex: 999,
           transition: 'all 0.35s ease',
-          backgroundColor: isSticky ? 'rgb(255 255 255 / 92%)' : 'transparent',
+          backgroundColor: isSticky ? 'rgb(255 255 255 / 94%)' : 'transparent',
           backdropFilter: isSticky ? 'blur(16px)' : 'none',
-          boxShadow: isSticky ? '0 4px 30px rgba(0, 0, 0, 0.3)' : 'none',
-          paddingTop: isSticky ? '14px' : '24px',
-          paddingBottom: isSticky ? '14px' : '24px',
+          boxShadow: isSticky ? '0 4px 30px rgba(0, 0, 0, 0.08)' : 'none',
+          paddingTop: isSticky ? '14px' : '22px',
+          paddingBottom: isSticky ? '14px' : '22px',
         }}
       >
         <div className="container">
-          <div className="row align-items-center">
+          <div className="row align-items-center justify-content-between flex-nowrap g-2">
             {/* Logo Area */}
-            <div className="col-xl-3 col-6">
+            <div className="col-auto">
               <div className="tp-header-logo">
                 <a href="#home" onClick={(e) => handleNav('home', e)} style={{ display: 'inline-block' }}>
                   <img
-                    data-width="180"
-                    style={{ width: '180px', height: 'auto', display: 'block' }}
+                    data-width="170"
+                    style={{ width: '100%', maxWidth: '170px', minWidth: '120px', height: 'auto', display: 'block' }}
                     src="/assets/img/logo/logo.svg"
                     alt="Revlytics Travel Agency"
                   />
@@ -118,7 +121,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="col-xl-6 d-none d-xl-block">
+            <div className="col-auto d-none d-xl-block">
               <div className="tp-main-menu d-flex justify-content-center">
                 <nav>
                   <ul>
@@ -192,7 +195,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
             </div>
 
             {/* Right Action Buttons & Hamburger Toggle */}
-            <div className="col-xl-3 col-6">
+            <div className="col-auto ms-auto ms-xl-0">
               <div className="tp-header-right d-flex justify-content-end align-items-center">
                 <button
                   className="tp-header-search-btn tp-search-click"
@@ -209,7 +212,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
                     />
                   </svg>
                 </button>
-                <div className="tp-header-btn-wrap d-none d-sm-block ml-30">
+                <div className="tp-header-btn-wrap d-none d-sm-block ml-25">
                   <Button
                     text="Book Consultation"
                     href="#contact"
@@ -220,7 +223,7 @@ const Header1: React.FC<Header1Props> = ({ onNavigate }) => {
                   />
                 </div>
                 <button
-                  className="tp-header-sidebar-btn hamburger-open-btn d-xl-none ml-20 text-white"
+                  className="tp-header-sidebar-btn hamburger-open-btn d-xl-none ml-15"
                   type="button"
                   aria-label="Open Mobile Menu"
                 >
